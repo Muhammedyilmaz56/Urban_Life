@@ -4,6 +4,7 @@ from datetime import datetime
 import enum
 
 from .base import Base
+from .category_model import Category   # ✅ doğrudan import
 
 
 class ComplaintStatus(enum.Enum):
@@ -35,4 +36,4 @@ class Complaint(Base):
 
     # İlişkiler
     user = relationship("User", backref="complaints")
-    category = relationship("Category", backref="complaints")
+    category = relationship("Category", back_populates="complaints")

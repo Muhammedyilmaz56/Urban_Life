@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from .base import Base
+from sqlalchemy.orm import relationship
+from app.models.base import Base
 
 
 class Category(Base):
@@ -9,3 +10,6 @@ class Category(Base):
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+
+    # İlişkiler
+    complaints = relationship("Complaint", back_populates="category")
