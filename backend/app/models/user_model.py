@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime
+from sqlalchemy import Column, Integer, String, Enum, DateTime, Boolean
 from datetime import datetime
 import enum
 
@@ -20,4 +20,26 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(Enum(UserRole), default=UserRole.citizen, nullable=False)
+
     created_at = Column(DateTime, default=datetime.utcnow)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    verification_token = Column(String, nullable=True)
+    reset_password_token = Column(String, nullable=True)
+    reset_password_expires = Column(DateTime, nullable=True)
+
+  
+    tc_kimlik_no = Column(String(11), unique=True, nullable=True)
+    birth_year = Column(Integer, nullable=True)
+    phone_number = Column(String, nullable=True)
+
+    is_name_public = Column(Boolean, default=True, nullable=False)
+    avatar_url = Column(String, nullable=True)
+
+    profile_completed = Column(Boolean, default=False, nullable=False)
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )

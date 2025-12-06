@@ -23,6 +23,6 @@ class Assignment(Base):
     end_time = Column(DateTime, nullable=True)
     solution_photo_url = Column(String, nullable=True)
 
-    # İlişkiler
+
     complaint = relationship("Complaint", backref="assignments")
     employee = relationship("User", backref="assignments")

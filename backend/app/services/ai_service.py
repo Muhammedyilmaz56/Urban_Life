@@ -1,7 +1,7 @@
 import joblib
 import os
 
-# Modeli yükle
+
 MODEL_PATH = "category_model.pkl"
 if not os.path.exists(MODEL_PATH):
     raise RuntimeError("AI kategori modeli bulunamadı. Lütfen train_category_model.py çalıştırın.")

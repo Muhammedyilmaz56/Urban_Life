@@ -11,5 +11,5 @@ class Category(Base):
     description = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
 
-    # İlişkiler
+    
     complaints = relationship("Complaint", back_populates="category")

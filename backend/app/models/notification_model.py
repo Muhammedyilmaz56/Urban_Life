@@ -22,5 +22,5 @@ class Notification(Base):
     status = Column(Enum(NotificationStatus), default=NotificationStatus.sent, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # İlişki
+    
     user = relationship("User", backref="notifications")

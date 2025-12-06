@@ -13,6 +13,6 @@ class ComplaintSupport(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # İlişkiler
+    
     complaint = relationship("Complaint", backref="supports")
     user = relationship("User", backref="supports")

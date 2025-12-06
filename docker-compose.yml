@@ -1,0 +1,34 @@
+services:
+  backend:
+    build: ./backend
+    container_name: urbanlife-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/urbanlife_db
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - APP_BASE_URL=${APP_BASE_URL}
+
+  db:
+    image: postgres:14
+    restart: always
+    container_name: urbanlife-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: urbanlife_db
+    ports:
+      - "5436:5432"   # 🔴 Burayı değiştirdik!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

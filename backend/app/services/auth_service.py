@@ -10,11 +10,16 @@ from app.utils.security import (
     verify_password,
     create_access_token,
 )
+
+import secrets
+from app.utils.email_service import send_verification_email
+
 auth_scheme = HTTPBearer()
 
-# Kullanıcı kayıt servisi
+
+
 def register_user(db: Session, user_data: UserCreate):
-    # email zaten kayıtlı mı kontrol et
+ 
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(
@@ -22,41 +27,56 @@ def register_user(db: Session, user_data: UserCreate):
             detail="Bu email zaten kayıtlı."
         )
 
-    # şifreyi güvenli şekilde hashle
     hashed_password = hash_password(user_data.password)
 
-    # yeni kullanıcı oluştur (rol = citizen otomatik atanır)
+  
+    verification_token = secrets.token_urlsafe(32)
+
     new_user = User(
         name=user_data.name,
         email=user_data.email,
         password_hash=hashed_password,
-        role="citizen"   # herkes için varsayılan rol
+        role=UserRole.citizen,
+        is_verified=False,              
+        verification_token=verification_token
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    
+    send_verification_email(new_user.email, verification_token)
+
     return new_user
 
 
-# Kullanıcı giriş servisi
+
 def login_user(db: Session, user: UserLogin):
     db_user = db.query(User).filter(User.email == user.email).first()
 
-    # kullanıcı yoksa veya şifre yanlışsa
     if not db_user or not verify_password(user.password, db_user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Geçersiz kimlik bilgileri."
         )
 
-    # JWT token üret
+   
+    if not db_user.is_verified:
+        raise HTTPException(
+            status_code=400,
+            detail="Email doğrulanmamış. Lütfen emailinizi kontrol edin."
+        )
+
     token = create_access_token({
         "sub": str(db_user.id),
-        "role": db_user.role.value if hasattr(db_user.role, "value") else db_user.role
+        "role": db_user.role.value
     })
 
     return {"access_token": token, "token_type": "bearer"}
+
+
+
 def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(auth_scheme),
     db: Session = Depends(get_db)
@@ -82,13 +102,13 @@ def get_current_user(
     return db_user
 
 
-# Rol kontrolü
+
 def role_required(required_roles: list[UserRole]):
     def wrapper(current_user: User = Depends(get_current_user)):
         if current_user.role not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bu işlem için yetkiniz yok"
+                detail="Bu işlem için yetkiniz yok."
             )
         return current_user
     return wrapper
