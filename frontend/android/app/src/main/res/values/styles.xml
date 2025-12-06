@@ -1,0 +1,10 @@
+<resources>
+
+    <!-- Uygulama çalışırken kullanılan normal tema -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Uygulama içi renkler, toolbar vs burada olur -->
+    </style>
+
+   
+
+</resources>
