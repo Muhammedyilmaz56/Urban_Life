@@ -15,23 +15,26 @@ export const changePassword = async (data: {
 
 export const updateProfile = async (data: {
   full_name?: string;
-  phone?: string;
+  phone_number?: string;
+  tc_kimlik_no?: string;
+  birth_date?: string;
+  is_name_public?: boolean;
 }) => {
-  const res = await api.put("/users/me", data);
+  const res = await api.put("/users/profile", data);
   return res.data;
 };
 export const uploadAvatar = async (fileUri: string) => {
-    const formData = new FormData();
-    formData.append("file", {
-      uri: fileUri,
-      name: "avatar.jpg",
-      type: "image/jpeg",
-    } as any);
-  
-    const res = await api.post("/users/upload-avatar", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return res.data;
-  };
+  const formData = new FormData();
+  formData.append("file", {
+    uri: fileUri,
+    name: "avatar.jpg",
+    type: "image/jpeg",
+  } as any);
+
+  const res = await api.post("/users/upload-avatar", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};

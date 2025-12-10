@@ -121,7 +121,7 @@ const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
                 </View>
               )}
 
-              {/* Yeni Şifre */}
+             
               <View style={styles.inputWrapper}>
                 <Text style={styles.inputIcon}>🔒</Text>
                 <TextInput
@@ -134,7 +134,7 @@ const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
                 />
               </View>
 
-              {/* Şifre Tekrar */}
+           
               <View style={styles.inputWrapper}>
                 <Text style={styles.inputIcon}>🔐</Text>
                 <TextInput
@@ -147,7 +147,7 @@ const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
                 />
               </View>
 
-              {/* Buton */}
+             
               <TouchableOpacity
                 style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                 onPress={handleResetPassword}
@@ -161,7 +161,7 @@ const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
                 )}
               </TouchableOpacity>
               
-              {/* İptal / Geri Dön */}
+              
               <TouchableOpacity style={{marginTop: 20}} onPress={() => navigation.navigate("Login" as never)}>
                   <Text style={{color: '#ccc', textAlign: 'center'}}>Giriş Ekranına Dön</Text>
               </TouchableOpacity>

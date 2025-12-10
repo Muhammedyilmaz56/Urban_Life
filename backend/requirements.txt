@@ -13,4 +13,5 @@ passlib[bcrypt]==1.7.4
 scikit-learn
 joblib
 python-multipart
+requests
 

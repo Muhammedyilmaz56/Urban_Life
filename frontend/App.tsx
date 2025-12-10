@@ -52,17 +52,18 @@ export default function App() {
           options={{ title: "Giriş Yap", headerShown: false }} 
         />
 
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{ title: "Kayıt Ol", headerTransparent: false, headerTintColor: '#fff' }} 
-        />
+<Stack.Screen 
+    name="Register" 
+    component={RegisterScreen} 
+    options={{ headerShown: false }} 
+  />
 
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ title: "CityFlow" }} 
-        />
+  
+  <Stack.Screen 
+    name="Home" 
+    component={HomeScreen} 
+    options={{ headerShown: false }} 
+  />
 
         <Stack.Screen
           name="CreateComplaint"

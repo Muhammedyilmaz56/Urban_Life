@@ -6,19 +6,33 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Alert,
+  Image,
+  ScrollView,
+  ImageBackground, // Eklendi
+  StatusBar,       // Eklendi
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import MapView, { Marker } from "react-native-maps";
 
-import { getMyComplaints } from "../../api/complaints";
+import {
+  getMyComplaints,
+  deleteComplaint,
+  deleteComplaintPhoto,
+} from "../../api/complaints";
 import { Complaint } from "../../types";
 import MyComplaintsStyles from "../../styles/MyComplaintsStyles";
+import { BASE_URL } from "../../config";
 
 type Props = NativeStackScreenProps<any, "MyComplaints">;
+
+const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [expandedIds, setExpandedIds] = useState<number[]>([]);
 
   const loadComplaints = async () => {
     try {
@@ -32,9 +46,7 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    loadComplaints();
-  }, []);
+  useEffect(() => { loadComplaints(); }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -43,86 +55,220 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderStatus = (status: Complaint["status"]) => {
     switch (status) {
-      case "pending":
-        return "Beklemede";
-      case "in_progress":
-        return "İşlemde";
-      case "resolved":
-        return "Çözüldü";
-      default:
-        return status;
+      case "pending": return "Beklemede";
+      case "in_progress": return "İşlemde";
+      case "resolved": return "Çözüldü";
+      default: return status;
     }
   };
 
+  const toggleExpand = (id: number) => {
+    setExpandedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const handleDeleteComplaint = (id: number) => {
+    Alert.alert(
+      "Şikayeti Sil",
+      "Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteComplaint(id);
+              setComplaints((prev) => prev.filter((c) => c.id !== id));
+            } catch (err) { Alert.alert("Hata", "Silme işlemi başarısız."); }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeletePhoto = (complaintId: number, photoId: number) => {
+    Alert.alert("Fotoğrafı Sil", "Bu fotoğraf silinsin mi?", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteComplaintPhoto(photoId);
+            setComplaints((prev) =>
+              prev.map((c) =>
+                c.id === complaintId
+                  ? { ...c, photos: c.photos?.filter((p) => p.id !== photoId) || [] }
+                  : c
+              )
+            );
+          } catch (err) { Alert.alert("Hata", "Fotoğraf silinemedi."); }
+        },
+      },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: Complaint }) => {
+    const expanded = expandedIds.includes(item.id);
+
     return (
-      <TouchableOpacity
-        style={MyComplaintsStyles.card}
-      
-        activeOpacity={0.8}
-      >
+      <View style={MyComplaintsStyles.card}>
+        
+        
         <View style={MyComplaintsStyles.cardHeader}>
-          <Text style={MyComplaintsStyles.title}>
-            {item.title || "Başlıksız şikayet"}
-          </Text>
-          <Text
-            style={[
-              MyComplaintsStyles.statusBadge,
-              item.status === "pending" && MyComplaintsStyles.statusPending,
-              item.status === "in_progress" && MyComplaintsStyles.statusInProgress,
-              item.status === "resolved" && MyComplaintsStyles.statusResolved,
-            ]}
-          >
-            {renderStatus(item.status)}
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={MyComplaintsStyles.title}>
+              {item.title || "Başlıksız Şikayet"}
+            </Text>
+            <Text
+              style={[
+                MyComplaintsStyles.statusBadge,
+                item.status === "pending" && MyComplaintsStyles.statusPending,
+                item.status === "in_progress" && MyComplaintsStyles.statusInProgress,
+                item.status === "resolved" && MyComplaintsStyles.statusResolved,
+              ]}
+            >
+              {renderStatus(item.status)}
+            </Text>
+          </View>
         </View>
 
-        <Text style={MyComplaintsStyles.description} numberOfLines={2}>
+        
+        <Text
+          style={MyComplaintsStyles.description}
+          numberOfLines={expanded ? undefined : 2}
+        >
           {item.description}
         </Text>
 
+        
         <View style={MyComplaintsStyles.cardFooter}>
           <Text style={MyComplaintsStyles.dateText}>
-            {new Date(item.created_at).toLocaleString()}
+            {new Date(item.created_at).toLocaleDateString("tr-TR", { day: 'numeric', month: 'long', year:'numeric' })}
           </Text>
           <Text style={MyComplaintsStyles.supportText}>
             👍 {item.support_count ?? 0}
           </Text>
         </View>
-      </TouchableOpacity>
+
+       
+        {expanded && (
+          <View style={MyComplaintsStyles.detailsContainer}>
+            
+            
+            {item.photos && item.photos.length > 0 && (
+              <View style={MyComplaintsStyles.photosContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {item.photos.map((p) => {
+                    const fullUrl = p.photo_url.startsWith("http") ? p.photo_url : `${BASE_URL}${p.photo_url}`;
+                    return (
+                      <View key={p.id} style={MyComplaintsStyles.photoWrapper}>
+                        <Image source={{ uri: fullUrl }} style={MyComplaintsStyles.detailImage} />
+                        <TouchableOpacity
+                          style={MyComplaintsStyles.photoDeleteButton}
+                          onPress={() => handleDeletePhoto(item.id, p.id)}
+                        >
+                          <Text style={MyComplaintsStyles.photoDeleteText}>SİL</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            
+            {typeof (item as any).latitude === "number" && typeof (item as any).longitude === "number" && (
+              <View style={MyComplaintsStyles.mapContainer}>
+                <MapView
+                  style={MyComplaintsStyles.map}
+                  scrollEnabled={false}
+                  initialRegion={{
+                    latitude: (item as any).latitude,
+                    longitude: (item as any).longitude,
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  }}
+                >
+                  <Marker coordinate={{ latitude: (item as any).latitude, longitude: (item as any).longitude }} />
+                </MapView>
+              </View>
+            )}
+
+           
+            <TouchableOpacity
+              style={MyComplaintsStyles.deleteButton}
+              onPress={() => handleDeleteComplaint(item.id)}
+            >
+              <Text style={MyComplaintsStyles.deleteButtonText}>🗑️ Şikayeti Sil</Text>
+            </TouchableOpacity>
+
+          </View>
+        )}
+
+        
+        <TouchableOpacity 
+          style={MyComplaintsStyles.expandButtonContainer} 
+          onPress={() => toggleExpand(item.id)}
+          activeOpacity={0.7}
+        >
+           <View style={MyComplaintsStyles.expandButton}>
+              <Text style={MyComplaintsStyles.expandText}>
+                {expanded ? "Gizle" : "Detaylar"}
+              </Text>
+              
+           </View>
+        </TouchableOpacity>
+
+      </View>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={MyComplaintsStyles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={MyComplaintsStyles.loadingText}>Şikayetleriniz yükleniyor...</Text>
-      </View>
-    );
-  }
-
-  if (!loading && complaints.length === 0) {
-    return (
-      <View style={MyComplaintsStyles.emptyContainer}>
-        <Text style={MyComplaintsStyles.emptyText}>
-          Henüz bir şikayet oluşturmamışsınız.
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={MyComplaintsStyles.container}>
-      <FlatList
-        data={complaints}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={MyComplaintsStyles.listContent}
-      />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      
+      <ImageBackground
+        source={{ uri: BG_IMAGE }}
+        style={MyComplaintsStyles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={MyComplaintsStyles.overlay}>
+          
+          
+          <View style={MyComplaintsStyles.header}>
+            <TouchableOpacity 
+              style={MyComplaintsStyles.backButton} 
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={MyComplaintsStyles.backButtonIcon}>‹</Text>
+            </TouchableOpacity>
+            <Text style={MyComplaintsStyles.headerTitle}>Şikayetlerim</Text>
+          </View>
+
+         
+          {loading ? (
+            <View style={MyComplaintsStyles.loadingContainer}>
+              <ActivityIndicator size="large" color="#6C63FF" />
+              <Text style={MyComplaintsStyles.loadingText}>Yükleniyor...</Text>
+            </View>
+          ) : (
+             <FlatList
+              data={complaints}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderItem}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+              contentContainerStyle={MyComplaintsStyles.listContent}
+              ListEmptyComponent={
+                <View style={MyComplaintsStyles.emptyContainer}>
+                  <Text style={MyComplaintsStyles.emptyText}>Henüz bir şikayetiniz yok.</Text>
+                </View>
+              }
+            />
+          )}
+
+        </View>
+      </ImageBackground>
     </View>
   );
 };

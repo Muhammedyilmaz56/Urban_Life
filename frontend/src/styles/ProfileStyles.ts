@@ -1,139 +1,49 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 export default StyleSheet.create({
+  
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F2F4F8", 
+  },
+  
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F2F4F8",
   },
 
+  
   header: {
-    padding: 20,
+    paddingVertical: 30,
     alignItems: "center",
     backgroundColor: "white",
-    marginBottom: 10,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    marginBottom: 20,
+  },
+
+  avatarWrap: {
+    width: 100,
+    height: 100,
+    marginBottom: 15,
+    position: "relative",
   },
 
   avatar: {
-    width: 90,
-    height: 90,
+    width: 100,
+    height: 100,
     borderRadius: 50,
-    backgroundColor: "#ddd",
-    marginBottom: 15,
-  },
-
-  name: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
-  },
-
-  email: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 5,
-  },
-
-  section: {
-    backgroundColor: "white",
-    padding: 15,
-    marginHorizontal: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-  },
-
-  row: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-
-  rowText: {
-    fontSize: 16,
-    color: "#444",
-  },
-
-  logoutButton: {
-    padding: 15,
-    backgroundColor: "#e74c3c",
-    marginHorizontal: 15,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-
-  logoutText: {
-    color: "white",
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  passwordModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  passwordModalContainer: {
-    width: "85%",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-  },
-
-  passwordModalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#333",
-  },
-
-  passwordInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 10,
-    fontSize: 15,
-  },
-
-  passwordButtonsRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-  },
-
-  passwordButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: "#3498db",
-    marginLeft: 10,
-  },
-
-  passwordCancelButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: "#bdc3c7",
-  },
-
-  passwordButtonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  avatarWrap: {
-    width: 90,
-    height: 90,
-    marginBottom: 15,
+    backgroundColor: "#E1E4E8",
+    borderWidth: 3,
+    borderColor: "white",
   },
 
   avatarEditButton: {
@@ -141,16 +51,191 @@ export default StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: "#3498db",
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: "white",
   },
 
   avatarEditText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
+    marginTop: -2,
+  },
+
+  name: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1F2937", 
+    marginBottom: 4,
+  },
+
+  email: {
+    fontSize: 15,
+    color: "#6B7280", 
+  },
+
+  
+  section: {
+    backgroundColor: "white",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+   
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9CA3AF", 
+    textTransform: "uppercase",
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+
+  rowBetween: { 
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+  },
+
+ 
+  label: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 2,
+  },
+
+  value: {
+    fontSize: 16,
+    color: "#111827",
+    fontWeight: "500",
+  },
+
+  actionText: {
+    fontSize: 14,
+    color: "#3498db", 
+    fontWeight: "600",
+  },
+
+  arrow: {
+    fontSize: 18,
+    color: "#9CA3AF",
+    fontWeight: "bold",
+  },
+
+ 
+  logoutButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: "#FEE2E2", 
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+
+  logoutText: {
+    color: "#DC2626", 
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+
+  passwordModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", 
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  passwordModalContainer: {
+    width: "90%",
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 24,
+   
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+
+  passwordModalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+
+  passwordInput: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 12,
+    color: "#374151",
+  },
+
+  passwordButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between", 
+    marginTop: 20,
+    gap: 12, 
+  },
+
+  passwordCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+  },
+
+  passwordButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#3498db",
+    alignItems: "center",
+    
+    shadowColor: "#3498db",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+
+  passwordButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937", 
   },
 });

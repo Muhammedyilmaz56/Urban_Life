@@ -68,7 +68,6 @@ def create_complaint(db: Session, user_id: int, complaint: ComplaintCreate):
     
     category_name = predict_category(complaint.description)
 
-   
     category = db.query(Category).filter(Category.name == category_name).first()
     if not category:
         category = Category(
@@ -79,22 +78,22 @@ def create_complaint(db: Session, user_id: int, complaint: ComplaintCreate):
         db.commit()
         db.refresh(category)
 
-    
     new_complaint = Complaint(
         user_id=user_id,
+        title=complaint.title,                
         description=complaint.description,
-        category_id=category.id,
+        category_id=category.id,              
         latitude=complaint.latitude,
         longitude=complaint.longitude,
         photo_url=complaint.photo_url,
+        is_anonymous=complaint.is_anonymous,  
         status=ComplaintStatus.pending,
-        priority=Priority.medium
+        priority=Priority.medium,
     )
     db.add(new_complaint)
     db.commit()
     db.refresh(new_complaint)
     return new_complaint
-
 
 def get_my_complaints(db: Session, user_id: int):
     return db.query(Complaint).filter(Complaint.user_id == user_id).all()
@@ -291,3 +290,19 @@ def get_feed_complaints(
         query = query.order_by(Complaint.created_at.desc())
 
     return query.all()
+def delete_complaint(db: Session, complaint_id: int):
+    complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    if not complaint:
+        return False
+    db.delete(complaint)
+    db.commit()
+    return True
+
+
+def delete_photo(db: Session, photo_id: int):
+    photo = db.query(ComplaintPhoto).filter(ComplaintPhoto.id == photo_id).first()
+    if not photo:
+        return False
+    db.delete(photo)
+    db.commit()
+    return True

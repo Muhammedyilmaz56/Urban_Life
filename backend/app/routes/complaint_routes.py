@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status,UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List,Optional
 from fastapi import UploadFile, File,Query
@@ -19,7 +19,16 @@ from app.routes.auth_routes import get_current_user, role_required
 from app.models.user_model import User, UserRole
 from app.models.category_model import Category
 from app.models.complaint_model import Complaint
+import time
+from pathlib import Path
+import os
 
+
+from app.models.complaint_model import ComplaintPhoto
+
+MEDIA_ROOT = Path("media")
+UPLOAD_DIR = Path("media/complaints")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter(prefix="/complaints", tags=["Complaints"])
 
@@ -37,7 +46,11 @@ def create_complaint(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Sadece vatandaş şikayet oluşturabilir.",
         )
-
+    if not current_user.profile_completed:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profil bilgilerinizi tamamlamadan şikayet oluşturamazsınız.",
+        )
 
     if not current_user.profile_completed:
         raise HTTPException(
@@ -150,34 +163,49 @@ def change_complaint_status(
     if not complaint:
         raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
     return complaint
-@router.post("/{complaint_id}/photos", response_model=ComplaintPhotoOut)
-async def upload_complaint_photo(
+@router.post("/{complaint_id}/photos", response_model=List[ComplaintPhotoOut])
+async def upload_complaint_photos(
     complaint_id: int,
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    
     complaint = complaint_service.get_complaint_by_id(db, complaint_id)
     if not complaint:
         raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
 
+   
     if complaint.user_id != current_user.id and current_user.role not in [
         UserRole.admin,
         UserRole.official,
+        UserRole.employee,  
     ]:
         raise HTTPException(
             status_code=403,
             detail="Bu şikayete fotoğraf ekleme yetkiniz yok.",
         )
 
+    saved_photos = []
 
-    file_bytes = await file.read()
-    fake_url = f"https://firebase.fake/{file.filename}"  
+    for f in files:
+        timestamp = int(time.time())
+        safe_name = f"complaint_{complaint_id}_{timestamp}_{f.filename}"
+        file_path = UPLOAD_DIR / safe_name
 
-    saved_photo = complaint_service.add_photo(db, complaint_id, fake_url)
+        content = await f.read()
+        with open(file_path, "wb") as out:
+            out.write(content)
 
-    return saved_photo
+        public_path = f"/media/complaints/{safe_name}"
+
+        photo = complaint_service.add_photo(
+            db,
+            complaint_id=complaint_id,
+            photo_url=public_path,  
+        )
+        saved_photos.append(photo)
+
+    return saved_photos
 
 
 @router.get("/feed", response_model=List[ComplaintOut])
@@ -213,3 +241,59 @@ def get_complaint_detail(
         raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
     return complaint
 
+@router.delete("/{complaint_id}", status_code=204)
+def delete_complaint(
+    complaint_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    complaint = complaint_service.get_complaint_by_id(db, complaint_id)
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
+
+    
+    if complaint.user_id != current_user.id and current_user.role not in [
+        UserRole.admin,
+        UserRole.official,
+    ]:
+        raise HTTPException(
+            status_code=403,
+            detail="Bu şikayeti silme yetkiniz yok.",
+        )
+
+    complaint_service.delete_complaint(db, complaint_id)  
+    return
+
+
+@router.delete("/photos/{photo_id}", status_code=204)
+def delete_complaint_photo(
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    photo = db.query(ComplaintPhoto).filter(ComplaintPhoto.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Fotoğraf bulunamadı.")
+
+    complaint = complaint_service.get_complaint_by_id(db, photo.complaint_id)
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
+
+    if complaint.user_id != current_user.id and current_user.role not in [
+        UserRole.admin,
+        UserRole.official,
+        UserRole.employee,
+    ]:
+        raise HTTPException(
+            status_code=403,
+            detail="Bu fotoğrafı silme yetkiniz yok.",
+        )
+
+    
+    if photo.photo_url and photo.photo_url.startswith("/media/"):
+        file_path = MEDIA_ROOT / photo.photo_url.replace("/media/", "")
+        if file_path.exists():
+            file_path.unlink()
+
+    complaint_service.delete_photo(db, photo_id)  
+    return

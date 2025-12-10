@@ -11,13 +11,14 @@ import {
   Image,
   PermissionsAndroid,
   Platform,
-  Linking, // 🔹 Ayarlara yönlendirmek için
+  Linking,
 } from "react-native";
 
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
 import { launchImageLibrary } from "react-native-image-picker";
 
-import { createComplaint } from "../../api/complaints";
+import { createComplaint, uploadComplaintPhotos } from "../../api/complaints";
+
 import { CreateComplaintDto } from "../../types";
 
 const CreateComplaintScreen = () => {
@@ -27,15 +28,15 @@ const CreateComplaintScreen = () => {
 
   const [pickedLocation, setPickedLocation] = useState<any>(null);
 
-  // 🔥 Artık bir dizi: birden fazla foto
+ 
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
 
   const [isAnonymous, setIsAnonymous] = useState(false);
 
   const mapRef = useRef<MapView | null>(null);
-  const hasCenteredOnUser = useRef(false); // 🔹 Sadece ilk konumda zoom yapmak için
+  const hasCenteredOnUser = useRef(false); 
 
-  // Konum izni
+  
   useEffect(() => {
     (async () => {
       if (Platform.OS === "android") {
@@ -44,7 +45,7 @@ const CreateComplaintScreen = () => {
         );
 
         if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-          // Kullanıcı izni reddettiyse ayarlara yönlendir
+          
           Alert.alert(
             "Konum izni gerekli",
             "Haritada bulunduğun yere otomatik gitmek için konum izni vermen ve telefonu konum açık kullanman gerekiyor.",
@@ -63,20 +64,20 @@ const CreateComplaintScreen = () => {
     })();
   }, []);
 
-  // Haritaya tıklayınca konum seç
+  
   const handleMapPress = (e: MapPressEvent) => {
     const coord = e.nativeEvent.coordinate;
     setPickedLocation(coord);
   };
 
-  // 🔹 Kullanıcının canlı konumu geldiğinde (mavi nokta)
+ 
   const handleUserLocationChange = (e: any) => {
     const coord = e.nativeEvent.coordinate;
     if (!coord) return;
 
     console.log("Canlı konum:", coord);
 
-    // Sadece ilk seferinde otomatik zoom yap
+   
     if (!hasCenteredOnUser.current) {
       hasCenteredOnUser.current = true;
 
@@ -89,12 +90,12 @@ const CreateComplaintScreen = () => {
 
       mapRef.current?.animateToRegion(region, 800);
 
-      // Aynı zamanda şikayet konumu olarak da seç
+     
       setPickedLocation(coord);
     }
   };
 
-  //  Çoklu fotoğraf seçme
+ 
   const pickImage = async () => {
     try {
       const result: any = await launchImageLibrary({
@@ -123,7 +124,7 @@ const CreateComplaintScreen = () => {
     if (!description.trim()) return Alert.alert("Hata", "Açıklama zorunludur.");
     if (!pickedLocation)
       return Alert.alert("Hata", "Haritadan konum seçmelisiniz.");
-
+  
     const payload: CreateComplaintDto = {
       title,
       description,
@@ -131,13 +132,19 @@ const CreateComplaintScreen = () => {
       latitude: pickedLocation.latitude,
       longitude: pickedLocation.longitude,
       is_anonymous: isAnonymous,
-      
     };
-
+  
     try {
+      
       const res = await createComplaint(payload);
+  
+      
+      if (selectedImages.length > 0) {
+        await uploadComplaintPhotos(res.id, selectedImages);
+      }
+  
       Alert.alert("Başarılı", `Şikayet oluşturuldu (ID: ${res.id})`);
-
+  
       setTitle("");
       setDescription("");
       setCategoryId("1");
@@ -145,13 +152,14 @@ const CreateComplaintScreen = () => {
       setSelectedImages([]);
       setIsAnonymous(false);
     } catch (err: any) {
+      console.log("Şikayet oluşturma hatası:", err?.response?.data || err);
       Alert.alert(
         "Hata",
         err?.response?.data?.detail || "Şikayet oluşturulamadı"
       );
     }
   };
-
+  
   const initialRegion: Region = {
     latitude: 41.01,
     longitude: 28.97,
@@ -208,13 +216,13 @@ const CreateComplaintScreen = () => {
           onPress={handleMapPress}
           showsUserLocation={true}
           showsMyLocationButton={true}
-          onUserLocationChange={handleUserLocationChange} // 🔹 canlı konumdan zoom
+          onUserLocationChange={handleUserLocationChange} 
         >
           {pickedLocation && <Marker coordinate={pickedLocation} />}
         </MapView>
       </View>
 
-      {/* FOTOĞRAFLAR */}
+      
       <View style={styles.card}>
         <Text style={styles.label}>Fotoğraflar (İstediğin kadar)</Text>
 
@@ -239,13 +247,13 @@ const CreateComplaintScreen = () => {
         )}
       </View>
 
-      {/* ANONİM */}
+
       <View style={styles.cardRow}>
         <Text style={styles.label}>İsmim gizlensin</Text>
         <Switch value={isAnonymous} onValueChange={setIsAnonymous} />
       </View>
 
-      {/* GÖNDER BUTONU */}
+ 
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Şikayet Oluştur</Text>
       </TouchableOpacity>

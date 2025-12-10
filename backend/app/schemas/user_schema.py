@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, validator
-from typing import Optional
+from typing import Optional, Union
 import enum
-
+from datetime import datetime, date
 
 class UserRole(str, enum.Enum):
     citizen = "citizen"
@@ -23,26 +23,26 @@ class UserLogin(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    name: str
+    full_name: Optional[str] = None
     email: EmailStr
     role: str
-
     tc_kimlik_no: Optional[str] = None
-    birth_year: Optional[int] = None
+    birth_date: Optional[date] = None
     phone_number: Optional[str] = None
     is_name_public: bool
     avatar_url: Optional[str] = None
     profile_completed: bool
 
     class Config:
-        orm_mode = True   
+        orm_mode = True
 
 
 class UserProfileUpdate(BaseModel):
-    tc_kimlik_no: Optional[str] = None
-    birth_year: Optional[int] = None
+    full_name: Optional[str] = None
     phone_number: Optional[str] = None
-    is_name_public: Optional[bool] = True
+    tc_kimlik_no: Optional[str] = None
+    birth_date: Optional[Union[date, str]] = None
+    is_name_public: Optional[bool] = None
     avatar_url: Optional[str] = None
 
     @validator("tc_kimlik_no")
@@ -51,14 +51,6 @@ class UserProfileUpdate(BaseModel):
             return v
         if not (len(v) == 11 and v.isdigit()):
             raise ValueError("TC Kimlik No 11 haneli ve sadece rakamlardan oluşmalıdır.")
-        return v
-
-    @validator("birth_year")
-    def validate_birth_year(cls, v):
-        if v is None:
-            return v
-        if v < 1900 or v > 2100:
-            raise ValueError("Doğum yılı geçerli bir aralıkta olmalıdır.")
         return v
 
     @validator("phone_number")

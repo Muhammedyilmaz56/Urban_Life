@@ -28,15 +28,14 @@ export type Complaint = {
   photos?: ComplaintPhoto[];   
 };
 
-export type CreateComplaintDto = {
+export interface CreateComplaintDto {
   title: string;
   description: string;
   category_id: number;
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
   is_anonymous: boolean;
-  photo_url?: string;
-};
+}
 
 export type UpdateStatusDto = {
   status: "pending" | "in_progress" | "resolved";

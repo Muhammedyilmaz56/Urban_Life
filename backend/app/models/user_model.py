@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Enum, DateTime, Boolean,Date
 from datetime import datetime
 import enum
 
@@ -29,7 +29,7 @@ class User(Base):
 
   
     tc_kimlik_no = Column(String(11), unique=True, nullable=True)
-    birth_year = Column(Integer, nullable=True)
+    birth_date = Column(Date, nullable=True)
     phone_number = Column(String, nullable=True)
 
     is_name_public = Column(Boolean, default=True, nullable=False)
@@ -43,3 +43,9 @@ class User(Base):
         onupdate=datetime.utcnow,
         nullable=False,
     )
+    is_phone_verified = Column(Boolean, default=False, nullable=False)
+    phone_verification_code = Column(String(6), nullable=True)
+    phone_verification_expires = Column(DateTime, nullable=True)
+    @property
+    def full_name(self):
+        return self.name

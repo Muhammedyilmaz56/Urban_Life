@@ -10,17 +10,21 @@ from app.models.base import Base
 from app.utils.db import engine 
 from app.routes.user_routes import router as user_router
 from app.routes.complaint_routes import router as complaint_router
+from fastapi.staticfiles import StaticFiles
+from app.routes import user_routes
+from app.routes import official_routes
 
 app = FastAPI(title="Urbanlife API")
 
+app.include_router(official_routes.router)
 
 app.include_router(auth_routes.router)
 app.include_router(complaint_routes.router)
 app.include_router(assignment_routes.router)
 app.include_router(user_router)
 app.include_router(complaint_router)
-
-
+app.mount("/media", StaticFiles(directory="media"), name="media")
+app.include_router(user_routes.router)
 @app.get("/auth/open-app", response_class=HTMLResponse)
 def open_mobile_app_bridge(token: str):
     """
