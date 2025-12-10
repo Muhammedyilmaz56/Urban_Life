@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
   Switch,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
+  StatusBar,
 } from "react-native";
 import styles from "../styles/ProfileStyles"; 
 import {
@@ -25,6 +27,7 @@ import { useNavigation } from "@react-navigation/native";
 import { launchImageLibrary } from "react-native-image-picker";
 import { BASE_URL } from "../config";
 
+const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 const InfoRow = ({ label, value, onPress, actionLabel }: any) => (
   <View style={styles.row}>
@@ -40,7 +43,6 @@ const InfoRow = ({ label, value, onPress, actionLabel }: any) => (
   </View>
 );
 
-
 const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
   avatar_url
     ? {
@@ -50,32 +52,26 @@ const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
       }
     : require("../../assets/default-avatar.png");
 
-
-    
-
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
-
   const [modalType, setModalType] = useState<"NONE" | "INFO" | "PHONE" | "PASSWORD">("NONE");
-
   const [editName, setEditName] = useState("");
   const [editTc, setEditTc] = useState("");
   const [birthDay, setBirthDay] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
   const [birthYear, setBirthYear] = useState("");
-  
-
   const [editPhone, setEditPhone] = useState("");
-  
- 
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
-  
-
   const [isSaving, setIsSaving] = useState(false);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   const loadUser = async () => {
     try {
@@ -92,7 +88,6 @@ const ProfileScreen = () => {
     loadUser();
   }, []);
 
- 
   const handleSelectAvatar = () => {
     launchImageLibrary({ mediaType: "photo", quality: 0.8 }, async (res: any) => {
       if (res?.didCancel || !res?.assets?.[0]?.uri) return;
@@ -108,13 +103,11 @@ const ProfileScreen = () => {
     });
   };
 
-  
   const openInfoModal = () => {
     if (!user) return;
     setEditName(user.full_name || user.name || "");
     setEditTc(user.tc_kimlik_no || "");
     
-   
     if (user.birth_date) {
       const d = new Date(user.birth_date);
       setBirthYear(d.getFullYear().toString());
@@ -137,7 +130,6 @@ const ProfileScreen = () => {
       return;
     }
 
-   
     const d = parseInt(birthDay);
     const m = parseInt(birthMonth);
     const y = parseInt(birthYear);
@@ -150,7 +142,6 @@ const ProfileScreen = () => {
 
     try {
       setIsSaving(true);
-    
       await updateProfile({
         full_name: editName.trim(),
         tc_kimlik_no: editTc.trim(),
@@ -166,14 +157,12 @@ const ProfileScreen = () => {
     }
   };
 
-  
   const openPhoneModal = () => {
     setEditPhone(user?.phone || user?.phone_number || "");
     setModalType("PHONE");
   };
 
   const handleUpdatePhone = async () => {
-    
     if (editPhone.length < 10) {
       Alert.alert("Uyarı", "Geçerli bir numara giriniz.");
       return;
@@ -192,18 +181,14 @@ const ProfileScreen = () => {
     }
   };
 
- 
   const toggleVisibility = async (value: boolean) => {
-   
     setUser((prev: any) => ({ ...prev, is_name_public: value }));
     try {
       await updateProfile({ is_name_public: value });
     } catch (error) {
-     
       setUser((prev: any) => ({ ...prev, is_name_public: !value }));
     }
   };
-
 
   const handleChangePassword = async () => {
     const { current, new: newPass, confirm } = passwords;
@@ -234,153 +219,157 @@ const ProfileScreen = () => {
     navigation.reset({ index: 0, routes: [{ name: "Login" }] });
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" /></View>;
-  if (!user) return <View style={styles.center}><Text>Kullanıcı yüklenemedi</Text></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#6C63FF" /></View>;
+  if (!user) return <View style={styles.center}><Text style={{color: 'white'}}>Kullanıcı yüklenemedi</Text></View>;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{flex:1}}>
-      <ScrollView style={styles.container}>
-        
-        <View style={styles.header}>
-          <View style={styles.avatarWrap}>
-            <Image source={resolveAvatar(user.avatar_url, avatarRefreshKey)} style={styles.avatar} />
-            <TouchableOpacity style={styles.avatarEditButton} onPress={handleSelectAvatar}>
-              <Text style={styles.avatarEditText}>+</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.name}>{user.full_name || user.name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
-        </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ImageBackground source={{ uri: BG_IMAGE }} style={styles.backgroundImage} resizeMode="cover">
+        <View style={styles.overlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{flex:1}}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              
+              <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                  <Text style={styles.backButtonIcon}>‹</Text>
+                </TouchableOpacity>
+                <View style={styles.avatarWrap}>
+                  <Image source={resolveAvatar(user.avatar_url, avatarRefreshKey)} style={styles.avatar} />
+                  <TouchableOpacity style={styles.avatarEditButton} onPress={handleSelectAvatar}>
+                    <Text style={styles.avatarEditText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.name}>{user.full_name || user.name}</Text>
+                <Text style={styles.email}>{user.email}</Text>
+              </View>
 
-      
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kimlik Bilgileri</Text>
-          <InfoRow label="Ad Soyad" value={user.full_name} onPress={openInfoModal} />
-          <InfoRow label="TC Kimlik No" value={user.tc_kimlik_no} onPress={openInfoModal} />
-          <InfoRow 
-            label="Doğum Tarihi" 
-            value={user.birth_date ? new Date(user.birth_date).toLocaleDateString("tr-TR") : "-"} 
-            onPress={openInfoModal} 
-          />
-        </View>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Kimlik Bilgileri</Text>
+                <InfoRow label="Ad Soyad" value={user.full_name} onPress={openInfoModal} />
+                <InfoRow label="TC Kimlik No" value={user.tc_kimlik_no} onPress={openInfoModal} />
+                <InfoRow 
+                  label="Doğum Tarihi" 
+                  value={user.birth_date ? new Date(user.birth_date).toLocaleDateString("tr-TR") : "-"} 
+                  onPress={openInfoModal} 
+                />
+              </View>
 
-      
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>İletişim</Text>
-          <InfoRow 
-            label="Telefon" 
-            value={user.phone_number || user.phone} 
-            onPress={openPhoneModal} 
-            actionLabel="Değiştir" 
-          />
-        </View>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>İletişim</Text>
+                <InfoRow 
+                  label="Telefon" 
+                  value={user.phone_number || user.phone} 
+                  onPress={openPhoneModal} 
+                  actionLabel="Değiştir" 
+                />
+              </View>
 
-       
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ayarlar</Text>
-          <View style={styles.rowBetween}>
-            <Text style={styles.label}>İsim Herkese Görünsün</Text>
-            <Switch 
-              value={user.is_name_public ?? true} 
-              onValueChange={toggleVisibility} 
-            />
-          </View>
-        </View>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Ayarlar</Text>
+                <View style={styles.rowBetween}>
+                  <Text style={styles.label}>İsim Herkese Görünsün</Text>
+                  <Switch 
+                    value={user.is_name_public ?? true} 
+                    onValueChange={toggleVisibility}
+                    trackColor={{ false: "#767577", true: "#6C63FF" }}
+                    thumbColor={user.is_name_public ? "#fff" : "#f4f3f4"}
+                  />
+                </View>
+              </View>
 
-        
-        <View style={styles.section}>
-           <Text style={styles.sectionTitle}>Güvenlik</Text>
-           <TouchableOpacity style={styles.row} onPress={() => setModalType("PASSWORD")}>
-             <Text style={styles.label}>Şifre Değiştir</Text>
-             <Text style={styles.arrow}>{">"}</Text>
-           </TouchableOpacity>
-        </View>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Güvenlik</Text>
+                <TouchableOpacity style={styles.row} onPress={() => setModalType("PASSWORD")}>
+                  <Text style={styles.label}>Şifre Değiştir</Text>
+                  <Text style={styles.arrow}>{">"}</Text>
+                </TouchableOpacity>
+              </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
-        </TouchableOpacity>
-
-        <View style={{height: 50}} /> 
-      </ScrollView>
-
-      
-      
-      
-      <Modal visible={modalType === "INFO"} transparent animationType="fade">
-        <View style={styles.passwordModalOverlay}>
-          <View style={styles.passwordModalContainer}>
-            <Text style={styles.passwordModalTitle}>Kimlik Bilgilerini Düzenle</Text>
-            
-            <TextInput style={styles.passwordInput} placeholder="Ad Soyad" value={editName} onChangeText={setEditName} />
-            <TextInput style={styles.passwordInput} placeholder="TC Kimlik No" value={editTc} onChangeText={setEditTc} keyboardType="number-pad" maxLength={11} />
-            
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <TextInput style={[styles.passwordInput, { flex: 1 }]} placeholder="Gün" value={birthDay} onChangeText={setBirthDay} keyboardType="numeric" maxLength={2} />
-              <TextInput style={[styles.passwordInput, { flex: 1 }]} placeholder="Ay" value={birthMonth} onChangeText={setBirthMonth} keyboardType="numeric" maxLength={2} />
-              <TextInput style={[styles.passwordInput, { flex: 1.5 }]} placeholder="Yıl" value={birthYear} onChangeText={setBirthYear} keyboardType="numeric" maxLength={4} />
-            </View>
-
-            <View style={styles.passwordButtonsRow}>
-              <TouchableOpacity style={styles.passwordCancelButton} onPress={() => setModalType("NONE")}>
-                <Text style={styles.passwordButtonText}>İptal</Text>
+              <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <Text style={styles.logoutText}>Çıkış Yap</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.passwordButton} onPress={handleUpdatePersonalInfo} disabled={isSaving}>
-                {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.passwordButtonText}>Kaydet</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
+
+              <View style={{height: 100}} /> 
+            </ScrollView>
+
+            <Modal visible={modalType === "INFO"} transparent animationType="fade">
+              <View style={styles.passwordModalOverlay}>
+                <View style={styles.passwordModalContainer}>
+                  <Text style={styles.passwordModalTitle}>Kimlik Bilgilerini Düzenle</Text>
+                  
+                  <TextInput style={styles.passwordInput} placeholder="Ad Soyad" placeholderTextColor="#999" value={editName} onChangeText={setEditName} />
+                  <TextInput style={styles.passwordInput} placeholder="TC Kimlik No" placeholderTextColor="#999" value={editTc} onChangeText={setEditTc} keyboardType="number-pad" maxLength={11} />
+                  
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <TextInput style={[styles.passwordInput, { flex: 1 }]} placeholder="Gün" placeholderTextColor="#999" value={birthDay} onChangeText={setBirthDay} keyboardType="numeric" maxLength={2} />
+                    <TextInput style={[styles.passwordInput, { flex: 1 }]} placeholder="Ay" placeholderTextColor="#999" value={birthMonth} onChangeText={setBirthMonth} keyboardType="numeric" maxLength={2} />
+                    <TextInput style={[styles.passwordInput, { flex: 1.5 }]} placeholder="Yıl" placeholderTextColor="#999" value={birthYear} onChangeText={setBirthYear} keyboardType="numeric" maxLength={4} />
+                  </View>
+
+                  <View style={styles.passwordButtonsRow}>
+                    <TouchableOpacity style={styles.passwordCancelButton} onPress={() => setModalType("NONE")}>
+                      <Text style={styles.passwordButtonText}>İptal</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.passwordButton} onPress={handleUpdatePersonalInfo} disabled={isSaving}>
+                      {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.passwordButtonText}>Kaydet</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+            <Modal visible={modalType === "PHONE"} transparent animationType="fade">
+              <View style={styles.passwordModalOverlay}>
+                <View style={styles.passwordModalContainer}>
+                  <Text style={styles.passwordModalTitle}>Telefon Numarası</Text>
+                  <Text style={{fontSize: 12, color: '#CCC', marginBottom: 10}}>Numaranızı değiştirdiğinizde doğrulama SMS'i gönderilecektir.</Text>
+                  
+                  <TextInput 
+                    style={styles.passwordInput} 
+                    placeholder="5XX XXX XX XX" 
+                    placeholderTextColor="#999"
+                    value={editPhone} 
+                    onChangeText={setEditPhone} 
+                    keyboardType="phone-pad" 
+                  />
+
+                  <View style={styles.passwordButtonsRow}>
+                    <TouchableOpacity style={styles.passwordCancelButton} onPress={() => setModalType("NONE")}>
+                      <Text style={styles.passwordButtonText}>İptal</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.passwordButton} onPress={handleUpdatePhone} disabled={isSaving}>
+                        {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.passwordButtonText}>Güncelle</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+            <Modal visible={modalType === "PASSWORD"} transparent animationType="fade">
+              <View style={styles.passwordModalOverlay}>
+                <View style={styles.passwordModalContainer}>
+                  <Text style={styles.passwordModalTitle}>Şifre Değiştir</Text>
+                  <TextInput style={styles.passwordInput} placeholder="Mevcut Şifre" placeholderTextColor="#999" secureTextEntry value={passwords.current} onChangeText={(t) => setPasswords(p => ({...p, current: t}))} />
+                  <TextInput style={styles.passwordInput} placeholder="Yeni Şifre" placeholderTextColor="#999" secureTextEntry value={passwords.new} onChangeText={(t) => setPasswords(p => ({...p, new: t}))} />
+                  <TextInput style={styles.passwordInput} placeholder="Yeni Şifre (Tekrar)" placeholderTextColor="#999" secureTextEntry value={passwords.confirm} onChangeText={(t) => setPasswords(p => ({...p, confirm: t}))} />
+                  
+                  <View style={styles.passwordButtonsRow}>
+                    <TouchableOpacity style={styles.passwordCancelButton} onPress={() => setModalType("NONE")}>
+                      <Text style={styles.passwordButtonText}>İptal</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.passwordButton} onPress={handleChangePassword} disabled={isSaving}>
+                        {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.passwordButtonText}>Değiştir</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+          </KeyboardAvoidingView>
         </View>
-      </Modal>
-
-     
-      <Modal visible={modalType === "PHONE"} transparent animationType="fade">
-        <View style={styles.passwordModalOverlay}>
-          <View style={styles.passwordModalContainer}>
-            <Text style={styles.passwordModalTitle}>Telefon Numarası</Text>
-            <Text style={{fontSize: 12, color: '#666', marginBottom: 10}}>Numaranızı değiştirdiğinizde doğrulama SMS'i gönderilecektir.</Text>
-            
-            <TextInput 
-              style={styles.passwordInput} 
-              placeholder="5XX XXX XX XX" 
-              value={editPhone} 
-              onChangeText={setEditPhone} 
-              keyboardType="phone-pad" 
-            />
-
-            <View style={styles.passwordButtonsRow}>
-              <TouchableOpacity style={styles.passwordCancelButton} onPress={() => setModalType("NONE")}>
-                <Text style={styles.passwordButtonText}>İptal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.passwordButton} onPress={handleUpdatePhone} disabled={isSaving}>
-                 {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.passwordButtonText}>Güncelle</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-     
-      <Modal visible={modalType === "PASSWORD"} transparent animationType="fade">
-        <View style={styles.passwordModalOverlay}>
-          <View style={styles.passwordModalContainer}>
-            <Text style={styles.passwordModalTitle}>Şifre Değiştir</Text>
-            <TextInput style={styles.passwordInput} placeholder="Mevcut Şifre" secureTextEntry value={passwords.current} onChangeText={(t) => setPasswords(p => ({...p, current: t}))} />
-            <TextInput style={styles.passwordInput} placeholder="Yeni Şifre" secureTextEntry value={passwords.new} onChangeText={(t) => setPasswords(p => ({...p, new: t}))} />
-            <TextInput style={styles.passwordInput} placeholder="Yeni Şifre (Tekrar)" secureTextEntry value={passwords.confirm} onChangeText={(t) => setPasswords(p => ({...p, confirm: t}))} />
-            
-            <View style={styles.passwordButtonsRow}>
-              <TouchableOpacity style={styles.passwordCancelButton} onPress={() => setModalType("NONE")}>
-                <Text style={styles.passwordButtonText}>İptal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.passwordButton} onPress={handleChangePassword} disabled={isSaving}>
-                 {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.passwordButtonText}>Değiştir</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-    </KeyboardAvoidingView>
+      </ImageBackground>
+    </View>
   );
 };
 

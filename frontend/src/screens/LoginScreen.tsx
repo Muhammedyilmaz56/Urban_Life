@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -10,25 +10,29 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { BASE_URL } from "../config";
 
 import LoginStyles from "../styles/LoginStyles";
+import { AuthContext } from "../../App"; // 🔥 ÖNEMLİ: AuthContext'i App.tsx'ten alıyoruz
 
-const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
+const BG_IMAGE =
+  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const auth = useContext(AuthContext); // 🔥 App içindeki user/setUser'a erişim
+
   const handleLogin = async () => {
     if (!email || !password) {
-        Alert.alert("Uyarı", "Lütfen email ve şifrenizi giriniz.");
-        return;
+      Alert.alert("Uyarı", "Lütfen email ve şifrenizi giriniz.");
+      return;
     }
 
     setLoading(true);
@@ -45,44 +49,60 @@ export default function LoginScreen({ navigation }: any) {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      await AsyncStorage.setItem("user", JSON.stringify(meResponse.data));
-      
-      setTimeout(() => {
-          setLoading(false);
-          navigation.navigate("Home");
-      }, 500);
+      const userData = meResponse.data;
+
+      await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+      // 🔥 ASIL KRİTİK KISIM: App.tsx içindeki user state'ini güncelle
+      auth?.setUser(userData);
+      console.log("Login başarılı, kullanıcı:", userData);
+
+      setLoading(false);
+
+      // İstersen navigation.reset de ekleyebilirsin, ama gerek yok:
+      // App, user değişince otomatik Citizen/Official/EmployeeNavigator'a geçecek.
+      // navigation.reset({ index: 0, routes: [{ name: "Home" as never }] });
 
     } catch (err: any) {
       setLoading(false);
-      console.error("LOGIN ERROR:", err.message);
+      console.error("LOGIN ERROR:", err?.response?.data || err.message);
       Alert.alert("Giriş Başarısız", "Email veya şifre hatalı.");
     }
   };
 
   return (
-    <ImageBackground source={{ uri: BG_IMAGE }} style={LoginStyles.background} resizeMode="cover">
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      
-      {/* 🔥 DÜZELTME: Android için behavior undefined yapıldı */}
+    <ImageBackground
+      source={{ uri: BG_IMAGE }}
+      style={LoginStyles.background}
+      resizeMode="cover"
+    >
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+
+      {/* Android için behavior undefined */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={LoginStyles.keyboardView}
       >
-        <ScrollView 
-          contentContainerStyle={LoginStyles.scrollContainer} 
+        <ScrollView
+          contentContainerStyle={LoginStyles.scrollContainer}
           showsVerticalScrollIndicator={false}
-          bounces={false} 
+          bounces={false}
         >
           <View style={LoginStyles.overlay}>
-            
             <View style={LoginStyles.headerContainer}>
               <Text style={LoginStyles.appTitle}>CityFlow</Text>
-              <Text style={LoginStyles.appSubtitle}>Şehrin kontrolü sende.</Text>
+              <Text style={LoginStyles.appSubtitle}>
+                Şehrin kontrolü sende.
+              </Text>
             </View>
 
             <View style={LoginStyles.glassFormContainer}>
               <Text style={LoginStyles.formTitle}>Giriş Yap</Text>
-              
+
               <View style={LoginStyles.inputWrapper}>
                 <Text style={LoginStyles.inputIcon}>✉️</Text>
                 <TextInput
@@ -107,34 +127,42 @@ export default function LoginScreen({ navigation }: any) {
                   onChangeText={setPassword}
                 />
               </View>
-                
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={LoginStyles.forgotPasswordContainer}
                 onPress={() => navigation.navigate("ForgotPassword" as never)}
               >
-                  <Text style={LoginStyles.forgotPasswordText}>Şifremi unuttum?</Text>
+                <Text style={LoginStyles.forgotPasswordText}>
+                  Şifremi unuttum?
+                </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={[LoginStyles.loginButton, loading && LoginStyles.loginButtonDisabled]} 
+              <TouchableOpacity
+                style={[
+                  LoginStyles.loginButton,
+                  loading && LoginStyles.loginButtonDisabled,
+                ]}
                 onPress={handleLogin}
                 disabled={loading}
               >
                 {loading ? (
-                    <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text style={LoginStyles.loginButtonText}>GİRİŞ YAP</Text>
+                  <Text style={LoginStyles.loginButtonText}>GİRİŞ YAP</Text>
                 )}
               </TouchableOpacity>
 
               <View style={LoginStyles.registerContainer}>
-                <Text style={LoginStyles.registerText}>Hesabın yok mu? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+                <Text style={LoginStyles.registerText}>
+                  Hesabın yok mu?{" "}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("Register")}
+                >
                   <Text style={LoginStyles.registerLink}>Kayıt Ol</Text>
                 </TouchableOpacity>
               </View>
-
-            </View> 
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

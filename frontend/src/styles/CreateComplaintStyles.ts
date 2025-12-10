@@ -1,207 +1,168 @@
-import { StyleSheet, Dimensions, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 
-const { width } = Dimensions.get("window");
-
-export const styles = StyleSheet.create({
-  // Tüm ekranı kaplayan arka plan görseli
-  backgroundImage: {
-    flex: 1,
-    width: width,
-    height: '100%',
-  },
-  // Arka planı karartan katman
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)', 
-  },
-  // Ana içerik alanı
+export default StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    backgroundColor: "#121212",
   },
-  // Başlık alanı
-  headerContainer: {
-    marginBottom: 25,
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.8)",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 45,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    zIndex: 10,
+    position: "relative",
+  },
+  backButton: {
+    position: "absolute",
+    left: 20,
+    bottom: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  backButtonIcon: {
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "300",
+    marginTop: -4,
+    marginLeft: -2,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: "800",
-    color: "#fff",
+    color: "#FFFFFF",
+    letterSpacing: 1,
+    textShadowColor: "rgba(0, 0, 0, 0.9)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
+  },
+  card: {
+    backgroundColor: "rgba(35, 35, 35, 0.85)",
+    borderRadius: 20,
+    marginBottom: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#CCCCCC",
+    marginBottom: 10,
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "#ccc",
-    marginTop: 5,
-  },
-  
-  // ✨ Glassmorphism (Buzlu Cam) Kartları
-  glassCard: {
-    backgroundColor: 'rgba(40, 40, 40, 0.7)', // Yarı saydam koyu gri
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)', // İnce beyaz çerçeve
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  
-  // Satır halindeki kartlar (Switch vb. için)
-  glassCardRow: {
-    backgroundColor: 'rgba(40, 40, 40, 0.7)',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  
-  // Etiketler (Label)
-  label: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#bbb",
-    marginBottom: 8,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  labelRow: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  subLabelRow: {
-    fontSize: 13,
-    color: "#aaa",
-    marginTop: 2,
-  },
-  
-  // Input Alanları
   input: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    padding: 15,
-    fontSize: 16,
-    color: "#fff",
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 12,
+    padding: 14,
+    color: "#FFFFFF",
+    fontSize: 15,
   },
   textArea: {
     minHeight: 100,
     textAlignVertical: "top",
   },
-  
-  // Konum başlığı ve butonu arasındaki hizalama
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8
-  },
-  
-  // "Konumumu Bul" butonu
-  locateButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-  },
-  locateButtonText: {
-    color: '#4cd137',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  
-  // Harita Kutusu
   mapContainer: {
-    borderRadius: 15,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
     height: 250,
-    position: 'relative',
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginBottom: 10,
   },
   map: {
     width: "100%",
     height: "100%",
   },
-  // Haritada konum seçilmediyse çıkan uyarı
-  mapOverlayPlaceholder: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'none',
+  mapHint: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 5,
+    textAlign: "center",
   },
-  mapPlaceholderText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 10,
-    borderRadius: 8,
-  },
-  
-  // Fotoğraf Önizleme
-  previewRow: {
+  imagePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(52, 152, 219, 0.2)",
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(52, 152, 219, 0.5)",
     marginBottom: 15,
   },
+  imagePickerText: {
+    color: "#5DADE2",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  previewRow: {
+    flexDirection: "row",
+  },
   previewImage: {
-    width: 90,
-    height: 90,
+    width: 100,
+    height: 100,
     borderRadius: 12,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "#333",
   },
-  
-  // Kesikli çizgiye sahip fotoğraf ekleme butonu
-  photoButtonOutline: {
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderStyle: 'dashed',
-    padding: 15,
-    borderRadius: 12,
+  switchRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: 'center',
   },
-  photoButtonText: {
-    color: "#ddd",
+  switchLabel: {
+    fontSize: 16,
+    color: "#FFFFFF",
     fontWeight: "600",
-    fontSize: 15,
   },
-  
-  // Ana Gönder Butonu
   submitButton: {
-    backgroundColor: "#4cd137", // Neon Yeşil
-    padding: 18,
+    backgroundColor: "#6C63FF",
+    paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
-    shadowColor: "#4cd137",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 10,
+    marginTop: 10,
+    shadowColor: "#6C63FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  submitButtonDisabled: {
-    backgroundColor: '#2e8526',
-    opacity: 0.7
-  },
-  submitText: {
-    color: "#fff",
-    fontWeight: "800",
+  submitButtonText: {
+    color: "#FFFFFF",
     fontSize: 18,
-    letterSpacing: 0.5,
+    fontWeight: "800",
+    letterSpacing: 1,
   },
 });

@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   ScrollView,
-  StyleSheet,
   Alert,
   Switch,
   TouchableOpacity,
@@ -12,31 +11,28 @@ import {
   PermissionsAndroid,
   Platform,
   Linking,
+  ImageBackground,
+  StatusBar,
 } from "react-native";
 
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
 import { launchImageLibrary } from "react-native-image-picker";
-
 import { createComplaint, uploadComplaintPhotos } from "../../api/complaints";
-
 import { CreateComplaintDto } from "../../types";
+import CreateComplaintStyles from "../../styles/CreateComplaintStyles";
 
-const CreateComplaintScreen = () => {
+const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
+
+const CreateComplaintScreen = ({ navigation }: any) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("1");
-
   const [pickedLocation, setPickedLocation] = useState<any>(null);
-
- 
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
-
   const [isAnonymous, setIsAnonymous] = useState(false);
-
   const mapRef = useRef<MapView | null>(null);
-  const hasCenteredOnUser = useRef(false); 
+  const hasCenteredOnUser = useRef(false);
 
-  
   useEffect(() => {
     (async () => {
       if (Platform.OS === "android") {
@@ -45,10 +41,9 @@ const CreateComplaintScreen = () => {
         );
 
         if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-          
           Alert.alert(
             "Konum izni gerekli",
-            "Haritada bulunduğun yere otomatik gitmek için konum izni vermen ve telefonu konum açık kullanman gerekiyor.",
+            "Haritada bulunduğun yere otomatik gitmek için konum izni vermen gerekiyor.",
             [
               { text: "Vazgeç", style: "cancel" },
               {
@@ -64,44 +59,34 @@ const CreateComplaintScreen = () => {
     })();
   }, []);
 
-  
   const handleMapPress = (e: MapPressEvent) => {
     const coord = e.nativeEvent.coordinate;
     setPickedLocation(coord);
   };
 
- 
   const handleUserLocationChange = (e: any) => {
     const coord = e.nativeEvent.coordinate;
     if (!coord) return;
 
-    console.log("Canlı konum:", coord);
-
-   
     if (!hasCenteredOnUser.current) {
       hasCenteredOnUser.current = true;
-
       const region: Region = {
         latitude: coord.latitude,
         longitude: coord.longitude,
-        latitudeDelta: 0.0009,
-        longitudeDelta: 0.0009,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
       };
-
       mapRef.current?.animateToRegion(region, 800);
-
-     
       setPickedLocation(coord);
     }
   };
 
- 
   const pickImage = async () => {
     try {
       const result: any = await launchImageLibrary({
         mediaType: "photo",
         quality: 1,
-        selectionLimit: 0, 
+        selectionLimit: 0,
       });
 
       if (!result || result.didCancel) {
@@ -109,22 +94,19 @@ const CreateComplaintScreen = () => {
       }
 
       if (result.assets && result.assets.length > 0) {
-        
         setSelectedImages((prev) => [...prev, ...result.assets]);
       }
     } catch (error) {
-      console.log("Image pick error:", error);
       Alert.alert("Hata", "Fotoğraf seçerken bir hata oluştu.");
     }
   };
 
-  
   const handleSubmit = async () => {
     if (!title.trim()) return Alert.alert("Hata", "Başlık zorunludur.");
     if (!description.trim()) return Alert.alert("Hata", "Açıklama zorunludur.");
     if (!pickedLocation)
       return Alert.alert("Hata", "Haritadan konum seçmelisiniz.");
-  
+
     const payload: CreateComplaintDto = {
       title,
       description,
@@ -133,18 +115,18 @@ const CreateComplaintScreen = () => {
       longitude: pickedLocation.longitude,
       is_anonymous: isAnonymous,
     };
-  
+
     try {
-      
       const res = await createComplaint(payload);
-  
-      
+
       if (selectedImages.length > 0) {
         await uploadComplaintPhotos(res.id, selectedImages);
       }
-  
-      Alert.alert("Başarılı", `Şikayet oluşturuldu (ID: ${res.id})`);
-  
+
+      Alert.alert("Başarılı", "Şikayetiniz oluşturuldu!", [
+        { text: "Tamam", onPress: () => navigation.goBack() }
+      ]);
+
       setTitle("");
       setDescription("");
       setCategoryId("1");
@@ -152,14 +134,13 @@ const CreateComplaintScreen = () => {
       setSelectedImages([]);
       setIsAnonymous(false);
     } catch (err: any) {
-      console.log("Şikayet oluşturma hatası:", err?.response?.data || err);
       Alert.alert(
         "Hata",
         err?.response?.data?.detail || "Şikayet oluşturulamadı"
       );
     }
   };
-  
+
   const initialRegion: Region = {
     latitude: 41.01,
     longitude: 28.97,
@@ -168,183 +149,110 @@ const CreateComplaintScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.header}>Yeni Şikayet</Text>
+    <View style={CreateComplaintStyles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ImageBackground
+        source={{ uri: BG_IMAGE }}
+        style={CreateComplaintStyles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={CreateComplaintStyles.overlay}>
+          <View style={CreateComplaintStyles.header}>
+            <TouchableOpacity
+              style={CreateComplaintStyles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={CreateComplaintStyles.backButtonIcon}>‹</Text>
+            </TouchableOpacity>
+            <Text style={CreateComplaintStyles.headerTitle}>Yeni Şikayet</Text>
+          </View>
 
-      {/* BAŞLIK */}
-      <View style={styles.card}>
-        <Text style={styles.label}>Başlık</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Örn: Sokak lambası yanmıyor"
-          value={title}
-          onChangeText={setTitle}
-        />
-      </View>
-
-      {/* AÇIKLAMA */}
-      <View style={styles.card}>
-        <Text style={styles.label}>Açıklama</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Şikayetinizi detaylı açıklayın..."
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-      </View>
-
-      {/* KATEGORİ */}
-      <View style={styles.card}>
-        <Text style={styles.label}>Kategori (geçici)</Text>
-        <TextInput
-          style={styles.input}
-          value={categoryId}
-          onChangeText={setCategoryId}
-          keyboardType="numeric"
-        />
-      </View>
-
-      {/* HARİTA */}
-      <View style={styles.card}>
-        <Text style={styles.label}>Konum Seç (Haritaya Dokunun)</Text>
-
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={initialRegion}
-          onPress={handleMapPress}
-          showsUserLocation={true}
-          showsMyLocationButton={true}
-          onUserLocationChange={handleUserLocationChange} 
-        >
-          {pickedLocation && <Marker coordinate={pickedLocation} />}
-        </MapView>
-      </View>
-
-      
-      <View style={styles.card}>
-        <Text style={styles.label}>Fotoğraflar (İstediğin kadar)</Text>
-
-        <TouchableOpacity style={styles.button} onPress={pickImage}>
-          <Text style={styles.buttonText}>Fotoğraf Ekle</Text>
-        </TouchableOpacity>
-
-        {selectedImages.length > 0 && (
           <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.previewRow}
+            contentContainerStyle={CreateComplaintStyles.contentContainer}
+            showsVerticalScrollIndicator={false}
           >
-            {selectedImages.map((img, index) => (
-              <Image
-                key={img.uri || index}
-                source={{ uri: img.uri }}
-                style={styles.preview}
+            <View style={CreateComplaintStyles.card}>
+              <Text style={CreateComplaintStyles.label}>Başlık</Text>
+              <TextInput
+                style={CreateComplaintStyles.input}
+                placeholder="Örn: Çukur var"
+                placeholderTextColor="#999"
+                value={title}
+                onChangeText={setTitle}
               />
-            ))}
+            </View>
+
+            <View style={CreateComplaintStyles.card}>
+              <Text style={CreateComplaintStyles.label}>Açıklama</Text>
+              <TextInput
+                style={[CreateComplaintStyles.input, CreateComplaintStyles.textArea]}
+                placeholder="Detaylı açıklama yazınız..."
+                placeholderTextColor="#999"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+              />
+            </View>
+
+            <View style={CreateComplaintStyles.card}>
+              <Text style={CreateComplaintStyles.label}>Konum</Text>
+              <View style={CreateComplaintStyles.mapContainer}>
+                <MapView
+                  ref={mapRef}
+                  style={CreateComplaintStyles.map}
+                  initialRegion={initialRegion}
+                  onPress={handleMapPress}
+                  showsUserLocation={true}
+                  showsMyLocationButton={true}
+                  onUserLocationChange={handleUserLocationChange}
+                >
+                  {pickedLocation && <Marker coordinate={pickedLocation} />}
+                </MapView>
+              </View>
+              <Text style={CreateComplaintStyles.mapHint}>
+                {pickedLocation ? "Konum seçildi" : "Konum seçmek için haritaya dokunun"}
+              </Text>
+            </View>
+
+            <View style={CreateComplaintStyles.card}>
+              <Text style={CreateComplaintStyles.label}>Fotoğraflar</Text>
+              <TouchableOpacity style={CreateComplaintStyles.imagePickerButton} onPress={pickImage}>
+                <Text style={CreateComplaintStyles.imagePickerText}>+ Fotoğraf Ekle</Text>
+              </TouchableOpacity>
+
+              {selectedImages.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={CreateComplaintStyles.previewRow}>
+                  {selectedImages.map((img, index) => (
+                    <Image
+                      key={img.uri || index}
+                      source={{ uri: img.uri }}
+                      style={CreateComplaintStyles.previewImage}
+                    />
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
+            <View style={CreateComplaintStyles.card}>
+              <View style={CreateComplaintStyles.switchRow}>
+                <Text style={CreateComplaintStyles.switchLabel}>İsmim Gizlensin</Text>
+                <Switch
+                  value={isAnonymous}
+                  onValueChange={setIsAnonymous}
+                  trackColor={{ false: "#767577", true: "#6C63FF" }}
+                  thumbColor={isAnonymous ? "#fff" : "#f4f3f4"}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity style={CreateComplaintStyles.submitButton} onPress={handleSubmit}>
+              <Text style={CreateComplaintStyles.submitButtonText}>ŞİKAYETİ GÖNDER</Text>
+            </TouchableOpacity>
           </ScrollView>
-        )}
-      </View>
-
-
-      <View style={styles.cardRow}>
-        <Text style={styles.label}>İsmim gizlensin</Text>
-        <Switch value={isAnonymous} onValueChange={setIsAnonymous} />
-      </View>
-
- 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Şikayet Oluştur</Text>
-      </TouchableOpacity>
-
-      <View style={{ height: 50 }} />
-    </ScrollView>
+        </View>
+      </ImageBackground>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 14,
-    backgroundColor: "#f6f6f6",
-  },
-  header: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 10,
-    marginLeft: 4,
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 12,
-    elevation: 2,
-  },
-  cardRow: {
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    elevation: 2,
-  },
-  label: {
-    fontWeight: "bold",
-    marginBottom: 6,
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: "#fafafa",
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  map: {
-    width: "100%",
-    height: 250,
-    borderRadius: 12,
-    marginTop: 10,
-  },
-  button: {
-    backgroundColor: "#007bff",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  previewRow: {
-    marginTop: 10,
-  },
-  preview: {
-    width: 120,
-    height: 120,
-    borderRadius: 10,
-    marginRight: 8,
-  },
-  submitButton: {
-    backgroundColor: "#28a745",
-    padding: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 4,
-  },
-  submitText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 17,
-  },
-});
 
 export default CreateComplaintScreen;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,8 @@ import {
   Alert,
   Image,
   ScrollView,
-  ImageBackground, // Eklendi
-  StatusBar,       // Eklendi
+  ImageBackground,
+  StatusBar,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import MapView, { Marker } from "react-native-maps";
@@ -34,19 +34,30 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [expandedIds, setExpandedIds] = useState<number[]>([]);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
+
   const loadComplaints = async () => {
     try {
       const data = await getMyComplaints();
       setComplaints(data);
     } catch (err: any) {
-      console.log("GET_MY_COMPLAINTS_ERROR:", err?.response?.data || err.message);
+      console.log(
+        "GET_MY_COMPLAINTS_ERROR:",
+        err?.response?.data || err.message
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useEffect(() => { loadComplaints(); }, []);
+  useEffect(() => {
+    loadComplaints();
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -55,21 +66,27 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderStatus = (status: Complaint["status"]) => {
     switch (status) {
-      case "pending": return "Beklemede";
-      case "in_progress": return "İşlemde";
-      case "resolved": return "Çözüldü";
-      default: return status;
+      case "pending":
+        return "Beklemede";
+      case "in_progress":
+        return "İşlemde";
+      case "resolved":
+        return "Çözüldü";
+      default:
+        return status;
     }
   };
 
   const toggleExpand = (id: number) => {
-    setExpandedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setExpandedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
   const handleDeleteComplaint = (id: number) => {
     Alert.alert(
-      "Şikayeti Sil",
-      "Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
+      "Şikayeti sil",
+      "Bu şikayeti kalıcı olarak silmek istediğine emin misin?",
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -79,7 +96,13 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
             try {
               await deleteComplaint(id);
               setComplaints((prev) => prev.filter((c) => c.id !== id));
-            } catch (err) { Alert.alert("Hata", "Silme işlemi başarısız."); }
+            } catch (err: any) {
+              console.log(
+                "DELETE_COMPLAINT_ERROR:",
+                err?.response?.data || err
+              );
+              Alert.alert("Hata", "Şikayet silinirken bir hata oluştu.");
+            }
           },
         },
       ]
@@ -87,25 +110,38 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleDeletePhoto = (complaintId: number, photoId: number) => {
-    Alert.alert("Fotoğrafı Sil", "Bu fotoğraf silinsin mi?", [
-      { text: "Vazgeç", style: "cancel" },
-      {
-        text: "Sil",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteComplaintPhoto(photoId);
-            setComplaints((prev) =>
-              prev.map((c) =>
-                c.id === complaintId
-                  ? { ...c, photos: c.photos?.filter((p) => p.id !== photoId) || [] }
-                  : c
-              )
-            );
-          } catch (err) { Alert.alert("Hata", "Fotoğraf silinemedi."); }
+    Alert.alert(
+      "Fotoğrafı sil",
+      "Bu fotoğrafı silmek istediğine emin misin?",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteComplaintPhoto(photoId);
+              setComplaints((prev) =>
+                prev.map((c) =>
+                  c.id === complaintId
+                    ? {
+                        ...c,
+                        photos: c.photos?.filter((p) => p.id !== photoId) || [],
+                      }
+                    : c
+                )
+              );
+            } catch (err: any) {
+              console.log(
+                "DELETE_PHOTO_ERROR:",
+                err?.response?.data || err
+              );
+              Alert.alert("Hata", "Fotoğraf silinirken bir hata oluştu.");
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const renderItem = ({ item }: { item: Complaint }) => {
@@ -113,19 +149,19 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
       <View style={MyComplaintsStyles.card}>
-        
-        
         <View style={MyComplaintsStyles.cardHeader}>
           <View style={{ flex: 1 }}>
             <Text style={MyComplaintsStyles.title}>
-              {item.title || "Başlıksız Şikayet"}
+              {item.title || "Başlıksız şikayet"}
             </Text>
             <Text
               style={[
                 MyComplaintsStyles.statusBadge,
                 item.status === "pending" && MyComplaintsStyles.statusPending,
-                item.status === "in_progress" && MyComplaintsStyles.statusInProgress,
-                item.status === "resolved" && MyComplaintsStyles.statusResolved,
+                item.status === "in_progress" &&
+                  MyComplaintsStyles.statusInProgress,
+                item.status === "resolved" &&
+                  MyComplaintsStyles.statusResolved,
               ]}
             >
               {renderStatus(item.status)}
@@ -133,7 +169,6 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        
         <Text
           style={MyComplaintsStyles.description}
           numberOfLines={expanded ? undefined : 2}
@@ -141,34 +176,40 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
           {item.description}
         </Text>
 
-        
         <View style={MyComplaintsStyles.cardFooter}>
           <Text style={MyComplaintsStyles.dateText}>
-            {new Date(item.created_at).toLocaleDateString("tr-TR", { day: 'numeric', month: 'long', year:'numeric' })}
+            {new Date(item.created_at).toLocaleString()}
           </Text>
           <Text style={MyComplaintsStyles.supportText}>
             👍 {item.support_count ?? 0}
           </Text>
         </View>
 
-       
         {expanded && (
           <View style={MyComplaintsStyles.detailsContainer}>
-            
-            
             {item.photos && item.photos.length > 0 && (
               <View style={MyComplaintsStyles.photosContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {item.photos.map((p) => {
-                    const fullUrl = p.photo_url.startsWith("http") ? p.photo_url : `${BASE_URL}${p.photo_url}`;
+                    const rawUrl = p.photo_url;
+                    const fullUrl = rawUrl.startsWith("http")
+                      ? rawUrl
+                      : `${BASE_URL}${rawUrl}`;
                     return (
                       <View key={p.id} style={MyComplaintsStyles.photoWrapper}>
-                        <Image source={{ uri: fullUrl }} style={MyComplaintsStyles.detailImage} />
+                        <Image
+                          source={{ uri: fullUrl }}
+                          style={MyComplaintsStyles.detailImage}
+                        />
                         <TouchableOpacity
                           style={MyComplaintsStyles.photoDeleteButton}
-                          onPress={() => handleDeletePhoto(item.id, p.id)}
+                          onPress={() =>
+                            handleDeletePhoto(item.id, p.id)
+                          }
                         >
-                          <Text style={MyComplaintsStyles.photoDeleteText}>SİL</Text>
+                          <Text style={MyComplaintsStyles.photoDeleteText}>
+                            SİL
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     );
@@ -177,35 +218,39 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             )}
 
-            
-            {typeof (item as any).latitude === "number" && typeof (item as any).longitude === "number" && (
-              <View style={MyComplaintsStyles.mapContainer}>
-                <MapView
-                  style={MyComplaintsStyles.map}
-                  scrollEnabled={false}
-                  initialRegion={{
-                    latitude: (item as any).latitude,
-                    longitude: (item as any).longitude,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005,
-                  }}
-                >
-                  <Marker coordinate={{ latitude: (item as any).latitude, longitude: (item as any).longitude }} />
-                </MapView>
-              </View>
-            )}
+            {typeof (item as any).latitude === "number" &&
+              typeof (item as any).longitude === "number" && (
+                <View style={MyComplaintsStyles.mapContainer}>
+                  <MapView
+                    style={MyComplaintsStyles.map}
+                    scrollEnabled={false}
+                    initialRegion={{
+                      latitude: (item as any).latitude,
+                      longitude: (item as any).longitude,
+                      latitudeDelta: 0.005,
+                      longitudeDelta: 0.005,
+                    }}
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: (item as any).latitude,
+                        longitude: (item as any).longitude,
+                      }}
+                    />
+                  </MapView>
+                </View>
+              )}
 
-           
             <TouchableOpacity
               style={MyComplaintsStyles.deleteButton}
               onPress={() => handleDeleteComplaint(item.id)}
             >
-              <Text style={MyComplaintsStyles.deleteButtonText}>🗑️ Şikayeti Sil</Text>
+              <Text style={MyComplaintsStyles.deleteButtonText}>
+                🗑️ Şikayeti Sil
+              </Text>
             </TouchableOpacity>
-
           </View>
         )}
-
         
         <TouchableOpacity 
           style={MyComplaintsStyles.expandButtonContainer} 
@@ -216,7 +261,6 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={MyComplaintsStyles.expandText}>
                 {expanded ? "Gizle" : "Detaylar"}
               </Text>
-              
            </View>
         </TouchableOpacity>
 
@@ -227,14 +271,12 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={MyComplaintsStyles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
       <ImageBackground
         source={{ uri: BG_IMAGE }}
         style={MyComplaintsStyles.backgroundImage}
         resizeMode="cover"
       >
         <View style={MyComplaintsStyles.overlay}>
-          
           
           <View style={MyComplaintsStyles.header}>
             <TouchableOpacity 
@@ -246,27 +288,31 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={MyComplaintsStyles.headerTitle}>Şikayetlerim</Text>
           </View>
 
-         
           {loading ? (
             <View style={MyComplaintsStyles.loadingContainer}>
               <ActivityIndicator size="large" color="#6C63FF" />
-              <Text style={MyComplaintsStyles.loadingText}>Yükleniyor...</Text>
+              <Text style={MyComplaintsStyles.loadingText}>
+                Yükleniyor...
+              </Text>
             </View>
           ) : (
              <FlatList
               data={complaints}
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderItem}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
+              }
               contentContainerStyle={MyComplaintsStyles.listContent}
               ListEmptyComponent={
                 <View style={MyComplaintsStyles.emptyContainer}>
-                  <Text style={MyComplaintsStyles.emptyText}>Henüz bir şikayetiniz yok.</Text>
+                  <Text style={MyComplaintsStyles.emptyText}>
+                    Henüz bir şikayetiniz yok.
+                  </Text>
                 </View>
               }
             />
           )}
-
         </View>
       </ImageBackground>
     </View>

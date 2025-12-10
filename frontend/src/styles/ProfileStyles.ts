@@ -1,241 +1,233 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 
 export default StyleSheet.create({
-  
   container: {
     flex: 1,
-    backgroundColor: "#F2F4F8", 
+    backgroundColor: "#121212",
   },
-  
-  center: {
+  backgroundImage: {
     flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.8)",
+  },
+  header: {
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 45,
+    paddingBottom: 20,
+    zIndex: 10,
+    position: "relative",
+  },
+  backButton: {
+    position: "absolute",
+    left: 20,
+    top: Platform.OS === "ios" ? 60 : 45,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.1)",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F2F4F8",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    zIndex: 20,
   },
-
-  
-  header: {
-    paddingVertical: 30,
-    alignItems: "center",
-    backgroundColor: "white",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    marginBottom: 20,
+  backButtonIcon: {
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "300",
+    marginTop: -4,
+    marginLeft: -2,
   },
-
   avatarWrap: {
-    width: 100,
-    height: 100,
+    width: 110,
+    height: 110,
     marginBottom: 15,
     position: "relative",
   },
-
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#E1E4E8",
-    borderWidth: 3,
-    borderColor: "white",
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.5)",
   },
-
   avatarEditButton: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#3498db",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    backgroundColor: "#6C63FF",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "white",
+    borderColor: "#121212",
   },
-
   avatarEditText: {
     color: "white",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     marginTop: -2,
   },
-
   name: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1F2937", 
+    color: "#FFFFFF",
     marginBottom: 4,
-  },
-
-  email: {
-    fontSize: 15,
-    color: "#6B7280", 
-  },
-
-  
-  section: {
-    backgroundColor: "white",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 16,
-    padding: 16,
-   
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#9CA3AF", 
-    textTransform: "uppercase",
-    marginBottom: 12,
     letterSpacing: 0.5,
   },
-
-
+  email: {
+    fontSize: 14,
+    color: "#CCCCCC",
+  },
+  section: {
+    backgroundColor: "rgba(35, 35, 35, 0.85)",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#888",
+    textTransform: "uppercase",
+    marginBottom: 15,
+    letterSpacing: 1,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: "rgba(255,255,255,0.1)",
   },
-
-  rowBetween: { 
+  rowBetween: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
   },
-
- 
   label: {
     fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 2,
+    color: "#AAAAAA",
+    marginBottom: 4,
   },
-
   value: {
     fontSize: 16,
-    color: "#111827",
+    color: "#FFFFFF",
     fontWeight: "500",
   },
-
   actionText: {
     fontSize: 14,
-    color: "#3498db", 
+    color: "#6C63FF",
     fontWeight: "600",
   },
-
   arrow: {
     fontSize: 18,
-    color: "#9CA3AF",
+    color: "#666",
     fontWeight: "bold",
   },
-
- 
   logoutButton: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    backgroundColor: "#FEE2E2", 
+    marginHorizontal: 20,
+    marginTop: 10,
+    backgroundColor: "rgba(220, 38, 38, 0.2)",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: "rgba(220, 38, 38, 0.5)",
   },
-
   logoutText: {
-    color: "#DC2626", 
+    color: "#FF5252",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    letterSpacing: 1,
   },
-
-
   passwordModalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)", 
+    backgroundColor: "rgba(0,0,0,0.85)",
     justifyContent: "center",
     alignItems: "center",
   },
-
   passwordModalContainer: {
-    width: "90%",
-    backgroundColor: "white",
-    borderRadius: 20,
+    width: "85%",
+    backgroundColor: "#1E1E1E",
+    borderRadius: 24,
     padding: 24,
-   
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
     elevation: 10,
   },
-
   passwordModalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#FFFFFF",
     marginBottom: 20,
     textAlign: "center",
   },
-
   passwordInput: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "rgba(0,0,0,0.3)",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 10,
+    borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
-    marginBottom: 12,
-    color: "#374151",
+    marginBottom: 15,
+    color: "#FFFFFF",
   },
-
   passwordButtonsRow: {
     flexDirection: "row",
-    justifyContent: "space-between", 
-    marginTop: 20,
-    gap: 12, 
+    justifyContent: "space-between",
+    marginTop: 10,
+    gap: 12,
   },
-
   passwordCancelButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.1)",
     alignItems: "center",
   },
-
   passwordButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: "#3498db",
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "#6C63FF",
     alignItems: "center",
-    
-    shadowColor: "#3498db",
+    shadowColor: "#6C63FF",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
     elevation: 4,
   },
-
   passwordButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1F2937", 
+    color: "#FFFFFF",
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#121212",
   },
 });
