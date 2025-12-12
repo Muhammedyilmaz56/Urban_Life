@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 const OfficialHomeStyles = StyleSheet.create({
   container: {
@@ -7,6 +7,7 @@ const OfficialHomeStyles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingTop: 10,
   },
   loadingContainer: {
     flex: 1,
@@ -40,6 +41,7 @@ const OfficialHomeStyles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: "row",
@@ -64,7 +66,6 @@ const OfficialHomeStyles = StyleSheet.create({
     fontWeight: "500",
     color: "#111827",
   },
-  // Duruma göre renkler
   status_pending: {
     backgroundColor: "#FEF3C7",
   },
@@ -107,6 +108,67 @@ const OfficialHomeStyles = StyleSheet.create({
   supportText: {
     fontSize: 12,
     color: "#6B7280",
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 15,
+    paddingBottom: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    zIndex: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 20,
+  },
+  menuContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 90 : 65,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: 180,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 10,
+    zIndex: 25,
+  },
+  menuItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    marginHorizontal: 10,
   },
 });
 

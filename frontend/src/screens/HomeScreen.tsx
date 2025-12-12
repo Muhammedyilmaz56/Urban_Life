@@ -11,13 +11,16 @@ import {
   ScrollView,
   ImageBackground,
   StatusBar,
+  Modal,
+  Linking,
+  Dimensions,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import MapView, { Marker } from "react-native-maps";
 
 import { getFeed, toggleSupport } from "../api/complaints";
 import { Complaint } from "../types";
-import HomeScreenStyles from "../styles/HomeStyles"; 
+import HomeScreenStyles from "../styles/HomeStyles";
 import { getCurrentUser } from "../api/user";
 import { BASE_URL } from "../config";
 
@@ -43,6 +46,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [user, setUser] = useState<any>(null);
   const [avatarError, setAvatarError] = useState(false);
   const [expandedIds, setExpandedIds] = useState<number[]>([]);
+  
+  const [fullImageVisible, setFullImageVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const toggleProfileMenu = () => setProfileMenuVisible((prev) => !prev);
   const closeProfileMenu = () => setProfileMenuVisible(false);
@@ -119,7 +125,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <View style={HomeScreenStyles.card}>
         <View style={HomeScreenStyles.cardHeader}>
-         
+          
           <Text style={HomeScreenStyles.cardTitle} numberOfLines={2}>
             {item.title ? item.title : "Şikayet"}
           </Text>
@@ -137,9 +143,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {!expanded && (
-           <Text style={HomeScreenStyles.cardDescription} numberOfLines={3}>
-             {item.description}
-           </Text>
+            <Text style={HomeScreenStyles.cardDescription} numberOfLines={3}>
+              {item.description}
+            </Text>
         )}
 
         <View style={HomeScreenStyles.cardFooter}>
@@ -171,12 +177,19 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   {item.photos.map((p) => {
                     const fullUrl = p.photo_url.startsWith("http") ? p.photo_url : `${BASE_URL}${p.photo_url}`;
                     return (
-                      <Image
-                        key={p.id}
-                        source={{ uri: fullUrl }}
-                        style={HomeScreenStyles.detailImage}
-                        resizeMode="cover"
-                      />
+                      <TouchableOpacity 
+                        key={p.id} 
+                        onPress={() => {
+                            setSelectedImage(fullUrl);
+                            setFullImageVisible(true);
+                        }}
+                      >
+                          <Image
+                            source={{ uri: fullUrl }}
+                            style={HomeScreenStyles.detailImage}
+                            resizeMode="cover"
+                          />
+                      </TouchableOpacity>
                     );
                   })}
                 </ScrollView>
@@ -202,6 +215,34 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     }}
                   />
                 </MapView>
+                
+                <TouchableOpacity 
+                    style={{
+                        position: 'absolute',
+                        bottom: 10,
+                        right: 10,
+                        backgroundColor: 'rgba(108, 99, 255, 0.9)',
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: 20,
+                        zIndex: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 5,
+                    }}
+                    onPress={() => {
+                        const lat = (item as any).latitude;
+                        const lon = (item as any).longitude;
+                        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+                        Linking.openURL(url);
+                    }}
+                >
+                    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 12}}>📍 Haritada Aç</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -216,7 +257,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={HomeScreenStyles.expandText}>
                 {expanded ? "Gizle" : "Detayları Göster"}
               </Text>
-             
            </View>
         </TouchableOpacity>
       </View>
@@ -238,16 +278,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       >
         <View style={HomeScreenStyles.overlay}>
 
-         
           <View style={HomeScreenStyles.header}>
-            
-            
             <TouchableOpacity 
               style={HomeScreenStyles.glassButton} 
               onPress={toggleProfileMenu} 
               activeOpacity={0.7}
             >
-             
               <Text style={HomeScreenStyles.glassButtonIcon}>‹</Text> 
             </TouchableOpacity>
 
@@ -309,6 +345,31 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         </View>
       </ImageBackground>
+
+      <Modal
+        visible={fullImageVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setFullImageVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }}>
+            <TouchableOpacity 
+                style={{ position: 'absolute', top: 40, right: 20, zIndex: 10, padding: 10 }}
+                onPress={() => setFullImageVisible(false)}
+            >
+                <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>✕</Text>
+            </TouchableOpacity>
+            
+            {selectedImage && (
+                <Image
+                    source={{ uri: selectedImage }}
+                    style={{ width: Dimensions.get('window').width, height: Dimensions.get('window').height * 0.8 }}
+                    resizeMode="contain"
+                />
+            )}
+        </View>
+      </Modal>
+
     </View>
   );
 };

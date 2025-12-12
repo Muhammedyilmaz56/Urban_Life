@@ -2,10 +2,10 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import HomeScreen from "../src/screens/HomeScreen";
-import CreateComplaintScreen from "../src/screens/complaints/CreateComplaintScreen";
-import MyComplaintsScreen from "../src/screens/complaints/MyComplaintsScreen";
-import ProfileScreen from "../src/screens/ProfileScreen";
+import HomeScreen from "../screens/HomeScreen";
+import CreateComplaintScreen from "../screens/complaints/CreateComplaintScreen";
+import MyComplaintsScreen from "../screens/complaints/MyComplaintsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 

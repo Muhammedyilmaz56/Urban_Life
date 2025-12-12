@@ -2,7 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 
-import EmployeeHomeScreen from "../src/screens/EmployeeHomeScreen";
+import EmployeeHomeScreen from "../screens/EmployeeHomeScreen";
 
 const Stack = createNativeStackNavigator();
 

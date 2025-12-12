@@ -1,9 +1,10 @@
-
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import OfficialHomeScreen from "../src/screens/OfficialHomeScreen";
-import OfficialComplaintDetailScreen from "../src/screens/OfficialComplaintDetailScreen";
+
+import OfficialHomeScreen from "../screens/OfficialHomeScreen";
+import OfficialComplaintDetailScreen from "../screens/OfficialComplaintDetailScreen";
+import OfficialProfileScreen from "../screens/OfficialProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,11 @@ export default function OfficialNavigator() {
         name="OfficialComplaintDetail"
         component={OfficialComplaintDetailScreen}
         options={{ title: "Şikayet Detayı" }}
+      />
+      <Stack.Screen 
+        name="OfficialProfile" 
+        component={OfficialProfileScreen} 
+        options={{ headerShown: false }} 
       />
     </Stack.Navigator>
   );

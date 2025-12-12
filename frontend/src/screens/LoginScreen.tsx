@@ -17,7 +17,7 @@ import axios from "axios";
 import { BASE_URL } from "../config";
 
 import LoginStyles from "../styles/LoginStyles";
-import { AuthContext } from "../../App"; // 🔥 ÖNEMLİ: AuthContext'i App.tsx'ten alıyoruz
+import { AuthContext } from "../../App"; 
 
 const BG_IMAGE =
   "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
@@ -27,7 +27,7 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const auth = useContext(AuthContext); // 🔥 App içindeki user/setUser'a erişim
+  const auth = useContext(AuthContext); 
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -53,15 +53,13 @@ export default function LoginScreen({ navigation }: any) {
 
       await AsyncStorage.setItem("user", JSON.stringify(userData));
 
-      // 🔥 ASIL KRİTİK KISIM: App.tsx içindeki user state'ini güncelle
+
       auth?.setUser(userData);
       console.log("Login başarılı, kullanıcı:", userData);
 
       setLoading(false);
 
-      // İstersen navigation.reset de ekleyebilirsin, ama gerek yok:
-      // App, user değişince otomatik Citizen/Official/EmployeeNavigator'a geçecek.
-      // navigation.reset({ index: 0, routes: [{ name: "Home" as never }] });
+ 
 
     } catch (err: any) {
       setLoading(false);
@@ -82,7 +80,6 @@ export default function LoginScreen({ navigation }: any) {
         backgroundColor="transparent"
       />
 
-      {/* Android için behavior undefined */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={LoginStyles.keyboardView}
