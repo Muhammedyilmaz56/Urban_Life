@@ -17,7 +17,8 @@ from app.models import (
     assignment_model,
     notification_model,
     complaint_support_model,
-    complaint_rating_model
+    complaint_rating_model,
+    worker,
 )
 
 

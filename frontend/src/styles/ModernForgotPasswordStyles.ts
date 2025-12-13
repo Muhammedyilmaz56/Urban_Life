@@ -15,7 +15,7 @@ export const ModernForgotPasswordStyles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingBottom: 50, // 🔥 DÜZELTME: Ekranı aşağı uzattık
+    paddingBottom: 50, // DÜZELTME: Ekranı aşağı uzattık
   },
   overlay: {
     flex: 1,
@@ -122,7 +122,7 @@ export const ModernForgotPasswordStyles = StyleSheet.create({
 
   backButton: {
     marginTop: 20,
-    marginBottom: 10, // 🔥 DÜZELTME: Altına boşluk eklendi
+    marginBottom: 10, //  DÜZELTME: Altına boşluk eklendi
     alignItems: 'center',
     padding: 10, // Tıklama alanını genişlettik
   },
@@ -147,7 +147,7 @@ export const ModernForgotPasswordStyles = StyleSheet.create({
     borderWidth: 1, // İnce bir çerçeve ekleyerek daha belirgin yapalım
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  // 🔥 GÜNCELLENMİŞ İKON STİLİ:
+  //  GÜNCELLENMİŞ İKON STİLİ:
   backButtonIcon: {
     color: '#fff',
     fontSize: 32, // İkonu büyüttük

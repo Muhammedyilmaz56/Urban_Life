@@ -15,7 +15,7 @@ export const RegisterStyles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingBottom: 50, // 🔥 DÜZELTME: Alttan boşluk bıraktık ki buton yapışmasın
+    paddingBottom: 50, 
   },
   overlay: {
     flex: 1,
@@ -118,7 +118,7 @@ export const RegisterStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 28,
-    marginBottom: 10, // 🔥 DÜZELTME: Altına biraz daha pay verildi
+    marginBottom: 10, 
   },
   loginLinkText: {
     color: 'rgba(255,255,255,0.7)',
@@ -133,25 +133,25 @@ export const RegisterStyles = StyleSheet.create({
   },
   backButtonAbsolute: {
     position: 'absolute',
-    top: 50, // Çentik (Notch) payı
+    top: 50, 
     left: 20,
     zIndex: 10,
-    // Biraz daha koyu ve şeffaf bir arka plan
+    
     backgroundColor: 'rgba(0,0,0,0.4)', 
-    width: 45, // Biraz daha büyük bir daire
+    width: 45, 
     height: 45,
-    borderRadius: 25, // Tam daire olması için
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1, // İnce bir çerçeve ekleyerek daha belirgin yapalım
+    borderWidth: 1, 
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  // 🔥 GÜNCELLENMİŞ İKON STİLİ:
+ 
   backButtonIcon: {
     color: '#fff',
-    fontSize: 32, // İkonu büyüttük
-    fontWeight: '300', // Daha ince ve modern bir görünüm için
-    marginTop: -4, // Dikeyde tam ortalamak için küçük bir ayar
-    marginLeft: -2, // Yatayda tam ortalamak için küçük bir ayar
+    fontSize: 32,
+    fontWeight: '300',
+    marginTop: -4, 
+    marginLeft: -2,
   }
 });

@@ -17,9 +17,9 @@ import {
 
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
 import { launchImageLibrary } from "react-native-image-picker";
-import { createComplaint, uploadComplaintPhotos } from "../../api/complaints";
-import { CreateComplaintDto } from "../../types";
-import CreateComplaintStyles from "../../styles/CreateComplaintStyles";
+import { createComplaint, uploadComplaintPhotos } from "../../../api/complaints";
+import { CreateComplaintDto } from "../../../types";
+import CreateComplaintStyles from "../../../styles/CreateComplaintStyles";
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 

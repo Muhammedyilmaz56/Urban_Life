@@ -13,11 +13,12 @@ from app.routes.complaint_routes import router as complaint_router
 from fastapi.staticfiles import StaticFiles
 from app.routes import user_routes
 from app.routes import official_routes
-
+from app.models.worker import Worker
+from app.routes.worker_router import router as worker_router
 app = FastAPI(title="Urbanlife API")
 
 app.include_router(official_routes.router)
-
+app.include_router(worker_router)
 app.include_router(auth_routes.router)
 app.include_router(complaint_routes.router)
 app.include_router(assignment_routes.router)

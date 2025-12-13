@@ -19,9 +19,9 @@ import {
   assignComplaintToEmployee,
   OfficialComplaint,
   EmployeeUser,
-} from "../api/official";
-import styles from "../styles/OfficialComplaintDetailStyles";
-import { BASE_URL } from "../config";
+} from "../../api/official";
+import styles from "../../styles/OfficialComplaintDetailStyles";
+import { BASE_URL } from "../../config";
 import MapView, { Marker } from "react-native-maps";
 
 type DetailRouteParams = {
@@ -181,7 +181,7 @@ export default function OfficialComplaintDetailScreen() {
             <>
               <Text style={styles.sectionTitle}>Konum</Text>
 
-              {/* Küçük harita */}
+              
               <View style={styles.mapContainer}>
                 <MapView
                   style={styles.map}

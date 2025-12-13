@@ -100,7 +100,7 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
     color: "#111827",
   },
 
-  // Modal
+  
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

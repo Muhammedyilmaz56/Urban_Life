@@ -14,17 +14,17 @@ import {
   ImageBackground,
   StatusBar,
 } from "react-native";
-import styles from "../styles/ProfileStyles"; 
+import styles from "../../styles/ProfileStyles"; 
 import {
   getCurrentUser,
   changePassword,
   updateProfile,
   uploadAvatar,
-} from "../api/user";
+} from "../../api/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { launchImageLibrary } from "react-native-image-picker";
-import { BASE_URL } from "../config";
+import { BASE_URL } from "../../config";
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop"; 
 
@@ -49,7 +49,7 @@ const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
           ? avatar_url
           : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
       }
-    : require("../../assets/default-avatar.png");
+    : require("../../../assets/default-avatar.png");
 
 const OfficialProfileScreen = () => {
   const navigation = useNavigation<any>();
@@ -195,7 +195,7 @@ const OfficialProfileScreen = () => {
                 </View>
                 <Text style={styles.name}>{user.full_name || user.name}</Text>
                 <Text style={styles.email}>{user.email}</Text>
-                {/* Personel Rolü Gösterimi (Opsiyonel) */}
+                
                 <Text style={{color: '#ccc', fontSize: 12, marginTop: 4}}>{user.role === 'admin' ? 'Yönetici' : 'Belediye Personeli'}</Text>
               </View>
 
@@ -234,7 +234,8 @@ const OfficialProfileScreen = () => {
               <View style={{ height: 100 }} />
             </ScrollView>
 
-            {/* INFO MODAL (Ad ve Telefon için tek modal) */}
+            
+
             <Modal visible={modalType === "INFO"} transparent animationType="fade">
               <View style={styles.passwordModalOverlay}>
                 <View style={styles.passwordModalContainer}>
@@ -271,7 +272,7 @@ const OfficialProfileScreen = () => {
               </View>
             </Modal>
 
-            {/* PASSWORD MODAL */}
+           
             <Modal visible={modalType === "PASSWORD"} transparent animationType="fade">
               <View style={styles.passwordModalOverlay}>
                 <View style={styles.passwordModalContainer}>

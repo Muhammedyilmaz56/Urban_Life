@@ -13,7 +13,7 @@ from app.schemas.complaint_schema import (
     ComplaintSupportOut,
 )
 from app.schemas.category_schema import CategoryCreate, CategoryUpdate, CategoryOut
-
+from app.models.worker import Worker
 router = APIRouter(prefix="/official", tags=["Official / Manager"])
 
 @router.get("/complaints", response_model=List[ComplaintOut])
@@ -111,6 +111,10 @@ def create_category(
     db: Session = Depends(get_db),
     current_user: User = Depends(role_required([UserRole.official, UserRole.admin])),
 ):
+    exists = db.query(Category).filter(Category.name == data.name).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="Bu kategori zaten var.")
+
     new_category = Category(**data.dict())
     db.add(new_category)
     db.commit()
@@ -124,17 +128,27 @@ def update_category(
     current_user: User = Depends(role_required([UserRole.official, UserRole.admin])),
 ):
     category = db.query(Category).filter(Category.id == category_id).first()
-
     if not category:
         raise HTTPException(status_code=404, detail="Kategori bulunamadı.")
 
-    for key, value in data.dict(exclude_unset=True).items():
+    payload = data.dict(exclude_unset=True)
+
+    if "name" in payload and payload["name"]:
+        exists = (
+            db.query(Category)
+            .filter(Category.name == payload["name"], Category.id != category_id)
+            .first()
+        )
+        if exists:
+            raise HTTPException(status_code=400, detail="Bu isimde başka kategori var.")
+
+    for key, value in payload.items():
         setattr(category, key, value)
 
     db.commit()
     db.refresh(category)
-
     return category
+
 @router.delete("/categories/{category_id}", status_code=204)
 def delete_category(
     category_id: int,
@@ -142,10 +156,17 @@ def delete_category(
     current_user: User = Depends(role_required([UserRole.official, UserRole.admin])),
 ):
     category = db.query(Category).filter(Category.id == category_id).first()
-
     if not category:
         raise HTTPException(status_code=404, detail="Kategori bulunamadı.")
 
+    linked = db.query(Worker).filter(Worker.category_id == category_id).count()
+    if linked > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Bu kategoriye bağlı işçi var. Önce işçileri başka kategoriye taşı veya sil."
+        )
+
     db.delete(category)
     db.commit()
+    return None
 

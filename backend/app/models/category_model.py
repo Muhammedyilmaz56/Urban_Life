@@ -13,3 +13,4 @@ class Category(Base):
 
     
     complaints = relationship("Complaint", back_populates="category")
+    workers = relationship("Worker", back_populates="category")

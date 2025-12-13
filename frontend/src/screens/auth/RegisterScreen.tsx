@@ -13,8 +13,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
-import { BASE_URL } from "../config";
-import { RegisterStyles as styles } from "../styles/RegisterStyles";
+import { BASE_URL } from "../../config";
+import { RegisterStyles as styles } from "../../styles/RegisterStyles";
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2000&auto=format&fit=crop";
 

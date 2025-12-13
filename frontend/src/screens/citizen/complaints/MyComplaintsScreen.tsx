@@ -19,10 +19,10 @@ import {
   getMyComplaints,
   deleteComplaint,
   deleteComplaintPhoto,
-} from "../../api/complaints";
-import { Complaint } from "../../types";
-import MyComplaintsStyles from "../../styles/MyComplaintsStyles";
-import { BASE_URL } from "../../config";
+} from "../../../api/complaints";
+import { Complaint } from "../../../types";
+import MyComplaintsStyles from "../../../styles/MyComplaintsStyles";
+import { BASE_URL } from "../../../config";
 
 type Props = NativeStackScreenProps<any, "MyComplaints">;
 

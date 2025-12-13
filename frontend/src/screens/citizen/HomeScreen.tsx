@@ -18,11 +18,11 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import MapView, { Marker } from "react-native-maps";
 
-import { getFeed, toggleSupport } from "../api/complaints";
-import { Complaint } from "../types";
-import HomeScreenStyles from "../styles/HomeStyles";
-import { getCurrentUser } from "../api/user";
-import { BASE_URL } from "../config";
+import { getFeed, toggleSupport } from "../../api/complaints";
+import { Complaint } from "../../types";
+import HomeScreenStyles from "../../styles/HomeStyles";
+import { getCurrentUser } from "../../api/user";
+import { BASE_URL } from "../../config";
 
 type Props = NativeStackScreenProps<any, "Home">;
 
@@ -35,7 +35,7 @@ const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
           ? avatar_url
           : `${BASE_URL}${avatar_url}?cacheBust=${Date.now()}`,
       }
-    : require("../../assets/default-avatar.png");
+    : require("../../../assets/default-avatar.png");
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -264,7 +264,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const avatarSource = !user?.avatar_url || avatarError
-    ? require("../../assets/default-avatar.png")
+    ? require("../../../assets/default-avatar.png")
     : { uri: user.avatar_url.startsWith("http") ? user.avatar_url : `${BASE_URL}${user.avatar_url}?cacheBust=${Date.now()}` };
 
   return (

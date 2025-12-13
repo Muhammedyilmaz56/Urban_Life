@@ -14,10 +14,10 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { BASE_URL } from "../config";
+import { BASE_URL } from "../../config";
 
-import LoginStyles from "../styles/LoginStyles";
-import { AuthContext } from "../../App"; 
+import LoginStyles from "../../styles/LoginStyles";
+import { AuthContext } from "../../../App"; 
 
 const BG_IMAGE =
   "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";

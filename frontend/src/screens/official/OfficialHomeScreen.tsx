@@ -10,10 +10,10 @@ import {
   StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { fetchOfficialComplaints, OfficialComplaint } from "../api/official";
-import { getCurrentUser } from "../api/user";
-import { BASE_URL } from "../config";
-import styles from "../styles/OfficialHomeStyles";
+import { fetchOfficialComplaints, OfficialComplaint } from "../../api/official";
+import { getCurrentUser } from "../../api/user";
+import { BASE_URL } from "../../config";
+import styles from "../../styles/OfficialHomeStyles";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -47,13 +47,13 @@ const resolveAvatar = (avatar_url?: string | null) =>
           ? avatar_url
           : `${BASE_URL}${avatar_url}?cacheBust=${Date.now()}`,
       }
-    : require("../../assets/default-avatar.png");
+    : require("../../../assets/default-avatar.png");
 
 const OfficialHomeScreen = () => {
   const [complaints, setComplaints] = useState<OfficialComplaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   const [menuVisible, setMenuVisible] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [avatarError, setAvatarError] = useState(false);
@@ -98,7 +98,7 @@ const OfficialHomeScreen = () => {
 
   const goToProfile = () => {
     closeMenu();
-    navigation.navigate("OfficialProfile"); 
+    navigation.navigate("OfficialProfile");
   };
 
   const goToAnnouncements = () => {
@@ -153,29 +153,71 @@ const OfficialHomeScreen = () => {
     );
   };
 
-  const avatarSource = !user?.avatar_url || avatarError
-    ? require("../../assets/default-avatar.png")
-    : resolveAvatar(user.avatar_url);
+  const avatarSource =
+    !user?.avatar_url || avatarError
+      ? require("../../../assets/default-avatar.png")
+      : resolveAvatar(user.avatar_url);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
+
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>Personel Paneli</Text>
         <TouchableOpacity onPress={toggleMenu} activeOpacity={0.8}>
-           <Image 
-             source={avatarSource} 
-             style={styles.avatar}
-             onError={() => setAvatarError(true)}
-           />
+          <Image
+            source={avatarSource}
+            style={styles.avatar}
+            onError={() => setAvatarError(true)}
+          />
+        </TouchableOpacity>
+      </View>
+
+      
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 10,
+          paddingHorizontal: 16,
+          marginTop: 10,
+          marginBottom: 6,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Categories")}
+          style={{
+            flex: 1,
+            paddingVertical: 12,
+            borderRadius: 14,
+            backgroundColor: "#1a1a1a",
+            borderWidth: 1,
+            borderColor: "#2a2a2a",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "800" }}>Kategoriler</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Workers")}
+          style={{
+            flex: 1,
+            paddingVertical: 12,
+            borderRadius: 14,
+            backgroundColor: "#1a1a1a",
+            borderWidth: 1,
+            borderColor: "#2a2a2a",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "800" }}>İşçiler</Text>
         </TouchableOpacity>
       </View>
 
       {menuVisible && (
-        <TouchableOpacity 
-          style={styles.menuOverlay} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
           onPress={closeMenu}
         >
           <View style={styles.menuContainer}>

@@ -14,10 +14,10 @@ import {
 } from "react-native";
 import axios from "axios";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { BASE_URL } from "../config";
+import { BASE_URL } from "../../config";
 
 
-import { ModernResetPasswordStyles as styles } from "../styles/ModernResetPasswordStyles";
+import { ModernResetPasswordStyles as styles } from "../../styles/ModernResetPasswordStyles";
 
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";

@@ -15,17 +15,17 @@ import {
   ImageBackground,
   StatusBar,
 } from "react-native";
-import styles from "../styles/ProfileStyles"; 
+import styles from "../../styles/ProfileStyles"; 
 import {
   getCurrentUser,
   changePassword,
   updateProfile,
   uploadAvatar,
-} from "../api/user";
+} from "../../api/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { launchImageLibrary } from "react-native-image-picker";
-import { BASE_URL } from "../config";
+import { BASE_URL } from "../../config";
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
@@ -50,7 +50,7 @@ const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
           ? avatar_url
           : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
       }
-    : require("../../assets/default-avatar.png");
+    : require("../../../assets/default-avatar.png");
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();

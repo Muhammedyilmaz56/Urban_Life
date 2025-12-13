@@ -4,7 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import secrets
-
+from typing import Iterable, Union
 from app.services.auth_service import register_user, login_user
 from app.schemas.user_schema import UserCreate, UserLogin, UserResponse
 from app.models.user_model import User, UserRole
@@ -56,15 +56,21 @@ def get_current_user(
 
 
 
+def role_required(required_roles: Union[UserRole, Iterable[UserRole]]):
+   
+    if isinstance(required_roles, UserRole):
+        required_roles = [required_roles]
+    else:
+        required_roles = list(required_roles)
 
-def role_required(required_roles: list[UserRole]):
-    def wrapper(current_user: User = Depends(get_current_user)):
+    def wrapper(current_user=Depends(get_current_user)):
         if current_user.role not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bu işlem için yetkiniz yok"
+                detail="Bu işlem için yetkiniz yok."
             )
         return current_user
+
     return wrapper
 
 

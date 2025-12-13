@@ -14,8 +14,8 @@ import {
 } from "react-native";
 import axios from "axios";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { BASE_URL } from "../config";
-import { ModernForgotPasswordStyles as styles } from "../styles/ModernForgotPasswordStyles";
+import { BASE_URL } from "../../config";
+import { ModernForgotPasswordStyles as styles } from "../../styles/ModernForgotPasswordStyles";
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2000&auto=format&fit=crop";
 

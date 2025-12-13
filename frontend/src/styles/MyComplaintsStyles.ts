@@ -193,12 +193,12 @@ export default StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   
-  // FOTO SİL BUTONU
+
   photoDeleteButton: {
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "rgba(220, 38, 38, 0.9)", // Koyu Kırmızı
+    backgroundColor: "rgba(220, 38, 38, 0.9)", 
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
@@ -211,7 +211,6 @@ export default StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // HARİTA
   mapContainer: {
     height: 180,
     borderRadius: 16,
@@ -225,12 +224,12 @@ export default StyleSheet.create({
     height: "100%",
   },
 
-  // SİLME BUTONU (ŞİKAYET)
+
   deleteButton: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(220, 38, 38, 0.15)", // Şeffaf Kırmızı Arka Plan
+    backgroundColor: "rgba(220, 38, 38, 0.15)", 
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
@@ -238,14 +237,14 @@ export default StyleSheet.create({
     marginBottom: 10,
   },
   deleteButtonText: {
-    color: "#EF4444", // Parlak Kırmızı Yazı
+    color: "#EF4444", 
     fontSize: 14,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
 
-  // AÇ/KAPA BUTONU
+ 
   expandButtonContainer: {
     alignItems: "center",
     paddingTop: 5,
@@ -271,7 +270,7 @@ export default StyleSheet.create({
     marginTop: -2,
   },
 
-  // YÜKLENİYOR / BOŞ
+
   loadingContainer: { marginTop: 100, alignItems: "center" },
   loadingText: { color: "#AAA", marginTop: 10 },
   emptyContainer: { alignItems: "center", marginTop: 150 },
