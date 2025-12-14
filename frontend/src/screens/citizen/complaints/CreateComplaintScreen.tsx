@@ -13,6 +13,9 @@ import {
   Linking,
   ImageBackground,
   StatusBar,
+  Modal,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
 
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
@@ -20,8 +23,12 @@ import { launchImageLibrary } from "react-native-image-picker";
 import { createComplaint, uploadComplaintPhotos } from "../../../api/complaints";
 import { CreateComplaintDto } from "../../../types";
 import CreateComplaintStyles from "../../../styles/CreateComplaintStyles";
+import { fetchCategories } from "../../../api/categories";
 
-const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
+const BG_IMAGE =
+  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
+
+type Category = { id: number; name: string };
 
 const CreateComplaintScreen = ({ navigation }: any) => {
   const [title, setTitle] = useState("");
@@ -30,8 +37,36 @@ const CreateComplaintScreen = ({ navigation }: any) => {
   const [pickedLocation, setPickedLocation] = useState<any>(null);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [isAnonymous, setIsAnonymous] = useState(false);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+
   const mapRef = useRef<MapView | null>(null);
   const hasCenteredOnUser = useRef(false);
+
+  const selectedCategory = categories.find(
+    (c) => String(c.id) === String(categoryId)
+  );
+
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const data = await fetchCategories();
+      setCategories(data);
+      if (data.length > 0 && (!categoryId || categoryId === "1")) {
+        setCategoryId(String(data[0].id));
+      }
+    } catch (e: any) {
+      Alert.alert("Hata", e?.response?.data?.detail || "Kategoriler alınamadı.");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -124,7 +159,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
       }
 
       Alert.alert("Başarılı", "Şikayetiniz oluşturuldu!", [
-        { text: "Tamam", onPress: () => navigation.goBack() }
+        { text: "Tamam", onPress: () => navigation.goBack() },
       ]);
 
       setTitle("");
@@ -134,10 +169,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
       setSelectedImages([]);
       setIsAnonymous(false);
     } catch (err: any) {
-      Alert.alert(
-        "Hata",
-        err?.response?.data?.detail || "Şikayet oluşturulamadı"
-      );
+      Alert.alert("Hata", err?.response?.data?.detail || "Şikayet oluşturulamadı");
     }
   };
 
@@ -150,7 +182,11 @@ const CreateComplaintScreen = ({ navigation }: any) => {
 
   return (
     <View style={CreateComplaintStyles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
       <ImageBackground
         source={{ uri: BG_IMAGE }}
         style={CreateComplaintStyles.backgroundImage}
@@ -185,13 +221,32 @@ const CreateComplaintScreen = ({ navigation }: any) => {
             <View style={CreateComplaintStyles.card}>
               <Text style={CreateComplaintStyles.label}>Açıklama</Text>
               <TextInput
-                style={[CreateComplaintStyles.input, CreateComplaintStyles.textArea]}
+                style={[
+                  CreateComplaintStyles.input,
+                  CreateComplaintStyles.textArea,
+                ]}
                 placeholder="Detaylı açıklama yazınız..."
                 placeholderTextColor="#999"
                 value={description}
                 onChangeText={setDescription}
                 multiline
               />
+            </View>
+
+            <View style={CreateComplaintStyles.card}>
+              <Text style={CreateComplaintStyles.label}>Kategori</Text>
+
+              <TouchableOpacity
+                style={CreateComplaintStyles.selectButton}
+                onPress={() => setCategoryModalVisible(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={CreateComplaintStyles.selectButtonText}>
+                  {selectedCategory?.name ||
+                    (categoriesLoading ? "Yükleniyor..." : "Kategori seç")}
+                </Text>
+                <Text style={CreateComplaintStyles.selectChevron}>›</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={CreateComplaintStyles.card}>
@@ -210,18 +265,29 @@ const CreateComplaintScreen = ({ navigation }: any) => {
                 </MapView>
               </View>
               <Text style={CreateComplaintStyles.mapHint}>
-                {pickedLocation ? "Konum seçildi" : "Konum seçmek için haritaya dokunun"}
+                {pickedLocation
+                  ? "Konum seçildi"
+                  : "Konum seçmek için haritaya dokunun"}
               </Text>
             </View>
 
             <View style={CreateComplaintStyles.card}>
               <Text style={CreateComplaintStyles.label}>Fotoğraflar</Text>
-              <TouchableOpacity style={CreateComplaintStyles.imagePickerButton} onPress={pickImage}>
-                <Text style={CreateComplaintStyles.imagePickerText}>+ Fotoğraf Ekle</Text>
+              <TouchableOpacity
+                style={CreateComplaintStyles.imagePickerButton}
+                onPress={pickImage}
+              >
+                <Text style={CreateComplaintStyles.imagePickerText}>
+                  + Fotoğraf Ekle
+                </Text>
               </TouchableOpacity>
 
               {selectedImages.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={CreateComplaintStyles.previewRow}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={CreateComplaintStyles.previewRow}
+                >
                   {selectedImages.map((img, index) => (
                     <Image
                       key={img.uri || index}
@@ -235,7 +301,9 @@ const CreateComplaintScreen = ({ navigation }: any) => {
 
             <View style={CreateComplaintStyles.card}>
               <View style={CreateComplaintStyles.switchRow}>
-                <Text style={CreateComplaintStyles.switchLabel}>İsmim Gizlensin</Text>
+                <Text style={CreateComplaintStyles.switchLabel}>
+                  İsmim Gizlensin
+                </Text>
                 <Switch
                   value={isAnonymous}
                   onValueChange={setIsAnonymous}
@@ -245,11 +313,81 @@ const CreateComplaintScreen = ({ navigation }: any) => {
               </View>
             </View>
 
-            <TouchableOpacity style={CreateComplaintStyles.submitButton} onPress={handleSubmit}>
-              <Text style={CreateComplaintStyles.submitButtonText}>ŞİKAYETİ GÖNDER</Text>
+            <TouchableOpacity
+              style={CreateComplaintStyles.submitButton}
+              onPress={handleSubmit}
+            >
+              <Text style={CreateComplaintStyles.submitButtonText}>
+                ŞİKAYETİ GÖNDER
+              </Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
+
+        <Modal
+          visible={categoryModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCategoryModalVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setCategoryModalVisible(false)}
+            style={CreateComplaintStyles.modalOverlay}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => {}}
+              style={CreateComplaintStyles.modalCard}
+            >
+              <Text style={CreateComplaintStyles.modalTitle}>Kategori Seç</Text>
+
+              {categoriesLoading ? (
+                <View style={CreateComplaintStyles.modalLoading}>
+                  <ActivityIndicator />
+                  <Text style={CreateComplaintStyles.modalLoadingText}>
+                    Kategoriler yükleniyor...
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={categories}
+                  keyExtractor={(it) => String(it.id)}
+                  style={CreateComplaintStyles.modalList}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        CreateComplaintStyles.modalItem,
+                        String(item.id) === String(categoryId) &&
+                          CreateComplaintStyles.modalItemSelected,
+                      ]}
+                      onPress={() => {
+                        setCategoryId(String(item.id));
+                        setCategoryModalVisible(false);
+                      }}
+                    >
+                      <Text style={CreateComplaintStyles.modalItemText}>
+                        {item.name}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  ListEmptyComponent={
+                    <Text style={CreateComplaintStyles.modalEmpty}>
+                      Kategori bulunamadı.
+                    </Text>
+                  }
+                />
+              )}
+
+              <TouchableOpacity
+                style={CreateComplaintStyles.modalCloseBtn}
+                onPress={() => setCategoryModalVisible(false)}
+              >
+                <Text style={CreateComplaintStyles.modalCloseText}>Kapat</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </ImageBackground>
     </View>
   );

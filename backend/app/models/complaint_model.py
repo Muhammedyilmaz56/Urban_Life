@@ -11,7 +11,9 @@ photos = relationship("ComplaintPhoto", back_populates="complaint")
 class ComplaintStatus(enum.Enum):
     pending = "pending"
     in_progress = "in_progress"
+    assigned = "assigned"
     resolved = "resolved"
+    rejected = "rejected"
     
 
 

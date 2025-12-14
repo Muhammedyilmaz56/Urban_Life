@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchOfficialComplaints, OfficialComplaint } from "../../api/official";
 import { getCurrentUser } from "../../api/user";
 import { BASE_URL } from "../../config";
 import styles from "../../styles/OfficialHomeStyles";
+import { AuthContext } from "../../../App";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -59,14 +62,13 @@ const OfficialHomeScreen = () => {
   const [avatarError, setAvatarError] = useState(false);
 
   const navigation = useNavigation<any>();
+  const auth = useContext(AuthContext);
 
   const loadUser = async () => {
     try {
       const userData = await getCurrentUser();
       setUser(userData);
-    } catch (error) {
-      console.log("User load error:", error);
-    }
+    } catch (error) {}
   };
 
   const loadComplaints = async () => {
@@ -74,9 +76,7 @@ const OfficialHomeScreen = () => {
       setLoading(true);
       const data = await fetchOfficialComplaints();
       setComplaints(data);
-    } catch (error) {
-      console.log("Official complaints fetch error:", error);
-    } finally {
+    } catch (error) {} finally {
       setLoading(false);
     }
   };
@@ -104,6 +104,35 @@ const OfficialHomeScreen = () => {
   const goToAnnouncements = () => {
     closeMenu();
     navigation.navigate("OfficialAnnouncements");
+  };
+
+  const goToCategories = () => {
+    closeMenu();
+    navigation.navigate("Categories");
+  };
+
+  const goToWorkers = () => {
+    closeMenu();
+    navigation.navigate("Workers");
+  };
+
+  const handleLogout = () => {
+    closeMenu();
+
+    Alert.alert("Çıkış", "Çıkış yapmak istiyor musun?", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Çıkış Yap",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("token");
+          } catch (e) {}
+
+          auth?.setUser(null);
+        },
+      },
+    ]);
   };
 
   const renderItem = ({ item }: { item: OfficialComplaint }) => {
@@ -173,47 +202,6 @@ const OfficialHomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 10,
-          paddingHorizontal: 16,
-          marginTop: 10,
-          marginBottom: 6,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Categories")}
-          style={{
-            flex: 1,
-            paddingVertical: 12,
-            borderRadius: 14,
-            backgroundColor: "#1a1a1a",
-            borderWidth: 1,
-            borderColor: "#2a2a2a",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "white", fontWeight: "800" }}>Kategoriler</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Workers")}
-          style={{
-            flex: 1,
-            paddingVertical: 12,
-            borderRadius: 14,
-            backgroundColor: "#1a1a1a",
-            borderWidth: 1,
-            borderColor: "#2a2a2a",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "white", fontWeight: "800" }}>İşçiler</Text>
-        </TouchableOpacity>
-      </View>
-
       {menuVisible && (
         <TouchableOpacity
           style={styles.menuOverlay}
@@ -224,9 +212,31 @@ const OfficialHomeScreen = () => {
             <TouchableOpacity style={styles.menuItem} onPress={goToProfile}>
               <Text style={styles.menuItemText}>👤 Profilim</Text>
             </TouchableOpacity>
+
             <View style={styles.divider} />
+
             <TouchableOpacity style={styles.menuItem} onPress={goToAnnouncements}>
               <Text style={styles.menuItemText}>📢 Duyurular</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity style={styles.menuItem} onPress={goToCategories}>
+              <Text style={styles.menuItemText}>🏷️ Kategoriler</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity style={styles.menuItem} onPress={goToWorkers}>
+              <Text style={styles.menuItemText}>👷 İşçiler</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+              <Text style={[styles.menuItemText, { color: "#ff4d4d" }]}>
+                🚪 Çıkış
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

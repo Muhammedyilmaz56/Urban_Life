@@ -242,6 +242,11 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
   },
+ 
+  
+ 
+  
+
   
 });
 

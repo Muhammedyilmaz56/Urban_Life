@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../config";
@@ -18,16 +17,16 @@ export interface OfficialComplaint {
   };
   photos?: { id: number; url: string }[];
   resolution_photos?: { id: number; url: string }[];
-
-  
   latitude?: number;
   longitude?: number;
 }
 
-export interface EmployeeUser {
+export interface Worker {
   id: number;
-  name: string;
-  email: string;
+  user_id: number;
+  full_name: string;
+  is_active: boolean;
+  category_id: number;
 }
 
 const getAuthHeaders = async () => {
@@ -66,10 +65,9 @@ export const rejectComplaint = async (id: number, reason: string) => {
   return res.data;
 };
 
-
-export const fetchEmployees = async (): Promise<EmployeeUser[]> => {
+export const fetchWorkers = async (): Promise<Worker[]> => {
   const headers = await getAuthHeaders();
-  const res = await axios.get(`${BASE_URL}/official/employees`, { headers });
+  const res = await axios.get(`${BASE_URL}/workers`, { headers });
   return res.data;
 };
 

@@ -1,38 +1,35 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse 
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.routes import complaint_routes
 from app.routes import auth_routes
 from app.routes import assignment_routes
-
-from app.utils.db import get_db 
-from app.models.base import Base
-from app.utils.db import engine 
-from app.routes.user_routes import router as user_router
-from app.routes.complaint_routes import router as complaint_router
-from fastapi.staticfiles import StaticFiles
 from app.routes import user_routes
 from app.routes import official_routes
-from app.models.worker import Worker
 from app.routes.worker_router import router as worker_router
+from app.routes.category_routes import router as category_router
+
+from app.utils.db import get_db, engine
+from app.models.base import Base
+from app.models.worker import Worker
+
 app = FastAPI(title="Urbanlife API")
 
+
+app.include_router(category_router)
 app.include_router(official_routes.router)
 app.include_router(worker_router)
 app.include_router(auth_routes.router)
 app.include_router(complaint_routes.router)
 app.include_router(assignment_routes.router)
-app.include_router(user_router)
-app.include_router(complaint_router)
-app.mount("/media", StaticFiles(directory="media"), name="media")
 app.include_router(user_routes.router)
+
+# Statik dosyalar
+app.mount("/media", StaticFiles(directory="media"), name="media")
+
 @app.get("/auth/open-app", response_class=HTMLResponse)
 def open_mobile_app_bridge(token: str):
-    """
-    Bu endpoint, mailden gelen kullanıcıyı karşılar ve
-    CityFlow mobil uygulamasını açması için yönlendirir.
-    """
-    
     deep_link = f"cityflow://reset-password/{token}"
     
     html_content = f"""
@@ -53,7 +50,6 @@ def open_mobile_app_bridge(token: str):
         <a href="{deep_link}" class="btn">Uygulamayı Aç</a>
         
         <script>
-            // Sayfa yüklenir yüklenmez uygulamayı açmaya zorla
             window.onload = function() {{
                 window.location.href = "{deep_link}";
             }};
@@ -62,8 +58,6 @@ def open_mobile_app_bridge(token: str):
     </html>
     """
     return HTMLResponse(content=html_content)
-
-
 
 @app.get("/")
 def root():

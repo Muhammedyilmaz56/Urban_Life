@@ -165,4 +165,90 @@ export default StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1,
   },
+  selectButton: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  selectButtonText: {
+    color: "white",
+    fontWeight: "800",
+    flex: 1,
+    paddingRight: 10,
+  },
+  selectChevron: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: "rgba(15,15,15,0.98)",
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  modalTitle: {
+    color: "white",
+    fontWeight: "900",
+    fontSize: 16,
+  },
+  modalLoading: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  modalLoadingText: {
+    marginTop: 8,
+    color: "rgba(255,255,255,0.7)",
+  },
+  modalList: {
+    marginTop: 10,
+    maxHeight: 360,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    marginBottom: 10,
+  },
+  modalItemSelected: {
+    borderColor: "rgba(255,255,255,0.35)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  modalItemText: {
+    color: "white",
+    fontWeight: "800",
+  },
+  modalEmpty: {
+    color: "rgba(255,255,255,0.7)",
+    paddingVertical: 12,
+  },
+  modalCloseBtn: {
+    marginTop: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  modalCloseText: {
+    color: "white",
+    fontWeight: "900",
+  },
+  
 });

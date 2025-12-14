@@ -15,10 +15,10 @@ import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import {
   fetchOfficialComplaintDetail,
   rejectComplaint,
-  fetchEmployees,
+  fetchWorkers,
   assignComplaintToEmployee,
   OfficialComplaint,
-  EmployeeUser,
+  Worker,
 } from "../../api/official";
 import styles from "../../styles/OfficialComplaintDetailStyles";
 import { BASE_URL } from "../../config";
@@ -38,15 +38,12 @@ const statusLabelMap: Record<string, string> = {
   rejected: "Reddedildi",
 };
 
-const resolvePhotoUrl = (url: string) =>
-  url.startsWith("http") ? url : `${BASE_URL}${url}`;
-
 export default function OfficialComplaintDetailScreen() {
-  
   const [fullImageVisible, setFullImageVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const route = useRoute<RouteProp<DetailRouteParams, "OfficialComplaintDetail">>();
+  const route =
+    useRoute<RouteProp<DetailRouteParams, "OfficialComplaintDetail">>();
   const navigation = useNavigation<any>();
 
   const complaintId = route.params?.complaintId;
@@ -58,33 +55,29 @@ export default function OfficialComplaintDetailScreen() {
   const [rejectReason, setRejectReason] = useState("");
 
   const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [employees, setEmployees] = useState<EmployeeUser[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeUser | null>(
-    null
-  );
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+
   const [actionLoading, setActionLoading] = useState(false);
 
   const loadComplaint = async () => {
     try {
       setLoading(true);
       const data = await fetchOfficialComplaintDetail(complaintId);
-      console.log("COMPLAINT DETAIL:", data);
       setComplaint(data);
     } catch (error) {
-      console.log("Complaint detail error:", error);
       Alert.alert("Hata", "Şikayet detayı yüklenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadEmployees = async () => {
+  const loadWorkers = async () => {
     try {
-      const list = await fetchEmployees();
-      setEmployees(list);
+      const list = await fetchWorkers();
+      setWorkers(list.filter((w) => w.is_active));
     } catch (error) {
-      console.log("Employees fetch error:", error);
-      Alert.alert("Hata", "Çalışan listesi alınamadı.");
+      Alert.alert("Hata", "İşçi listesi alınamadı.");
     }
   };
 
@@ -110,7 +103,6 @@ export default function OfficialComplaintDetailScreen() {
       setRejectReason("");
       Alert.alert("Başarılı", "Şikayet reddedildi.");
     } catch (error) {
-      console.log("Reject error:", error);
       Alert.alert("Hata", "Şikayet reddedilirken bir hata oluştu.");
     } finally {
       setActionLoading(false);
@@ -118,27 +110,27 @@ export default function OfficialComplaintDetailScreen() {
   };
 
   const openAssignModal = async () => {
-    await loadEmployees();
+    setSelectedWorker(null);
+    await loadWorkers();
     setAssignModalVisible(true);
   };
 
   const handleAssign = async () => {
-    if (!selectedEmployee) {
-      Alert.alert("Uyarı", "Lütfen bir çalışan seçin.");
+    if (!selectedWorker) {
+      Alert.alert("Uyarı", "Lütfen bir işçi seçin.");
       return;
     }
     try {
       setActionLoading(true);
       const updated = await assignComplaintToEmployee(
         complaintId,
-        selectedEmployee.id
+        selectedWorker.user_id
       );
       setComplaint(updated);
       setAssignModalVisible(false);
-      setSelectedEmployee(null);
-      Alert.alert("Başarılı", "Şikayet çalışana atandı.");
+      setSelectedWorker(null);
+      Alert.alert("Başarılı", "Şikayet işçiye atandı.");
     } catch (error) {
-      console.log("Assign error:", error);
       Alert.alert("Hata", "Şikayet atanırken bir hata oluştu.");
     } finally {
       setActionLoading(false);
@@ -181,7 +173,6 @@ export default function OfficialComplaintDetailScreen() {
             <>
               <Text style={styles.sectionTitle}>Konum</Text>
 
-              
               <View style={styles.mapContainer}>
                 <MapView
                   style={styles.map}
@@ -227,8 +218,7 @@ export default function OfficialComplaintDetailScreen() {
         )}
 
         <Text style={styles.metaText}>
-          Oluşturulma:{" "}
-          {new Date(complaint.created_at).toLocaleString("tr-TR")}
+          Oluşturulma: {new Date(complaint.created_at).toLocaleString("tr-TR")}
         </Text>
 
         {typeof complaint.support_count === "number" && (
@@ -247,9 +237,10 @@ export default function OfficialComplaintDetailScreen() {
               contentContainerStyle={{ paddingRight: 20 }}
             >
               {complaint.photos.map((p: any) => {
-                const fullUrl = p.photo_url.startsWith("http")
-                  ? p.photo_url
-                  : `${BASE_URL}${p.photo_url}`;
+                const rawUrl = p.photo_url || p.url;
+                const fullUrl = rawUrl?.startsWith("http")
+                  ? rawUrl
+                  : `${BASE_URL}${rawUrl}`;
 
                 return (
                   <TouchableOpacity
@@ -283,17 +274,26 @@ export default function OfficialComplaintDetailScreen() {
                 contentContainerStyle={{ paddingRight: 20 }}
               >
                 {complaint.resolution_photos.map((p: any) => {
-                  const fullUrl = p.photo_url.startsWith("http")
-                    ? p.photo_url
-                    : `${BASE_URL}${p.photo_url}`;
+                  const rawUrl = p.photo_url || p.url;
+                  const fullUrl = rawUrl?.startsWith("http")
+                    ? rawUrl
+                    : `${BASE_URL}${rawUrl}`;
 
                   return (
-                    <Image
+                    <TouchableOpacity
                       key={p.id}
-                      source={{ uri: fullUrl }}
-                      style={styles.photo}
-                      resizeMode="cover"
-                    />
+                      onPress={() => {
+                        setSelectedImage(fullUrl);
+                        setFullImageVisible(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Image
+                        source={{ uri: fullUrl }}
+                        style={styles.photo}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
                   );
                 })}
               </ScrollView>
@@ -314,11 +314,9 @@ export default function OfficialComplaintDetailScreen() {
           <TouchableOpacity
             style={[styles.actionButton, styles.assignButton]}
             onPress={openAssignModal}
-            disabled={
-              complaint.status === "resolved" || complaint.status === "rejected"
-            }
+            disabled={complaint.status === "resolved" || complaint.status === "rejected"}
           >
-            <Text style={styles.actionButtonText}>Çalışana Ata</Text>
+            <Text style={styles.actionButtonText}>İşçiye Ata</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -370,26 +368,27 @@ export default function OfficialComplaintDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Çalışan Seç</Text>
+            <Text style={styles.modalTitle}>İşçi Seç</Text>
 
-            {employees.length === 0 ? (
+            {workers.length === 0 ? (
               <Text style={styles.emptyEmployeesText}>
-                Atanabilir çalışan bulunamadı.
+                Atanabilir işçi bulunamadı.
               </Text>
             ) : (
               <ScrollView style={styles.employeeList}>
-                {employees.map((emp) => (
+                {workers.map((w) => (
                   <TouchableOpacity
-                    key={emp.id}
+                    key={w.id}
                     style={[
                       styles.employeeItem,
-                      selectedEmployee?.id === emp.id &&
-                        styles.employeeItemSelected,
+                      selectedWorker?.id === w.id && styles.employeeItemSelected,
                     ]}
-                    onPress={() => setSelectedEmployee(emp)}
+                    onPress={() => setSelectedWorker(w)}
                   >
-                    <Text style={styles.employeeName}>{emp.name}</Text>
-                    <Text style={styles.employeeEmail}>{emp.email}</Text>
+                    <Text style={styles.employeeName}>{w.full_name}</Text>
+                    <Text style={styles.employeeEmail}>
+                      user_id: {w.user_id}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -406,7 +405,7 @@ export default function OfficialComplaintDetailScreen() {
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalConfirm]}
                 onPress={handleAssign}
-                disabled={actionLoading || !selectedEmployee}
+                disabled={actionLoading || !selectedWorker}
               >
                 <Text style={styles.modalButtonText}>
                   {actionLoading ? "Atanıyor..." : "Ata"}
@@ -416,6 +415,7 @@ export default function OfficialComplaintDetailScreen() {
           </View>
         </View>
       </Modal>
+
       <Modal
         visible={fullImageVisible}
         transparent={true}
