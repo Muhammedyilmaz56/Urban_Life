@@ -19,13 +19,13 @@ type Complaint = {
   title?: string | null;
   description?: string | null;
   status?: string;
-  created_at?: string;
   photos?: { id: number; photo_url: string }[];
 };
 
-type AssignedItem = {
+type CompletedItem = {
   assignment_id: number;
   assignment_status: string;
+  solution_photo_url?: string | null;
   complaint: Complaint;
 };
 
@@ -35,12 +35,12 @@ const resolvePhoto = (url?: string | null) => {
   return `${BASE_URL}${url}`;
 };
 
-export default function EmployeeHomeScreen({ navigation }: any) {
-  const [items, setItems] = useState<AssignedItem[]>([]);
+export default function EmployeeCompletedScreen({ navigation }: any) {
+  const [items, setItems] = useState<CompletedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAssigned = useCallback(async () => {
+  const fetchCompleted = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
@@ -48,16 +48,13 @@ export default function EmployeeHomeScreen({ navigation }: any) {
         return;
       }
 
-      const res = await axios.get(`${BASE_URL}/employee/complaints/assigned`, {
+      const res = await axios.get(`${BASE_URL}/employee/complaints/completed`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setItems(res.data || []);
     } catch (e: any) {
-      const msg =
-        e?.response?.data?.detail ||
-        e?.message ||
-        "İşler alınamadı. Endpoint/Token kontrol et.";
+      const msg = e?.response?.data?.detail || e?.message || "Tamamlanan işler alınamadı.";
       Alert.alert("Hata", String(msg));
     } finally {
       setLoading(false);
@@ -66,23 +63,23 @@ export default function EmployeeHomeScreen({ navigation }: any) {
   }, []);
 
   useEffect(() => {
-    const unsub = navigation.addListener("focus", fetchAssigned);
-    fetchAssigned();
+    const unsub = navigation.addListener("focus", fetchCompleted);
+    fetchCompleted();
     return unsub;
-  }, [fetchAssigned, navigation]);
+  }, [fetchCompleted, navigation]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchAssigned().finally(() => setRefreshing(false));
+    fetchCompleted().finally(() => setRefreshing(false));
   };
 
-  const renderItem = ({ item }: { item: AssignedItem }) => {
+  const renderItem = ({ item }: { item: CompletedItem }) => {
     const c = item.complaint;
 
     const firstPhoto =
-      c.photos && c.photos.length > 0
-        ? resolvePhoto(c.photos[0]?.photo_url)
-        : null;
+      c.photos && c.photos.length > 0 ? resolvePhoto(c.photos[0]?.photo_url) : null;
+
+    const solutionPhoto = resolvePhoto(item.solution_photo_url || null);
 
     return (
       <TouchableOpacity
@@ -96,12 +93,10 @@ export default function EmployeeHomeScreen({ navigation }: any) {
         style={styles.card}
         activeOpacity={0.9}
       >
-        {firstPhoto ? (
-          <Image
-            source={{ uri: firstPhoto }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
+        {solutionPhoto ? (
+          <Image source={{ uri: solutionPhoto }} style={styles.cardImage} resizeMode="cover" />
+        ) : firstPhoto ? (
+          <Image source={{ uri: firstPhoto }} style={styles.cardImage} resizeMode="cover" />
         ) : (
           <View style={styles.noPhotoBox}>
             <Text style={styles.noPhotoText}>Foto yok</Text>
@@ -109,7 +104,7 @@ export default function EmployeeHomeScreen({ navigation }: any) {
         )}
 
         <View style={styles.cardBody}>
-          <Text style={styles.title}>{c.title || `Şikayet #${c.id}`}</Text>
+          <Text style={styles.title}>{c.title ? c.title : `Şikayet #${c.id}`}</Text>
 
           {!!c.description && (
             <Text style={styles.desc} numberOfLines={2}>
@@ -119,9 +114,7 @@ export default function EmployeeHomeScreen({ navigation }: any) {
 
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                Görev: {item.assignment_status || "-"}
-              </Text>
+              <Text style={styles.badgeText}>Görev: {item.assignment_status}</Text>
             </View>
 
             <View style={styles.badge}>
@@ -144,18 +137,16 @@ export default function EmployeeHomeScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Bana Atanan İşler</Text>
+      <Text style={styles.header}>Tamamlanan İşler</Text>
 
       <FlatList
         data={items}
         keyExtractor={(x) => String(x.assignment_id)}
         renderItem={renderItem}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
-            <Text style={styles.emptyText}>Şu an atanmış iş yok.</Text>
+            <Text style={styles.emptyText}>Tamamlanan iş yok.</Text>
           </View>
         }
       />

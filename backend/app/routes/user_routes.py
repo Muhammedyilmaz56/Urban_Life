@@ -7,6 +7,8 @@ from app.utils.db import get_db
 from app.models.user_model import User
 from app.schemas.user_schema import UserResponse, UserProfileUpdate
 from app.routes.auth_routes import get_current_user
+from app.schemas.user_schema import EmailChangeRequestIn, EmailChangeConfirmIn
+from app.services.user_service import request_email_change, confirm_email_change
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -124,3 +126,21 @@ def update_profile(
     db.refresh(current_user) 
 
     return current_user
+@router.post("/me/email-change/request")
+def email_change_request(
+    payload: EmailChangeRequestIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    request_email_change(db, user, payload.new_email)
+    return {"message": "Doğrulama kodu yeni e-postaya gönderildi."}
+
+
+@router.post("/me/email-change/confirm")
+def email_change_confirm(
+    payload: EmailChangeConfirmIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    confirm_email_change(db, user, payload.code)
+    return {"message": "E-posta başarıyla güncellendi."}

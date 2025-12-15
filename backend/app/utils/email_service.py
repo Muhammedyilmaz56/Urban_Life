@@ -128,3 +128,50 @@ def send_password_reset_email(to_email: str, token: str):
         print(f"📧 Şifre sıfırlama maili gönderildi → {to_email}")
     except Exception as e:
         print(f"❌ Mail gönderme hatası: {e}")
+
+
+def send_email_change_code(to_email: str, code: str):
+    if not (SMTP_USER and SMTP_PASSWORD and SMTP_HOST and SMTP_PORT):
+        print("⚠️ SMTP ayarları eksik! Mail gönderilmedi.")
+        print("E-posta değişim kodu:", code)
+        return
+
+    msg = EmailMessage()
+    msg["Subject"] = "CityFlow - E-posta Değiştirme Kodu"
+    msg["From"] = EMAIL_FROM
+    msg["To"] = to_email
+
+    msg.set_content(
+        f"Merhaba!\n\n"
+        f"E-posta değişikliği için doğrulama kodunuz: {code}\n"
+        f"Kod 10 dakika geçerlidir.\n\n"
+        f"Bu işlem size ait değilse bu e-postayı dikkate almayın.\n"
+    )
+
+    html_content = f"""
+    <html>
+      <body style="font-family: Arial, sans-serif; color: #333;">
+        <div style="background-color: #f4f4f4; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px;">
+            <h2 style="color: #4F46E5;">E-posta Değiştirme</h2>
+            <p>E-posta değişikliğini onaylamak için doğrulama kodunuz:</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <div style="display:inline-block; font-size: 28px; letter-spacing: 6px; font-weight: bold; padding: 12px 18px; border: 1px solid #ddd; border-radius: 8px;">
+                {code}
+              </div>
+            </div>
+            <p style="font-size: 12px; color: #888;">Kod 10 dakika geçerlidir.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    msg.add_alternative(html_content, subtype="html")
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls(context=context)
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.send_message(msg)
+
+    print(f"📧 E-posta değişim kodu gönderildi → {to_email}")

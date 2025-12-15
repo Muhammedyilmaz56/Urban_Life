@@ -3,6 +3,7 @@ from typing import Optional, Union
 import enum
 from datetime import datetime, date
 
+
 class UserRole(str, enum.Enum):
     citizen = "citizen"
     official = "official"
@@ -60,3 +61,9 @@ class UserProfileUpdate(BaseModel):
         if len(v.strip()) < 7:
             raise ValueError("Telefon numarası çok kısa.")
         return v
+class EmailChangeRequestIn(BaseModel):
+        new_email: EmailStr
+
+
+class EmailChangeConfirmIn(BaseModel):
+    code: str

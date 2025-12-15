@@ -13,7 +13,7 @@ from app.routes.category_routes import router as category_router
 from app.utils.db import get_db, engine
 from app.models.base import Base
 from app.models.worker import Worker
-
+from app.routes.employee_routes import router as employee_router
 app = FastAPI(title="Urbanlife API")
 
 
@@ -25,6 +25,7 @@ app.include_router(complaint_routes.router)
 app.include_router(assignment_routes.router)
 app.include_router(user_routes.router)
 
+app.include_router(employee_router)
 # Statik dosyalar
 app.mount("/media", StaticFiles(directory="media"), name="media")
 

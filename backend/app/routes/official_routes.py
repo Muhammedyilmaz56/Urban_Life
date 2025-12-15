@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-
+from app.models.assignment_model import Assignment, AssignmentStatus
 from app.utils.db import get_db
 from app.routes.auth_routes import get_current_user, role_required
 from app.models.user_model import User, UserRole
@@ -76,15 +76,32 @@ def assign_complaint_to_employee(
 
     if not complaint:
         raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
-
     if not employee:
         raise HTTPException(status_code=404, detail="Çalışan bulunamadı.")
 
-    complaint.assigned_to = employee_id
+   
+    existing = (
+        db.query(Assignment)
+        .filter(Assignment.complaint_id == complaint_id)
+        .filter(Assignment.status.in_([AssignmentStatus.assigned, AssignmentStatus.in_progress]))
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu şikayet zaten bir çalışana atanmış veya işlemde.")
+
+    new_assignment = Assignment(
+        complaint_id=complaint_id,
+        employee_id=employee_id,
+        status=AssignmentStatus.assigned,
+    )
+    db.add(new_assignment)
+
+   
     complaint.status = "assigned"
 
     db.commit()
     db.refresh(complaint)
+    return complaint
 
     return complaint
 @router.get("/complaints/{complaint_id}/supports", response_model=List[ComplaintSupportOut])

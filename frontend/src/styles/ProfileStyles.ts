@@ -230,4 +230,5 @@ export default StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#121212",
   },
+  roleText: { color: "#9ca3af", marginTop: 6, fontSize: 12 },
 });

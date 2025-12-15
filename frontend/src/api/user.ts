@@ -1,5 +1,11 @@
 import api from "./client";
-
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from "../config";
+const getToken = async () => {
+  const t = await AsyncStorage.getItem("accessToken");
+  return t;
+};
 export const getCurrentUser = async () => {
   const res = await api.get("/auth/me");
   return res.data;
@@ -36,5 +42,24 @@ export const uploadAvatar = async (fileUri: string) => {
       "Content-Type": "multipart/form-data",
     },
   });
+  return res.data;
+};
+export const requestEmailChange = async (new_email: string) => {
+  const token = await getToken();
+  const res = await axios.post(
+    `${BASE_URL}/users/me/email-change/request`,
+    { new_email },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+};
+
+export const confirmEmailChange = async (code: string) => {
+  const token = await getToken();
+  const res = await axios.post(
+    `${BASE_URL}/users/me/email-change/confirm`,
+    { code },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return res.data;
 };

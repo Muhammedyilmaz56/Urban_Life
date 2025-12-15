@@ -26,6 +26,9 @@ class User(Base):
     verification_token = Column(String, nullable=True)
     reset_password_token = Column(String, nullable=True)
     reset_password_expires = Column(DateTime, nullable=True)
+    email_change_pending = Column(String, nullable=True)          
+    email_change_code_hash = Column(String, nullable=True)        
+    email_change_expires = Column(DateTime, nullable=True)       
 
   
     tc_kimlik_no = Column(String(11), unique=True, nullable=True)
