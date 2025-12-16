@@ -39,7 +39,7 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
 
     profile_completed = Column(Boolean, default=False, nullable=False)
-
+    is_active = Column(Boolean, default=True, nullable=False)
     updated_at = Column(
         DateTime,
         default=datetime.utcnow,

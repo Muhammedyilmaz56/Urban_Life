@@ -11,7 +11,7 @@ export const getCurrentUser = async () => {
   return res.data;
 };
 
-export const changePassword = async (data: {
+export const changePassword = async (data: { 
   current_password: string;
   new_password: string;
 }) => {

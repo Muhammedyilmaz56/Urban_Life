@@ -9,6 +9,7 @@ from app.routes import user_routes
 from app.routes import official_routes
 from app.routes.worker_router import router as worker_router
 from app.routes.category_routes import router as category_router
+from app.routes.admin_routes import router as admin_router
 
 from app.utils.db import get_db, engine
 from app.models.base import Base
@@ -24,7 +25,7 @@ app.include_router(auth_routes.router)
 app.include_router(complaint_routes.router)
 app.include_router(assignment_routes.router)
 app.include_router(user_routes.router)
-
+app.include_router(admin_router)
 app.include_router(employee_router)
 # Statik dosyalar
 app.mount("/media", StaticFiles(directory="media"), name="media")

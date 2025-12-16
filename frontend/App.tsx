@@ -9,7 +9,7 @@ import AuthNavigator from "./src/navigation/AuthNavigator";
 import CitizenNavigator from "./src/navigation/CitizenNavigator";
 import OfficialNavigator from "./src/navigation/OfficialNavigator";
 import EmployeeNavigator from "./src/navigation/EmployeeNavigator";
-
+import AdminNavigator from "./src/navigation/AdminNavigator";
 
 export const AuthContext = createContext<{
   user: any;
@@ -48,7 +48,11 @@ export default function App() {
         {!user ? (
          
           <AuthNavigator />
-        ) : user.role === "citizen" ? (
+
+        ) 
+        : user.role === "admin" ? (              
+          <AdminNavigator />
+          ): user.role === "citizen" ? (
           <CitizenNavigator />
         ) : user.role === "official" ? (
           <OfficialNavigator />
