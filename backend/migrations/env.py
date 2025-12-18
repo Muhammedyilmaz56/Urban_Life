@@ -18,6 +18,8 @@ from app.models import (
     notification_model,
     complaint_support_model,
     complaint_rating_model,
+    complaint_photo_model,
+    audit_log_model,
     worker,
 )
 

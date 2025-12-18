@@ -11,7 +11,7 @@ export type Complaint = {
   title: string | null;       
   description: string;
   category_id?: number | null;
-  status: "pending" | "in_progress" | "resolved";
+  status: "pending" | "in_progress" | "resolved"| "assigned"|"rejected";
   priority: "low" | "medium" | "high";
   latitude?: number | null;
   longitude?: number | null;

@@ -119,6 +119,16 @@ def update_profile(
     if profile_data.avatar_url is not None:
         current_user.avatar_url = profile_data.avatar_url
 
+    # Check if profile is now complete (has required fields)
+    # Required fields: name, tc_kimlik_no, birth_date, phone_number
+    if (
+        current_user.name
+        and current_user.tc_kimlik_no
+        and current_user.birth_date
+        and current_user.phone_number
+    ):
+        current_user.profile_completed = True
+
     current_user.updated_at = datetime.utcnow()
     
     db.add(current_user) 

@@ -9,24 +9,37 @@ import {
   Alert,
   Image,
   ScrollView,
-  ImageBackground,
   StatusBar,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import MapView, { Marker } from "react-native-maps";
 
-import {
-  getMyComplaints,
-  deleteComplaint,
-  deleteComplaintPhoto,
-} from "../../../api/complaints";
+import { getMyComplaints, deleteComplaint, deleteComplaintPhoto } from "../../../api/complaints";
 import { Complaint } from "../../../types";
-import MyComplaintsStyles from "../../../styles/MyComplaintsStyles";
+import styles from "../../../styles/MyComplaintsStyles";
 import { BASE_URL } from "../../../config";
 
 type Props = NativeStackScreenProps<any, "MyComplaints">;
 
-const BG_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
+const formatDateTR = (value: any) => {
+  try {
+    return new Date(value).toLocaleString("tr-TR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return String(value ?? "");
+  }
+};
+
+const resolvePhotoUrl = (url: string) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${BASE_URL}${url}`;
+};
 
 const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -35,9 +48,7 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   const [expandedIds, setExpandedIds] = useState<number[]>([]);
 
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
+    navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
   const loadComplaints = async () => {
@@ -45,10 +56,7 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
       const data = await getMyComplaints();
       setComplaints(data);
     } catch (err: any) {
-      console.log(
-        "GET_MY_COMPLAINTS_ERROR:",
-        err?.response?.data || err.message
-      );
+      console.log("GET_MY_COMPLAINTS_ERROR:", err?.response?.data || err?.message || err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,149 +75,125 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
   const renderStatus = (status: Complaint["status"]) => {
     switch (status) {
       case "pending":
-        return "Beklemede";
+        return "İnceleniyor";
       case "in_progress":
-        return "İşlemde";
+        return "İşlem Yapılıyor";
       case "resolved":
-        return "Çözüldü";
+        return "Sonuçlandı";
       default:
-        return status;
+        return String(status);
     }
   };
 
   const toggleExpand = (id: number) => {
-    setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setExpandedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const handleDeleteComplaint = (id: number) => {
-    Alert.alert(
-      "Şikayeti sil",
-      "Bu şikayeti kalıcı olarak silmek istediğine emin misin?",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Sil",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteComplaint(id);
-              setComplaints((prev) => prev.filter((c) => c.id !== id));
-            } catch (err: any) {
-              console.log(
-                "DELETE_COMPLAINT_ERROR:",
-                err?.response?.data || err
-              );
-              Alert.alert("Hata", "Şikayet silinirken bir hata oluştu.");
-            }
-          },
+    Alert.alert("Şikayet Kaydını Sil", "Bu kaydı kalıcı olarak silmek istiyor musunuz?", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteComplaint(id);
+            setComplaints((prev) => prev.filter((c) => c.id !== id));
+          } catch (err: any) {
+            console.log("DELETE_COMPLAINT_ERROR:", err?.response?.data || err);
+            Alert.alert("Hata", "Şikayet silinirken bir hata oluştu.");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDeletePhoto = (complaintId: number, photoId: number) => {
-    Alert.alert(
-      "Fotoğrafı sil",
-      "Bu fotoğrafı silmek istediğine emin misin?",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Sil",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteComplaintPhoto(photoId);
-              setComplaints((prev) =>
-                prev.map((c) =>
-                  c.id === complaintId
-                    ? {
-                        ...c,
-                        photos: c.photos?.filter((p) => p.id !== photoId) || [],
-                      }
-                    : c
-                )
-              );
-            } catch (err: any) {
-              console.log(
-                "DELETE_PHOTO_ERROR:",
-                err?.response?.data || err
-              );
-              Alert.alert("Hata", "Fotoğraf silinirken bir hata oluştu.");
-            }
-          },
+    Alert.alert("Fotoğrafı Sil", "Bu fotoğrafı silmek istiyor musunuz?", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteComplaintPhoto(photoId);
+            setComplaints((prev) =>
+              prev.map((c) =>
+                c.id === complaintId
+                  ? { ...c, photos: c.photos?.filter((p) => p.id !== photoId) || [] }
+                  : c
+              )
+            );
+          } catch (err: any) {
+            console.log("DELETE_PHOTO_ERROR:", err?.response?.data || err);
+            Alert.alert("Hata", "Fotoğraf silinirken bir hata oluştu.");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const renderItem = ({ item }: { item: Complaint }) => {
     const expanded = expandedIds.includes(item.id);
 
     return (
-      <View style={MyComplaintsStyles.card}>
-        <View style={MyComplaintsStyles.cardHeader}>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={MyComplaintsStyles.title}>
-              {item.title || "Başlıksız şikayet"}
+            <Text style={styles.title} numberOfLines={2}>
+              {item.title || "Başlıksız Şikayet"}
             </Text>
-            <Text
+
+            <View
               style={[
-                MyComplaintsStyles.statusBadge,
-                item.status === "pending" && MyComplaintsStyles.statusPending,
-                item.status === "in_progress" &&
-                  MyComplaintsStyles.statusInProgress,
-                item.status === "resolved" &&
-                  MyComplaintsStyles.statusResolved,
+                styles.statusPill,
+                item.status === "pending" && styles.statusPending,
+                item.status === "in_progress" && styles.statusInProgress,
+                item.status === "resolved" && styles.statusResolved,
               ]}
             >
-              {renderStatus(item.status)}
-            </Text>
+              <Text
+                style={[
+                  styles.statusPillText,
+                  item.status === "pending" && styles.statusTextPending,
+                  item.status === "in_progress" && styles.statusTextInProgress,
+                  item.status === "resolved" && styles.statusTextResolved,
+                ]}
+              >
+                {renderStatus(item.status)}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <Text
-          style={MyComplaintsStyles.description}
-          numberOfLines={expanded ? undefined : 2}
-        >
+        <Text style={styles.description} numberOfLines={expanded ? undefined : 2}>
           {item.description}
         </Text>
 
-        <View style={MyComplaintsStyles.cardFooter}>
-          <Text style={MyComplaintsStyles.dateText}>
-            {new Date(item.created_at).toLocaleString()}
-          </Text>
-          <Text style={MyComplaintsStyles.supportText}>
-            👍 {item.support_count ?? 0}
-          </Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.dateText}>{formatDateTR(item.created_at)}</Text>
+          <View style={styles.supportPill}>
+            <Text style={styles.supportText}>👍 {item.support_count ?? 0}</Text>
+          </View>
         </View>
 
         {expanded && (
-          <View style={MyComplaintsStyles.detailsContainer}>
+          <View style={styles.detailsContainer}>
             {item.photos && item.photos.length > 0 && (
-              <View style={MyComplaintsStyles.photosContainer}>
+              <View style={styles.photosContainer}>
+                <Text style={styles.sectionMiniTitle}>Eklenen Fotoğraflar</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {item.photos.map((p) => {
-                    const rawUrl = p.photo_url;
-                    const fullUrl = rawUrl.startsWith("http")
-                      ? rawUrl
-                      : `${BASE_URL}${rawUrl}`;
+                    const fullUrl = resolvePhotoUrl(p.photo_url);
                     return (
-                      <View key={p.id} style={MyComplaintsStyles.photoWrapper}>
-                        <Image
-                          source={{ uri: fullUrl }}
-                          style={MyComplaintsStyles.detailImage}
-                        />
+                      <View key={p.id} style={styles.photoWrapper}>
+                        <Image source={{ uri: fullUrl }} style={styles.detailImage} />
                         <TouchableOpacity
-                          style={MyComplaintsStyles.photoDeleteButton}
-                          onPress={() =>
-                            handleDeletePhoto(item.id, p.id)
-                          }
+                          style={styles.photoDeleteButton}
+                          onPress={() => handleDeletePhoto(item.id, p.id)}
+                          activeOpacity={0.85}
                         >
-                          <Text style={MyComplaintsStyles.photoDeleteText}>
-                            SİL
-                          </Text>
+                          <Text style={styles.photoDeleteText}>KALDIR</Text>
                         </TouchableOpacity>
                       </View>
                     );
@@ -218,11 +202,12 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             )}
 
-            {typeof (item as any).latitude === "number" &&
-              typeof (item as any).longitude === "number" && (
-                <View style={MyComplaintsStyles.mapContainer}>
+            {typeof (item as any).latitude === "number" && typeof (item as any).longitude === "number" && (
+              <View style={styles.mapBlock}>
+                <Text style={styles.sectionMiniTitle}>Konum</Text>
+                <View style={styles.mapContainer}>
                   <MapView
-                    style={MyComplaintsStyles.map}
+                    style={styles.map}
                     scrollEnabled={false}
                     initialRegion={{
                       latitude: (item as any).latitude,
@@ -239,82 +224,64 @@ const MyComplaintsScreen: React.FC<Props> = ({ navigation }) => {
                     />
                   </MapView>
                 </View>
-              )}
+              </View>
+            )}
 
             <TouchableOpacity
-              style={MyComplaintsStyles.deleteButton}
+              style={styles.deleteButton}
               onPress={() => handleDeleteComplaint(item.id)}
+              activeOpacity={0.9}
             >
-              <Text style={MyComplaintsStyles.deleteButtonText}>
-                🗑️ Şikayeti Sil
-              </Text>
+              <Text style={styles.deleteButtonText}>Şikayet Kaydını Sil</Text>
             </TouchableOpacity>
           </View>
         )}
-        
-        <TouchableOpacity 
-          style={MyComplaintsStyles.expandButtonContainer} 
-          onPress={() => toggleExpand(item.id)}
-          activeOpacity={0.7}
-        >
-           <View style={MyComplaintsStyles.expandButton}>
-              <Text style={MyComplaintsStyles.expandText}>
-                {expanded ? "Gizle" : "Detaylar"}
-              </Text>
-           </View>
-        </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.expandButtonContainer}
+          onPress={() => toggleExpand(item.id)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.expandButton}>
+            <Text style={styles.expandText}>{expanded ? "Detayı Kapat" : "Detayı Gör"}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <View style={MyComplaintsStyles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground
-        source={{ uri: BG_IMAGE }}
-        style={MyComplaintsStyles.backgroundImage}
-        resizeMode="cover"
-      >
-        <View style={MyComplaintsStyles.overlay}>
-          
-          <View style={MyComplaintsStyles.header}>
-            <TouchableOpacity 
-              style={MyComplaintsStyles.backButton} 
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={MyComplaintsStyles.backButtonIcon}>‹</Text>
-            </TouchableOpacity>
-            <Text style={MyComplaintsStyles.headerTitle}>Şikayetlerim</Text>
-          </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
-          {loading ? (
-            <View style={MyComplaintsStyles.loadingContainer}>
-              <ActivityIndicator size="large" color="#6C63FF" />
-              <Text style={MyComplaintsStyles.loadingText}>
-                Yükleniyor...
-              </Text>
-            </View>
-          ) : (
-             <FlatList
-              data={complaints}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderItem}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
-              }
-              contentContainerStyle={MyComplaintsStyles.listContent}
-              ListEmptyComponent={
-                <View style={MyComplaintsStyles.emptyContainer}>
-                  <Text style={MyComplaintsStyles.emptyText}>
-                    Henüz bir şikayetiniz yok.
-                  </Text>
-                </View>
-              }
-            />
-          )}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.85}>
+          <Text style={styles.backButtonIcon}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Şikayetlerim</Text>
+        <View style={{ width: 44 }} />
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0B3A6A" />
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
         </View>
-      </ImageBackground>
+      ) : (
+        <FlatList
+          data={complaints}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0B3A6A" />}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>Kayıt Bulunamadı</Text>
+              <Text style={styles.emptyText}>Henüz bir şikayet kaydınız bulunmuyor.</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };

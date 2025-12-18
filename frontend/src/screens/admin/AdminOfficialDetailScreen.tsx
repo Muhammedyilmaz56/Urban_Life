@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  ImageBackground,
   StatusBar,
   Alert,
   ActivityIndicator,
@@ -14,9 +13,6 @@ import {
 import { useNavigation, useRoute } from "@react-navigation/native";
 import styles from "../../styles/AdminOfficialDetailStyles";
 import { adminApi } from "../../api/admin";
-
-const BG_IMAGE =
-  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 export default function AdminOfficialDetailScreen() {
   const navigation = useNavigation<any>();
@@ -54,7 +50,7 @@ export default function AdminOfficialDetailScreen() {
 
   useEffect(() => {
     if (!officialId) {
-      Alert.alert("Hata", "Official id yok");
+      Alert.alert("Hata", "Yönetici ID bulunamadı");
       navigation.goBack();
       return;
     }
@@ -77,7 +73,7 @@ export default function AdminOfficialDetailScreen() {
         phone_number: ph ? ph : "",
         is_active: isActive,
       });
-      Alert.alert("Başarılı", "Güncellendi.");
+      Alert.alert("Başarılı", "Bilgiler güncellendi.");
       await load();
     } catch (e: any) {
       Alert.alert("Hata", e?.response?.data?.detail || "Güncelleme başarısız");
@@ -89,9 +85,11 @@ export default function AdminOfficialDetailScreen() {
   const confirmToggle = (val: boolean) => {
     Alert.alert(
       "Onay",
-      val ? "Bu yöneticiyi aktif etmek istiyor musun?" : "Bu yöneticiyi pasifleştirmek istiyor musun?",
+      val
+        ? "Bu yöneticiyi aktif etmek istiyor musun?"
+        : "Bu yöneticiyi pasifleştirmek istiyor musun?",
       [
-        { text: "İptal", style: "cancel", onPress: () => setIsActive(!val) },
+        { text: "Vazgeç", style: "cancel", onPress: () => setIsActive(!val) },
         { text: "Evet", onPress: () => setIsActive(val) },
       ]
     );
@@ -99,79 +97,88 @@ export default function AdminOfficialDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground source={{ uri: BG_IMAGE }} style={styles.bg} resizeMode="cover">
-        <View style={styles.overlay}>
-          <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.backTxt}>‹</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
+
+      {/* TOP BAR */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
+
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>Yönetici Detay</Text>
+          <Text style={styles.subtitle}>Bilgileri düzenle / pasifleştir</Text>
+        </View>
+
+        <View style={{ width: 44 }} />
+      </View>
+
+      {loading ? (
+        <View style={{ paddingTop: 40 }}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Hesap Bilgileri</Text>
+
+            <Text style={styles.label}>E-posta</Text>
+            <TextInput
+              style={[styles.input, styles.inputDisabled]}
+              value={email}
+              editable={false}
+            />
+
+            <Text style={styles.label}>Ad Soyad</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ad Soyad"
+              placeholderTextColor="rgba(100,116,139,0.9)"
+              value={fullName}
+              onChangeText={setFullName}
+            />
+
+            <Text style={styles.label}>Telefon</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="05xx xxx xx xx"
+              placeholderTextColor="rgba(100,116,139,0.9)"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+            />
+
+            <View style={styles.switchRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.switchTitle}>Hesap Durumu</Text>
+                <Text style={styles.switchSub}>
+                  {isActive ? "Hesap aktif" : "Hesap pasif (giriş engellenir)"}
+                </Text>
+              </View>
+              <Switch value={isActive} onValueChange={confirmToggle} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveBtn, saving && styles.btnDisabled]}
+              onPress={save}
+              disabled={saving}
+              activeOpacity={0.9}
+            >
+              {saving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveTxt}>Kaydet</Text>
+              )}
             </TouchableOpacity>
-            <Text style={styles.title}>Yönetici Detay</Text>
-            <View style={{ width: 44 }} />
           </View>
 
-          {loading ? (
-            <View style={{ paddingTop: 30 }}>
-              <ActivityIndicator />
-            </View>
-          ) : (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View style={styles.card}>
-                <Text style={styles.label}>E-posta</Text>
-                <TextInput
-                  style={[styles.input, styles.inputDisabled]}
-                  value={email}
-                  editable={false}
-                />
-
-                <Text style={styles.label}>Ad Soyad</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ad Soyad"
-                  placeholderTextColor="#bdbdbd"
-                  value={fullName}
-                  onChangeText={setFullName}
-                />
-
-                <Text style={styles.label}>Telefon</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Telefon"
-                  placeholderTextColor="#bdbdbd"
-                  keyboardType="phone-pad"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                />
-
-                <View style={styles.switchRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.switchTitle}>Aktiflik</Text>
-                    <Text style={styles.switchSub}>
-                      {isActive ? "Hesap aktif" : "Hesap pasif (giriş engellenir)"}
-                    </Text>
-                  </View>
-                  <Switch value={isActive} onValueChange={confirmToggle} />
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.saveBtn, saving && { opacity: 0.7 }]}
-                  onPress={save}
-                  disabled={saving}
-                  activeOpacity={0.85}
-                >
-                  {saving ? <ActivityIndicator /> : <Text style={styles.saveTxt}>Kaydet</Text>}
-                </TouchableOpacity>
-              </View>
-
-              <View style={{ height: 90 }} />
-            </ScrollView>
-          )}
-        </View>
-      </ImageBackground>
+          <View style={{ height: 90 }} />
+        </ScrollView>
+      )}
     </View>
   );
 }

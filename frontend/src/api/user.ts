@@ -1,5 +1,6 @@
 import api from "./client";
 import axios from "axios";
+import client from "./client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../config";
 const getToken = async () => {
@@ -46,7 +47,7 @@ export const uploadAvatar = async (fileUri: string) => {
 };
 export const requestEmailChange = async (new_email: string) => {
   const token = await getToken();
-  const res = await axios.post(
+  const res = await client.post(
     `${BASE_URL}/users/me/email-change/request`,
     { new_email },
     { headers: { Authorization: `Bearer ${token}` } }
@@ -56,7 +57,7 @@ export const requestEmailChange = async (new_email: string) => {
 
 export const confirmEmailChange = async (code: string) => {
   const token = await getToken();
-  const res = await axios.post(
+  const res = await client.post(
     `${BASE_URL}/users/me/email-change/confirm`,
     { code },
     { headers: { Authorization: `Bearer ${token}` } }

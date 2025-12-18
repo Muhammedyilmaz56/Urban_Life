@@ -5,6 +5,7 @@ from typing import Optional, List
 from app.utils.db import get_db
 from app.routes.auth_routes import get_current_user, role_required
 from app.models.user_model import User, UserRole
+from app.schemas.admin_schema import CategoryCreate, CategoryUpdate, CategoryOut
 
 from app.schemas.admin_schema import (
     OfficialCreate, OfficialUpdate, OfficialOut,
@@ -64,3 +65,36 @@ def admin_audit(limit: int = 100, db: Session = Depends(get_db)):
 @router.get("/stats", response_model=AdminStatsOut, dependencies=[Depends(role_required(UserRole.admin))])
 def admin_stats(db: Session = Depends(get_db)):
     return admin_service.get_admin_stats(db)
+
+@router.get("/categories", response_model=List[CategoryOut], dependencies=[Depends(role_required(UserRole.admin))])
+def admin_list_categories(
+    q: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    db: Session = Depends(get_db),
+):
+    return admin_service.list_categories(db, q, is_active)
+
+@router.post("/categories", response_model=CategoryOut, dependencies=[Depends(role_required(UserRole.admin))])
+def admin_create_category(
+    payload: CategoryCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return admin_service.create_category(db, user, payload.name, payload.description, payload.is_active)
+
+@router.put("/categories/{category_id}", response_model=CategoryOut, dependencies=[Depends(role_required(UserRole.admin))])
+def admin_update_category(
+    category_id: int,
+    payload: CategoryUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return admin_service.update_category(db, user, category_id, payload.name, payload.description, payload.is_active)
+
+@router.delete("/categories/{category_id}", dependencies=[Depends(role_required(UserRole.admin))])
+def admin_delete_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return admin_service.delete_category(db, user, category_id)

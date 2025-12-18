@@ -1,278 +1,310 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform } from "react-native";
+
+const PRIMARY = "#0B3A6A";
+const PRIMARY_2 = "#1E3A8A";
+const BG = "#F6F8FB";
+const CARD = "#FFFFFF";
+const BORDER = "#E5E7EB";
+const TEXT = "#0F172A";
+const MUTED = "#64748B";
+const SOFT = "#F1F5F9";
 
 export default StyleSheet.create({
-  // --- ANA KAPLAYICI ---
   container: {
     flex: 1,
-    backgroundColor: "#121212",
-  },
-  
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
+    backgroundColor: BG,
   },
 
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.8)", // Biraz daha koyu olsun ki içerik net görünsün
-  },
-
-  // --- HEADER ---
+  // HEADER
   header: {
+    backgroundColor: PRIMARY,
+    paddingTop: Platform.OS === "ios" ? 60 : 18,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center", // Başlığı ortala
-    paddingTop: Platform.OS === "ios" ? 60 : 45,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    zIndex: 10,
-    position: "relative",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.15)",
   },
 
-  // GERİ BUTONU (SOLDAKİ CAM BUTON)
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0.2,
+  },
+
   backButton: {
-    position: "absolute",
-    left: 20,
-    bottom: 20, // Padding bottom ile hizalamak için
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.12)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(255,255,255,0.18)",
   },
 
   backButtonIcon: {
-    fontSize: 28,
     color: "#FFFFFF",
-    fontWeight: "300",
-    marginTop: -4,
-    marginLeft: -2,
-  },
-  
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    letterSpacing: 1,
-    textShadowColor: "rgba(0, 0, 0, 0.9)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    fontSize: 26,
+    fontWeight: "700",
+    marginTop: -2,
   },
 
-  // --- LİSTE ---
+  // LIST
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 50,
+    padding: 16,
+    paddingBottom: 24,
   },
 
-  // --- KART TASARIMI ---
+  // CARD
   card: {
-    backgroundColor: "rgba(35, 35, 35, 0.85)",
-    borderRadius: 24,
-    marginBottom: 20,
-    padding: 20,
+    backgroundColor: CARD,
+    borderRadius: 14,
+    marginBottom: 12,
+    padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: BORDER,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
 
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  
-  title: {
-    fontSize: 19,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    flex: 1,
-    marginRight: 10,
-    lineHeight: 26,
+    marginBottom: 10,
   },
 
-  // STATUS BADGES
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    fontSize: 10,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    overflow: "hidden",
+  title: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: TEXT,
+    lineHeight: 22,
+  },
+
+  // STATUS PILL
+  statusPill: {
     alignSelf: "flex-start",
-    marginTop: 5,
-    textAlign: "center",
+    marginTop: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
   },
+
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: "900",
+  },
+
   statusPending: {
-    backgroundColor: "rgba(255, 165, 0, 0.15)",
-    color: "#FFB347",
-    borderWidth: 1,
-    borderColor: "rgba(255, 165, 0, 0.3)",
+    backgroundColor: "#FFF7ED",
+    borderColor: "#FDBA74",
   },
+  statusTextPending: {
+    color: "#9A3412",
+  },
+
   statusInProgress: {
-    backgroundColor: "rgba(52, 152, 219, 0.15)",
-    color: "#5DADE2",
-    borderWidth: 1,
-    borderColor: "rgba(52, 152, 219, 0.3)",
+    backgroundColor: "#EFF6FF",
+    borderColor: "#93C5FD",
   },
+  statusTextInProgress: {
+    color: "#1D4ED8",
+  },
+
   statusResolved: {
-    backgroundColor: "rgba(46, 204, 113, 0.15)",
-    color: "#58D68D",
-    borderWidth: 1,
-    borderColor: "rgba(46, 204, 113, 0.3)",
+    backgroundColor: "#ECFDF5",
+    borderColor: "#86EFAC",
+  },
+  statusTextResolved: {
+    color: "#166534",
   },
 
   description: {
-    fontSize: 15,
-    color: "#CCCCCC",
-    lineHeight: 22,
-    marginBottom: 16,
+    fontSize: 14,
+    color: "#1F2937",
+    lineHeight: 20,
+    marginBottom: 10,
+    fontWeight: "600",
   },
 
-  // FOOTER
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 5,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.05)",
+    borderTopColor: BORDER,
   },
-  
+
   dateText: {
-    fontSize: 13,
-    color: "#888",
-    fontWeight: "500",
-  },
-  
-  supportText: {
-    fontSize: 14,
+    fontSize: 12,
+    color: MUTED,
     fontWeight: "700",
-    color: "#FFFFFF",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    paddingVertical: 4,
+  },
+
+  supportPill: {
+    backgroundColor: SOFT,
+    borderWidth: 1,
+    borderColor: BORDER,
+    paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 12,
-    overflow: "hidden",
+    borderRadius: 999,
   },
 
-  // --- DETAYLAR ---
+  supportText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: TEXT,
+  },
+
+  // DETAILS
   detailsContainer: {
-    marginTop: 15,
-    paddingTop: 10,
+    marginTop: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.05)",
+    borderTopColor: BORDER,
   },
 
-  // FOTOĞRAFLAR
-  photosContainer: {
-    marginBottom: 20,
-    height: 160,
+  sectionMiniTitle: {
+    color: PRIMARY_2,
+    fontWeight: "900",
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 10,
   },
+
+  photosContainer: {
+    marginBottom: 14,
+  },
+
   photoWrapper: {
     position: "relative",
-    marginRight: 15,
+    marginRight: 10,
   },
+
   detailImage: {
     width: 220,
     height: 150,
-    borderRadius: 16,
-    backgroundColor: "#2C2C2C",
+    borderRadius: 12,
+    backgroundColor: "#E2E8F0",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: BORDER,
   },
-  
 
   photoDeleteButton: {
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "rgba(220, 38, 38, 0.9)", 
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    backgroundColor: "#B91C1C",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
   },
+
   photoDeleteText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.2,
+  },
+
+  mapBlock: {
+    marginTop: 6,
+    marginBottom: 12,
   },
 
   mapContainer: {
     height: 180,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    marginBottom: 20,
+    borderColor: BORDER,
+    backgroundColor: "#FFFFFF",
   },
+
   map: {
     width: "100%",
     height: "100%",
   },
 
-
   deleteButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(220, 38, 38, 0.15)", 
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
     paddingVertical: 12,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(220, 38, 38, 0.5)",
-    marginBottom: 10,
+    alignItems: "center",
   },
+
   deleteButtonText: {
-    color: "#EF4444", 
-    fontSize: 14,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
+    color: "#B91C1C",
+    fontWeight: "900",
+    fontSize: 13,
+    letterSpacing: 0.2,
   },
 
- 
+  // EXPAND
   expandButtonContainer: {
+    marginTop: 8,
     alignItems: "center",
-    paddingTop: 5,
   },
+
   expandButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 5,
     width: "100%",
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: SOFT,
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: "center",
   },
+
   expandText: {
-    color: "#6C63FF",
+    color: PRIMARY_2,
     fontSize: 12,
-    fontWeight: "700",
-    marginRight: 4,
-    textTransform: "uppercase",
+    fontWeight: "900",
+    letterSpacing: 0.4,
   },
-  expandIcon: {
+
+  // LOADING / EMPTY
+  loadingContainer: {
+    marginTop: 80,
+    alignItems: "center",
+  },
+
+  loadingText: {
+    marginTop: 10,
+    color: MUTED,
+    fontWeight: "800",
+  },
+
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: 120,
+    paddingHorizontal: 20,
+  },
+
+  emptyTitle: {
+    color: TEXT,
     fontSize: 16,
-    color: "#6C63FF",
-    fontWeight: "bold",
-    marginTop: -2,
+    fontWeight: "900",
+    marginBottom: 8,
   },
 
-
-  loadingContainer: { marginTop: 100, alignItems: "center" },
-  loadingText: { color: "#AAA", marginTop: 10 },
-  emptyContainer: { alignItems: "center", marginTop: 150 },
-  emptyText: { color: "#888", fontSize: 16 },
+  emptyText: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 18,
+  },
 });

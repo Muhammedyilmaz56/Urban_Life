@@ -1,39 +1,38 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-const PRIMARY_COLOR = "#4F46E5"; 
+const PRIMARY_COLOR = "#4F46E5";
 
 export const RegisterStyles = StyleSheet.create({
   background: {
     flex: 1,
-    width: width,
-    height: height,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingBottom: 50, 
+    justifyContent: "center",
+    paddingBottom: 50,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)', 
+    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     padding: 24,
+    paddingTop: Platform.OS === "ios" ? 80 : 60,
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
   },
-  
+
   headerContainer: {
     marginBottom: 30,
-    alignItems: 'center',
+    alignItems: "center",
   },
   appTitle: {
     fontSize: 40,
     fontWeight: "900",
     color: "#ffffff",
     letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 10,
   },
@@ -41,16 +40,16 @@ export const RegisterStyles = StyleSheet.create({
     fontSize: 18,
     color: "rgba(255,255,255,0.85)",
     marginTop: 5,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 
   glassFormContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 30,
     paddingVertical: 36,
     paddingHorizontal: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)', 
+    borderColor: "rgba(255,255,255,0.15)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.3,
@@ -62,40 +61,38 @@ export const RegisterStyles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)', 
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
     borderRadius: 16,
     marginBottom: 16,
     paddingHorizontal: 16,
-    height: 60,
+    minHeight: 56,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: "rgba(255,255,255,0.1)",
   },
   inputIcon: {
     fontSize: 20,
     marginRight: 12,
-    color: 'rgba(255,255,255,0.8)'
+    color: "rgba(255,255,255,0.8)",
   },
   input: {
     flex: 1,
     color: "#ffffff",
     fontSize: 16,
-    height: '100%',
-    paddingTop: 0,
-    paddingBottom: 0,
+    paddingVertical: 16,
   },
 
   registerButton: {
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 16,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    minHeight: 56,
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 10,
     shadowColor: PRIMARY_COLOR,
     shadowOffset: { width: 0, height: 8 },
@@ -104,7 +101,7 @@ export const RegisterStyles = StyleSheet.create({
     elevation: 8,
   },
   registerButtonDisabled: {
-    backgroundColor: '#6b7280', 
+    backgroundColor: "#6b7280",
     opacity: 0.7,
   },
   registerButtonText: {
@@ -115,43 +112,52 @@ export const RegisterStyles = StyleSheet.create({
   },
 
   loginLinkContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 28,
-    marginBottom: 10, 
+    marginBottom: 10,
+    flexWrap: "wrap",
   },
   loginLinkText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: "rgba(255,255,255,0.7)",
     fontSize: 15,
   },
   loginLink: {
-    color: '#fff', 
+    color: "#fff",
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: "900",
     marginLeft: 5,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   backButtonAbsolute: {
-    position: 'absolute',
-    top: 50, 
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 40,
     left: 20,
     zIndex: 10,
-    
-    backgroundColor: 'rgba(0,0,0,0.4)', 
-    width: 45, 
+    backgroundColor: "rgba(0,0,0,0.4)",
+    width: 45,
     height: 45,
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1, 
-    borderColor: 'rgba(255,255,255,0.2)',
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
   },
- 
+
   backButtonIcon: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 32,
-    fontWeight: '300',
-    marginTop: -4, 
+    fontWeight: "300",
+    marginTop: -4,
     marginLeft: -2,
-  }
+  },
+
+  // Loading overlay for image preload
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#1a1a2e",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
 });

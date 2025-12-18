@@ -15,30 +15,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchOfficialComplaints, OfficialComplaint } from "../../api/official";
 import { getCurrentUser } from "../../api/user";
 import { BASE_URL } from "../../config";
-import styles from "../../styles/OfficialHomeStyles";
+import styles from "../../styles/OfficialHomeStyles"; 
 import { AuthContext } from "../../../App";
 
-const getStatusStyle = (status: string) => {
+
+const getStatusTheme = (status: string) => {
   switch (status) {
     case "pending":
-      return styles.status_pending;
+      return { style: styles.status_pending, textColor: "#9a3412" };
     case "in_progress":
-      return styles.status_in_progress;
+      return { style: styles.status_in_progress, textColor: "#1e40af" };
     case "assigned":
-      return styles.status_assigned;
+      return { style: styles.status_assigned, textColor: "#166534" };
     case "resolved":
-      return styles.status_resolved;
+      return { style: styles.status_resolved, textColor: "#047857" };
     case "rejected":
-      return styles.status_rejected;
+      return { style: styles.status_rejected, textColor: "#991b1b" };
     default:
-      return {};
+      return { style: {}, textColor: "#000" };
   }
 };
 
 const statusLabelMap: Record<string, string> = {
   pending: "Beklemede",
   in_progress: "İşlemde",
-  assigned: "İşçiye Atandı",
+  assigned: "Ekiplere İletildi", 
   resolved: "Çözüldü",
   rejected: "Reddedildi",
 };
@@ -96,39 +97,20 @@ const OfficialHomeScreen = () => {
   const toggleMenu = () => setMenuVisible(!menuVisible);
   const closeMenu = () => setMenuVisible(false);
 
-  const goToProfile = () => {
-    closeMenu();
-    navigation.navigate("OfficialProfile");
-  };
-
-  const goToAnnouncements = () => {
-    closeMenu();
-    navigation.navigate("OfficialAnnouncements");
-  };
-
-  const goToCategories = () => {
-    closeMenu();
-    navigation.navigate("Categories");
-  };
-
-  const goToWorkers = () => {
-    closeMenu();
-    navigation.navigate("Workers");
-  };
+  const goToProfile = () => { closeMenu(); navigation.navigate("OfficialProfile"); };
+  const goToAnnouncements = () => { closeMenu(); navigation.navigate("OfficialAnnouncements"); };
+  const goToCategories = () => { closeMenu(); navigation.navigate("Categories"); };
+  const goToWorkers = () => { closeMenu(); navigation.navigate("Workers"); };
 
   const handleLogout = () => {
     closeMenu();
-
-    Alert.alert("Çıkış", "Çıkış yapmak istiyor musun?", [
+    Alert.alert("Güvenli Çıkış", "Oturumunuzu sonlandırmak istediğinize emin misiniz?", [
       { text: "Vazgeç", style: "cancel" },
       {
         text: "Çıkış Yap",
         style: "destructive",
         onPress: async () => {
-          try {
-            await AsyncStorage.removeItem("token");
-          } catch (e) {}
-
+          try { await AsyncStorage.removeItem("token"); } catch (e) {}
           auth?.setUser(null);
         },
       },
@@ -136,46 +118,53 @@ const OfficialHomeScreen = () => {
   };
 
   const renderItem = ({ item }: { item: OfficialComplaint }) => {
+    const statusTheme = getStatusTheme(item.status);
+
     return (
       <TouchableOpacity
         style={styles.card}
+        activeOpacity={0.7}
         onPress={() =>
           navigation.navigate("OfficialComplaintDetail", { complaintId: item.id })
         }
       >
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
             {item.title}
           </Text>
-
-          <View style={[styles.statusBadge, getStatusStyle(item.status)]}>
-            <Text style={styles.statusText}>
+          <View style={[styles.statusBadge, statusTheme.style]}>
+            <Text style={[styles.statusText, { color: statusTheme.textColor }]}>
               {statusLabelMap[item.status] || item.status}
             </Text>
           </View>
         </View>
 
-        {item.category && (
-          <Text style={styles.categoryText}>Kategori: {item.category.name}</Text>
-        )}
+        {/* Kategori ve Adres Bilgileri */}
+        <View>
+            {item.category && (
+            <Text style={styles.categoryText}>📂 {item.category.name}</Text>
+            )}
+            {item.address && (
+            <Text style={styles.addressText} numberOfLines={1}>
+                📍 {item.address}
+            </Text>
+            )}
+        </View>
 
-        {item.address && (
-          <Text style={styles.addressText} numberOfLines={1}>
-            {item.address}
-          </Text>
-        )}
-
-        <Text style={styles.descriptionText} numberOfLines={2}>
+        <Text style={styles.descriptionText} numberOfLines={3}>
           {item.description}
         </Text>
 
         <View style={styles.cardFooter}>
           <Text style={styles.dateText}>
-            {new Date(item.created_at).toLocaleString("tr-TR")}
+            📅 {new Date(item.created_at).toLocaleDateString("tr-TR", { day: 'numeric', month: 'long', hour: '2-digit', minute:'2-digit' })}
           </Text>
 
           {typeof item.support_count === "number" && (
-            <Text style={styles.supportText}>👍 {item.support_count} destek</Text>
+            <View style={styles.supportContainer}>
+                <Text>👍</Text>
+                <Text style={styles.supportText}>{item.support_count}</Text>
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -189,10 +178,15 @@ const OfficialHomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      {/* StatusBar Rengini Header ile uyumlu yapıyoruz */}
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
 
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Personel Paneli</Text>
+        <View>
+             <Text style={[styles.headerTitle, {fontSize: 14, opacity: 0.8, fontWeight: '400'}]}>Hoş Geldiniz,</Text>
+             <Text style={styles.headerTitle}>Personel Paneli</Text>
+        </View>
+       
         <TouchableOpacity onPress={toggleMenu} activeOpacity={0.8}>
           <Image
             source={avatarSource}
@@ -210,32 +204,30 @@ const OfficialHomeScreen = () => {
         >
           <View style={styles.menuContainer}>
             <TouchableOpacity style={styles.menuItem} onPress={goToProfile}>
-              <Text style={styles.menuItemText}>👤 Profilim</Text>
+              <Text>👤</Text>
+              <Text style={styles.menuItemText}>Profilim</Text>
             </TouchableOpacity>
 
-            <View style={styles.divider} />
-
-            <TouchableOpacity style={styles.menuItem} onPress={goToAnnouncements}>
-              <Text style={styles.menuItemText}>📢 Duyurular</Text>
-            </TouchableOpacity>
-
-            <View style={styles.divider} />
+            
 
             <TouchableOpacity style={styles.menuItem} onPress={goToCategories}>
-              <Text style={styles.menuItemText}>🏷️ Kategoriler</Text>
+               <Text>🏷️</Text>
+              <Text style={styles.menuItemText}>Kategori Yönetimi</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.menuItem} onPress={goToWorkers}>
-              <Text style={styles.menuItemText}>👷 İşçiler</Text>
+               <Text>👷</Text>
+              <Text style={styles.menuItemText}>Personel Listesi</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-              <Text style={[styles.menuItemText, { color: "#ff4d4d" }]}>
-                🚪 Çıkış
+               <Text>🚪</Text>
+              <Text style={[styles.menuItemText, { color: "#dc2626" }]}>
+                Güvenli Çıkış
               </Text>
             </TouchableOpacity>
           </View>
@@ -244,12 +236,13 @@ const OfficialHomeScreen = () => {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" />
-          <Text style={styles.loadingText}>Şikayetler yükleniyor...</Text>
+          <ActivityIndicator size="large" color="#1e3a8a" />
+          <Text style={styles.loadingText}>Veriler güncelleniyor...</Text>
         </View>
       ) : complaints.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Henüz görüntülenecek şikayet yok.</Text>
+            <Text style={{fontSize: 40, marginBottom: 10}}>📭</Text>
+          <Text style={styles.emptyText}>Şu anda sistemde bekleyen veya işlem gören bir şikayet bulunmamaktadır.</Text>
         </View>
       ) : (
         <FlatList
@@ -257,8 +250,14 @@ const OfficialHomeScreen = () => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+                tintColor="#1e3a8a" 
+                colors={["#1e3a8a"]} 
+            />
           }
         />
       )}

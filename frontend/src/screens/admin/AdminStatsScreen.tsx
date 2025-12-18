@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,10 @@ import {
   ScrollView,
   RefreshControl,
   Alert,
+  StatusBar,
+  TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 import styles from "../../styles/AdminStatsStyles";
 import { adminApi } from "../../api/admin";
@@ -15,9 +18,15 @@ import type { AdminStatsDetail } from "../../api/admin";
 const formatKey = (k: string) => k.replace(/_/g, " ").toUpperCase();
 
 export default function AdminStatsScreen() {
+  const navigation = useNavigation<any>();
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<AdminStatsDetail | null>(null);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const load = useCallback(async () => {
     try {
@@ -40,85 +49,105 @@ export default function AdminStatsScreen() {
     await load();
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
-      </View>
-    );
-  }
+  const roleRows: [string, number][] = Object.entries(
+    stats?.users_by_role ?? {}
+  ).map(([k, v]) => [k, Number(v)]);
 
-  if (!stats) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Veri bulunamadı.</Text>
-      </View>
-    );
-  }
+  const statusRows: [string, number][] = Object.entries(
+    stats?.complaints_by_status ?? {}
+  ).map(([k, v]) => [k, Number(v)]);
 
-  const roleRows: [string, number][] = Object.entries(stats.users_by_role ?? {}).map(
-    ([k, v]) => [k, Number(v)]
-  );
   roleRows.sort((a, b) => b[1] - a[1]);
-
-  const statusRows: [string, number][] = Object.entries(stats.complaints_by_status ?? {}).map(
-    ([k, v]) => [k, Number(v)]
-  );
   statusRows.sort((a, b) => b[1] - a[1]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <Text style={styles.title}>Admin İstatistikleri</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
-      <View style={styles.grid}>
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Toplam Kullanıcı</Text>
-          <Text style={styles.cardValue}>{stats.total_users}</Text>
+      {/* TOP BAR - Matching AdminHomeScreen style */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
+
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>İstatistikler</Text>
+          <Text style={styles.subtitle}>Detaylı rapor</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Toplam Şikayet</Text>
-          <Text style={styles.cardValue}>{stats.total_complaints}</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Son 7 Gün Şikayet</Text>
-          <Text style={styles.cardValue}>{stats.complaints_last_7_days}</Text>
-        </View>
+        <View style={{ width: 44 }} />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Rol Dağılımı</Text>
-        {roleRows.length === 0 ? (
-          <Text style={styles.muted}>Veri yok</Text>
-        ) : (
-          roleRows.map(([role, count]) => (
-            <View key={role} style={styles.row}>
-              <Text style={styles.rowKey}>{formatKey(role)}</Text>
-              <Text style={styles.rowVal}>{count}</Text>
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0B3A6A" />
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
+        </View>
+      ) : !stats ? (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>Veri bulunamadı.</Text>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* ÖZET */}
+          <View style={styles.grid}>
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Toplam Kullanıcı</Text>
+              <Text style={styles.cardValue}>{stats.total_users}</Text>
             </View>
-          ))
-        )}
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Şikayet Durumları</Text>
-        {statusRows.length === 0 ? (
-          <Text style={styles.muted}>Veri yok</Text>
-        ) : (
-          statusRows.map(([st, count]) => (
-            <View key={st} style={styles.row}>
-              <Text style={styles.rowKey}>{formatKey(st)}</Text>
-              <Text style={styles.rowVal}>{count}</Text>
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Toplam Şikayet</Text>
+              <Text style={styles.cardValue}>{stats.total_complaints}</Text>
             </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Son 7 Gün</Text>
+              <Text style={styles.cardValue}>{stats.complaints_last_7_days}</Text>
+            </View>
+          </View>
+
+          {/* ROLLER */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Rol Dağılımı</Text>
+            {roleRows.length === 0 ? (
+              <Text style={styles.muted}>Veri yok</Text>
+            ) : (
+              roleRows.map(([role, count]) => (
+                <View key={role} style={styles.row}>
+                  <Text style={styles.rowKey}>{formatKey(role)}</Text>
+                  <Text style={styles.rowVal}>{count}</Text>
+                </View>
+              ))
+            )}
+          </View>
+
+          {/* DURUMLAR */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Şikayet Durumları</Text>
+            {statusRows.length === 0 ? (
+              <Text style={styles.muted}>Veri yok</Text>
+            ) : (
+              statusRows.map(([st, count]) => (
+                <View key={st} style={styles.row}>
+                  <Text style={styles.rowKey}>{formatKey(st)}</Text>
+                  <Text style={styles.rowVal}>{count}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </ScrollView>
+      )}
+    </View>
   );
 }

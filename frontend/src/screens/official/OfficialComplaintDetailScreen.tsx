@@ -10,6 +10,7 @@ import {
   TextInput,
   Image,
   Linking,
+  StatusBar,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import {
@@ -33,17 +34,33 @@ type DetailRouteParams = {
 const statusLabelMap: Record<string, string> = {
   pending: "Beklemede",
   in_progress: "İşlemde",
-  assigned: "İşçiye Atandı",
+  assigned: "Ekiplere İletildi",
   resolved: "Çözüldü",
   rejected: "Reddedildi",
+};
+
+const getStatusTheme = (status: string) => {
+  switch (status) {
+    case "pending":
+      return { bg: "#fff7ed", text: "#9a3412", border: "#ffedd5" };
+    case "in_progress":
+      return { bg: "#eff6ff", text: "#1e40af", border: "#dbeafe" };
+    case "assigned":
+      return { bg: "#f0fdf4", text: "#166534", border: "#dcfce7" };
+    case "resolved":
+      return { bg: "#ecfdf5", text: "#047857", border: "#d1fae5" };
+    case "rejected":
+      return { bg: "#fef2f2", text: "#991b1b", border: "#fee2e2" };
+    default:
+      return { bg: "#f3f4f6", text: "#1f2937", border: "#e5e7eb" };
+  }
 };
 
 export default function OfficialComplaintDetailScreen() {
   const [fullImageVisible, setFullImageVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const route =
-    useRoute<RouteProp<DetailRouteParams, "OfficialComplaintDetail">>();
+  const route = useRoute<RouteProp<DetailRouteParams, "OfficialComplaintDetail">>();
   const navigation = useNavigation<any>();
 
   const complaintId = route.params?.complaintId;
@@ -77,7 +94,7 @@ export default function OfficialComplaintDetailScreen() {
       const list = await fetchWorkers();
       setWorkers(list.filter((w) => w.is_active));
     } catch (error) {
-      Alert.alert("Hata", "İşçi listesi alınamadı.");
+      Alert.alert("Hata", "Personel listesi alınamadı.");
     }
   };
 
@@ -92,7 +109,7 @@ export default function OfficialComplaintDetailScreen() {
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      Alert.alert("Uyarı", "Lütfen red sebebini girin.");
+      Alert.alert("Uyarı", "Lütfen red için geçerli bir sebep girin.");
       return;
     }
     try {
@@ -101,9 +118,9 @@ export default function OfficialComplaintDetailScreen() {
       setComplaint(updated);
       setRejectModalVisible(false);
       setRejectReason("");
-      Alert.alert("Başarılı", "Şikayet reddedildi.");
+      Alert.alert("İşlem Başarılı", "Şikayet kaydı reddedildi.");
     } catch (error) {
-      Alert.alert("Hata", "Şikayet reddedilirken bir hata oluştu.");
+      Alert.alert("Hata", "İşlem sırasında bir hata oluştu.");
     } finally {
       setActionLoading(false);
     }
@@ -117,7 +134,7 @@ export default function OfficialComplaintDetailScreen() {
 
   const handleAssign = async () => {
     if (!selectedWorker) {
-      Alert.alert("Uyarı", "Lütfen bir işçi seçin.");
+      Alert.alert("Uyarı", "Lütfen bir personel seçin.");
       return;
     }
     try {
@@ -129,9 +146,9 @@ export default function OfficialComplaintDetailScreen() {
       setComplaint(updated);
       setAssignModalVisible(false);
       setSelectedWorker(null);
-      Alert.alert("Başarılı", "Şikayet işçiye atandı.");
+      Alert.alert("Atama Başarılı", "Şikayet ilgili personele iletildi.");
     } catch (error) {
-      Alert.alert("Hata", "Şikayet atanırken bir hata oluştu.");
+      Alert.alert("Hata", "Atama işlemi başarısız oldu.");
     } finally {
       setActionLoading(false);
     }
@@ -140,38 +157,41 @@ export default function OfficialComplaintDetailScreen() {
   if (loading || !complaint) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator />
-        <Text style={styles.loadingText}>Şikayet detayı yükleniyor...</Text>
+        <ActivityIndicator size="large" color="#1e3a8a" />
+        <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
       </View>
     );
   }
 
+  const statusTheme = getStatusTheme(complaint.status);
   const statusLabel = statusLabelMap[complaint.status] || complaint.status;
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>{complaint.title}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{statusLabel}</Text>
-          </View>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        
+        <View style={styles.headerSection}>
+            <View style={styles.headerRow}>
+                <Text style={styles.title}>{complaint.title}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: statusTheme.bg, borderColor: statusTheme.border }]}>
+                    <Text style={[styles.statusText, { color: statusTheme.text }]}>{statusLabel}</Text>
+                </View>
+            </View>
+
+            {complaint.category && (
+            <Text style={styles.categoryText}>📂 {complaint.category.name}</Text>
+            )}
+
+            {complaint.address && (
+            <Text style={styles.addressText}>📍 {complaint.address}</Text>
+            )}
         </View>
-
-        {complaint.category && (
-          <Text style={styles.categoryText}>
-            Kategori: {complaint.category.name}
-          </Text>
-        )}
-
-        {complaint.address && (
-          <Text style={styles.addressText}>Adres: {complaint.address}</Text>
-        )}
 
         {typeof complaint.latitude === "number" &&
           typeof complaint.longitude === "number" && (
-            <>
-              <Text style={styles.sectionTitle}>Konum</Text>
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Konum Bilgisi</Text>
 
               <View style={styles.mapContainer}>
                 <MapView
@@ -196,45 +216,46 @@ export default function OfficialComplaintDetailScreen() {
 
               <TouchableOpacity
                 style={styles.mapButton}
+                activeOpacity={0.7}
                 onPress={() =>
                   Linking.openURL(
-                    `http://maps.google.com/maps?q=${complaint.latitude},${complaint.longitude}`
+                    `http://maps.google.com/?q=${complaint.latitude},${complaint.longitude}`
                   )
                 }
               >
-                <Text style={styles.mapButtonText}>Haritada Aç</Text>
+                <Text style={styles.mapButtonText}>🗺️ Haritada Görüntüle</Text>
               </TouchableOpacity>
-            </>
+            </View>
           )}
 
-        <Text style={styles.sectionTitle}>Açıklama</Text>
-        <Text style={styles.description}>{complaint.description}</Text>
+        <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Vatandaş Açıklaması</Text>
+            <Text style={styles.description}>{complaint.description}</Text>
 
-        {complaint.reject_reason && (
-          <>
-            <Text style={styles.sectionTitle}>Red Sebebi</Text>
-            <Text style={styles.rejectText}>{complaint.reject_reason}</Text>
-          </>
-        )}
+            {complaint.reject_reason && (
+                <View style={styles.rejectContainer}>
+                    <Text style={styles.rejectLabel}>⚠️ Reddedilme Sebebi:</Text>
+                    <Text style={styles.rejectText}>{complaint.reject_reason}</Text>
+                </View>
+            )}
 
-        <Text style={styles.metaText}>
-          Oluşturulma: {new Date(complaint.created_at).toLocaleString("tr-TR")}
-        </Text>
-
-        {typeof complaint.support_count === "number" && (
-          <Text style={styles.metaText}>
-            Destek Sayısı: {complaint.support_count}
-          </Text>
-        )}
+            <View style={styles.metaContainer}>
+                <Text style={styles.metaText}>
+                    📅 {new Date(complaint.created_at).toLocaleString("tr-TR")}
+                </Text>
+                {typeof complaint.support_count === "number" && (
+                    <Text style={styles.metaText}>👍 {complaint.support_count} Destek</Text>
+                )}
+            </View>
+        </View>
 
         {complaint.photos && complaint.photos.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Şikayet Fotoğrafları</Text>
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Eklenen Fotoğraflar</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.photosRow}
-              contentContainerStyle={{ paddingRight: 20 }}
             >
               {complaint.photos.map((p: any) => {
                 const rawUrl = p.photo_url || p.url;
@@ -260,18 +281,17 @@ export default function OfficialComplaintDetailScreen() {
                 );
               })}
             </ScrollView>
-          </>
+          </View>
         )}
 
         {complaint.resolution_photos &&
           complaint.resolution_photos.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Çözüm Fotoğrafları</Text>
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>✅ Çözüm Kanıtları</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={styles.photosRow}
-                contentContainerStyle={{ paddingRight: 20 }}
               >
                 {complaint.resolution_photos.map((p: any) => {
                   const rawUrl = p.photo_url || p.url;
@@ -297,26 +317,28 @@ export default function OfficialComplaintDetailScreen() {
                   );
                 })}
               </ScrollView>
-            </>
+            </View>
           )}
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.rejectButton]}
+            style={[styles.actionButton, styles.rejectButton, 
+                (complaint.status === "rejected" || complaint.status === "resolved") && { opacity: 0.5 }
+            ]}
             onPress={() => setRejectModalVisible(true)}
-            disabled={
-              complaint.status === "rejected" || complaint.status === "resolved"
-            }
+            disabled={complaint.status === "rejected" || complaint.status === "resolved"}
           >
-            <Text style={styles.actionButtonText}>Reddet</Text>
+            <Text style={styles.rejectButtonText}>❌ Reddet</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, styles.assignButton]}
+            style={[styles.actionButton, styles.assignButton,
+                (complaint.status === "resolved" || complaint.status === "rejected") && { opacity: 0.5 }
+            ]}
             onPress={openAssignModal}
             disabled={complaint.status === "resolved" || complaint.status === "rejected"}
           >
-            <Text style={styles.actionButtonText}>İşçiye Ata</Text>
+            <Text style={styles.assignButtonText}>👷 Personel Ata</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -329,11 +351,11 @@ export default function OfficialComplaintDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Red Sebebi</Text>
+            <Text style={styles.modalTitle}>Şikayeti Reddet</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Örn: Uygunsuz içerik, yanlış bilgi..."
-              placeholderTextColor="#9CA3AF"
+              placeholder="Lütfen red gerekçesini detaylıca belirtiniz..."
+              placeholderTextColor="#94a3b8"
               multiline
               value={rejectReason}
               onChangeText={setRejectReason}
@@ -344,15 +366,15 @@ export default function OfficialComplaintDetailScreen() {
                 onPress={() => setRejectModalVisible(false)}
                 disabled={actionLoading}
               >
-                <Text style={styles.modalButtonText}>İptal</Text>
+                <Text style={styles.modalCancelText}>Vazgeç</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.modalConfirm]}
+                style={[styles.modalButton, styles.modalConfirm, { backgroundColor: '#dc2626' }]}
                 onPress={handleReject}
                 disabled={actionLoading}
               >
-                <Text style={styles.modalButtonText}>
-                  {actionLoading ? "Gönderiliyor..." : "Onayla"}
+                <Text style={styles.modalConfirmText}>
+                  {actionLoading ? "İşleniyor..." : "Onayla ve Reddet"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -368,14 +390,14 @@ export default function OfficialComplaintDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>İşçi Seç</Text>
+            <Text style={styles.modalTitle}>Görevli Personel Seçimi</Text>
 
             {workers.length === 0 ? (
               <Text style={styles.emptyEmployeesText}>
-                Atanabilir işçi bulunamadı.
+                Uygun durumda personel bulunamadı.
               </Text>
             ) : (
-              <ScrollView style={styles.employeeList}>
+              <ScrollView style={styles.employeeList} showsVerticalScrollIndicator={true}>
                 {workers.map((w) => (
                   <TouchableOpacity
                     key={w.id}
@@ -385,10 +407,16 @@ export default function OfficialComplaintDetailScreen() {
                     ]}
                     onPress={() => setSelectedWorker(w)}
                   >
-                    <Text style={styles.employeeName}>{w.full_name}</Text>
-                    <Text style={styles.employeeEmail}>
-                      user_id: {w.user_id}
-                    </Text>
+                    <View style={styles.employeeAvatarPlaceholder}>
+                        <Text style={styles.employeeInitials}>
+                            {w.full_name ? w.full_name.charAt(0).toUpperCase() : "?"}
+                        </Text>
+                    </View>
+                    <View style={styles.employeeInfo}>
+                        <Text style={styles.employeeName}>{w.full_name}</Text>
+                        <Text style={styles.employeeEmail}>ID: {w.user_id}</Text>
+                    </View>
+                    {selectedWorker?.id === w.id && <Text>✅</Text>}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -400,15 +428,15 @@ export default function OfficialComplaintDetailScreen() {
                 onPress={() => setAssignModalVisible(false)}
                 disabled={actionLoading}
               >
-                <Text style={styles.modalButtonText}>İptal</Text>
+                <Text style={styles.modalCancelText}>İptal</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalConfirm]}
                 onPress={handleAssign}
                 disabled={actionLoading || !selectedWorker}
               >
-                <Text style={styles.modalButtonText}>
-                  {actionLoading ? "Atanıyor..." : "Ata"}
+                <Text style={styles.modalConfirmText}>
+                  {actionLoading ? "Atanıyor..." : "Görevi Ata"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -427,7 +455,7 @@ export default function OfficialComplaintDetailScreen() {
             style={styles.fullImageClose}
             onPress={() => setFullImageVisible(false)}
           >
-            <Text style={styles.fullImageCloseText}>✕</Text>
+            <Text style={styles.fullImageCloseText}>Kapat ✕</Text>
           </TouchableOpacity>
 
           {selectedImage && (

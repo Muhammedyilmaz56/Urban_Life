@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  ImageBackground,
   StatusBar,
   Alert,
   ActivityIndicator,
@@ -15,9 +14,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import styles from "../../styles/AdminCreateOfficialStyles";
 import { adminApi } from "../../api/admin";
-
-const BG_IMAGE =
-  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 export default function AdminCreateOfficialScreen() {
   const navigation = useNavigation<any>();
@@ -62,12 +58,7 @@ export default function AdminCreateOfficialScreen() {
       });
 
       Alert.alert("Başarılı", "Yönetici oluşturuldu.", [
-        {
-          text: "Tamam",
-          onPress: () => {
-            navigation.goBack();
-          },
-        },
+        { text: "Tamam", onPress: () => navigation.goBack() },
       ]);
     } catch (e: any) {
       Alert.alert("Hata", e?.response?.data?.detail || "Oluşturma başarısız");
@@ -78,90 +69,96 @@ export default function AdminCreateOfficialScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground source={{ uri: BG_IMAGE }} style={styles.bg} resizeMode="cover">
-        <View style={styles.overlay}>
-          <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.backTxt}>‹</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
+
+      {/* TOP BAR */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
+
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>Yönetici Ekle</Text>
+          <Text style={styles.subtitle}>Yeni “official” hesabı oluştur</Text>
+        </View>
+
+        <View style={{ width: 44 }} />
+      </View>
+
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Hesap Bilgileri</Text>
+
+            <Text style={styles.label}>Ad Soyad</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Örn: Ahmet Yılmaz"
+              placeholderTextColor="rgba(100,116,139,0.9)"
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+            />
+
+            <Text style={styles.label}>E-posta</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Örn: ahmet@belediye.gov.tr"
+              placeholderTextColor="rgba(100,116,139,0.9)"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+
+            <Text style={styles.label}>Telefon (opsiyonel)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Örn: 05xx xxx xx xx"
+              placeholderTextColor="rgba(100,116,139,0.9)"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+            />
+
+            <Text style={styles.label}>Şifre</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="En az 6 karakter"
+              placeholderTextColor="rgba(100,116,139,0.9)"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+
+            <TouchableOpacity
+              style={[styles.submitBtn, loading ? styles.btnDisabled : null]}
+              onPress={submit}
+              disabled={loading}
+              activeOpacity={0.9}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitTxt}>Oluştur</Text>
+              )}
             </TouchableOpacity>
-            <Text style={styles.title}>Yönetici Ekle</Text>
-            <View style={{ width: 44 }} />
+
+            <View style={styles.infoBox}>
+              <Text style={styles.infoTitle}>Bilgi</Text>
+              <Text style={styles.hint}>
+                Oluşturulan hesap otomatik olarak <Text style={{ fontWeight: "900" }}>official</Text> rolü ile açılır.
+              </Text>
+            </View>
           </View>
 
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            style={{ flex: 1 }}
-          >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View style={styles.card}>
-                <Text style={styles.label}>Ad Soyad</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Örn: Ahmet Yılmaz"
-                  placeholderTextColor="#bdbdbd"
-                  value={fullName}
-                  onChangeText={setFullName}
-                />
-
-                <Text style={styles.label}>E-posta</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Örn: ahmet@belediye.com"
-                  placeholderTextColor="#bdbdbd"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-
-                <Text style={styles.label}>Telefon (opsiyonel)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Örn: 05xx..."
-                  placeholderTextColor="#bdbdbd"
-                  keyboardType="phone-pad"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                />
-
-                <Text style={styles.label}>Şifre</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="En az 6 karakter"
-                  placeholderTextColor="#bdbdbd"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-                />
-
-                <TouchableOpacity
-                  style={[styles.submitBtn, loading && { opacity: 0.7 }]}
-                  onPress={submit}
-                  disabled={loading}
-                  activeOpacity={0.85}
-                >
-                  {loading ? (
-                    <ActivityIndicator />
-                  ) : (
-                    <Text style={styles.submitTxt}>Oluştur</Text>
-                  )}
-                </TouchableOpacity>
-
-                <Text style={styles.hint}>
-                  * Oluşturulan yönetici hesabı “official” rolü ile açılır.
-                </Text>
-              </View>
-
-              <View style={{ height: 90 }} />
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </View>
-      </ImageBackground>
+          <View style={{ height: 90 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, createContext } from "react";
 import { NavigationContainer } from "@react-navigation/native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import SplashScreen from "./src/components/SplashScreen";
 
@@ -28,7 +29,7 @@ const linking = {
 };
 
 export default function App() {
-  const [user, setUser] = useState<any>(null); 
+  const [user, setUser] = useState<any>(null);
   const [splash, setSplash] = useState(true);
 
   useEffect(() => {
@@ -39,29 +40,35 @@ export default function App() {
 
 
   if (splash) {
-    return <SplashScreen />;
+    return (
+      <SafeAreaProvider>
+        <SplashScreen />
+      </SafeAreaProvider>
+    );
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      <NavigationContainer linking={linking}>
-        {!user ? (
-         
-          <AuthNavigator />
+    <SafeAreaProvider>
+      <AuthContext.Provider value={{ user, setUser }}>
+        <NavigationContainer linking={linking}>
+          {!user ? (
 
-        ) 
-        : user.role === "admin" ? (              
-          <AdminNavigator />
-          ): user.role === "citizen" ? (
-          <CitizenNavigator />
-        ) : user.role === "official" ? (
-          <OfficialNavigator />
-        ) : user.role === "employee" ? (
-          <EmployeeNavigator />
-        ) : (
-          <CitizenNavigator />
-        )}
-      </NavigationContainer>
-    </AuthContext.Provider>
+            <AuthNavigator />
+
+          )
+            : user.role === "admin" ? (
+              <AdminNavigator />
+            ) : user.role === "citizen" ? (
+              <CitizenNavigator />
+            ) : user.role === "official" ? (
+              <OfficialNavigator />
+            ) : user.role === "employee" ? (
+              <EmployeeNavigator />
+            ) : (
+              <CitizenNavigator />
+            )}
+        </NavigationContainer>
+      </AuthContext.Provider>
+    </SafeAreaProvider>
   );
 }

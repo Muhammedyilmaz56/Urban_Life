@@ -28,4 +28,4 @@ class AssignmentOut(BaseModel):
     solution_photo_url: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

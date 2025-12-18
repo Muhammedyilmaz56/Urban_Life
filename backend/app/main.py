@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import complaint_routes
 from app.routes import auth_routes
@@ -16,6 +17,15 @@ from app.models.base import Base
 from app.models.worker import Worker
 from app.routes.employee_routes import router as employee_router
 app = FastAPI(title="Urbanlife API")
+
+# CORS middleware - allow React Native app to communicate with API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(category_router)

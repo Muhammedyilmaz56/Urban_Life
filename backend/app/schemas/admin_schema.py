@@ -59,3 +59,22 @@ class AdminStatsOut(BaseModel):
     total_complaints: int
     complaints_by_status: Dict[str, int]
     complaints_last_7_days: int
+
+class CategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_active: Optional[bool] = True
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class CategoryOut(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    is_active: bool
+
+    class Config:
+        from_attributes = True

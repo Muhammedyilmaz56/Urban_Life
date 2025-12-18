@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   FlatList,
   TextInput,
-  ImageBackground,
   StatusBar,
   ActivityIndicator,
   Alert,
@@ -14,9 +13,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import styles from "../../styles/AdminOfficialsStyles";
 import { adminApi } from "../../api/admin";
-
-const BG_IMAGE =
-  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 type OfficialItem = {
   id: number;
@@ -81,7 +77,6 @@ export default function AdminOfficialsScreen() {
   };
 
   const filtered = useMemo(() => {
-   
     const q = debouncedSearch.trim().toLowerCase();
     return items.filter((u) => {
       const match =
@@ -102,101 +97,101 @@ export default function AdminOfficialsScreen() {
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate("AdminOfficialDetail", { id: item.id })}
-      activeOpacity={0.85}
+      activeOpacity={0.9}
     >
       <View style={{ flex: 1 }}>
-        <Text style={styles.cardTitle}>{item.full_name}</Text>
-        <Text style={styles.cardSub}>{item.email}</Text>
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {item.full_name}
+        </Text>
+        <Text style={styles.cardSub} numberOfLines={1}>
+          {item.email}
+        </Text>
       </View>
 
-      <View style={styles.badgeWrap}>
+      <View style={styles.rightCol}>
         <View style={[styles.badge, item.is_active ? styles.badgeActive : styles.badgePassive]}>
           <Text style={styles.badgeText}>{item.is_active ? "Aktif" : "Pasif"}</Text>
         </View>
-        <Text style={styles.arrow}>{">"}</Text>
+        <Text style={styles.arrow}>›</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground source={{ uri: BG_IMAGE }} style={styles.bg} resizeMode="cover">
-        <View style={styles.overlay}>
-          <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.backTxt}>‹</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Yöneticiler</Text>
-            <TouchableOpacity
-              style={styles.addBtn}
-              onPress={() => navigation.navigate("AdminCreateOfficial")}
-            >
-              <Text style={styles.addTxt}>+</Text>
-            </TouchableOpacity>
-          </View>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
-          <TextInput
-            style={styles.search}
-            placeholder="İsim veya e-posta ara..."
-            placeholderTextColor="#bdbdbd"
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-          />
+      {/* TOP BAR */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
 
-          <View style={styles.filterRow}>
-            <TouchableOpacity
-              style={[styles.filterBtn, filter === "ALL" && styles.filterBtnActive]}
-              onPress={() => setFilter("ALL")}
-            >
-              <Text style={[styles.filterTxt, filter === "ALL" && styles.filterTxtActive]}>
-                Tümü
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.filterBtn, filter === "ACTIVE" && styles.filterBtnActive]}
-              onPress={() => setFilter("ACTIVE")}
-            >
-              <Text style={[styles.filterTxt, filter === "ACTIVE" && styles.filterTxtActive]}>
-                Aktif
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.filterBtn, filter === "PASSIVE" && styles.filterBtnActive]}
-              onPress={() => setFilter("PASSIVE")}
-            >
-              <Text style={[styles.filterTxt, filter === "PASSIVE" && styles.filterTxtActive]}>
-                Pasif
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {loading ? (
-            <View style={{ paddingTop: 28 }}>
-              <ActivityIndicator />
-            </View>
-          ) : null}
-
-          <FlatList
-            data={filtered}
-            keyExtractor={(x) => String(x.id)}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            ListEmptyComponent={
-              <View style={{ paddingTop: 40 }}>
-                <Text style={{ color: "white", textAlign: "center" }}>
-                  Sonuç bulunamadı
-                </Text>
-              </View>
-            }
-          />
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>Yöneticiler</Text>
+          <Text style={styles.subtitle}>Ekle / Düzenle / Pasifleştir</Text>
         </View>
-      </ImageBackground>
+
+        <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate("AdminCreateOfficial")}>
+          <Text style={styles.addTxt}>+</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* SEARCH */}
+      <View style={styles.searchWrap}>
+        <TextInput
+          style={styles.search}
+          placeholder="İsim veya e-posta ara..."
+          placeholderTextColor="rgba(100,116,139,0.85)"
+          value={search}
+          onChangeText={setSearch}
+          autoCapitalize="none"
+        />
+      </View>
+
+      {/* FILTERS */}
+      <View style={styles.filterRow}>
+        <TouchableOpacity
+          style={[styles.filterBtn, filter === "ALL" && styles.filterBtnActive]}
+          onPress={() => setFilter("ALL")}
+        >
+          <Text style={[styles.filterTxt, filter === "ALL" && styles.filterTxtActive]}>Tümü</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterBtn, filter === "ACTIVE" && styles.filterBtnActive]}
+          onPress={() => setFilter("ACTIVE")}
+        >
+          <Text style={[styles.filterTxt, filter === "ACTIVE" && styles.filterTxtActive]}>Aktif</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterBtn, filter === "PASSIVE" && styles.filterBtnActive]}
+          onPress={() => setFilter("PASSIVE")}
+        >
+          <Text style={[styles.filterTxt, filter === "PASSIVE" && styles.filterTxtActive]}>Pasif</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <View style={{ paddingTop: 28 }}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : null}
+
+      <FlatList
+        data={filtered}
+        keyExtractor={(x) => String(x.id)}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListEmptyComponent={
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
+          </View>
+        }
+      />
     </View>
   );
 }

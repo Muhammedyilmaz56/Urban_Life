@@ -52,7 +52,7 @@ class ComplaintRatingOut(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -67,7 +67,7 @@ class ComplaintSupportOut(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -81,7 +81,7 @@ class ComplaintPhotoOut(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -110,4 +110,4 @@ class ComplaintOut(BaseModel):
     photos: Optional[List[ComplaintPhotoOut]] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True

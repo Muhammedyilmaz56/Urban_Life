@@ -1,123 +1,194 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
+
+const COLORS = {
+  primary: "#1e3a8a", // Kurumsal Lacivert
+  background: "#F8FAFC", // Açık Gri Zemin
+  cardBg: "#FFFFFF",
+  textDark: "#0f172a",
+  textGray: "#64748b",
+  border: "#e2e8f0",
+  danger: "#ef4444", // Kırmızı
+  success: "#22c55e", // Yeşil
+};
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: "#0f0f0f",
+    padding: 20,
+    backgroundColor: COLORS.background,
   },
 
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0f0f0f",
+    backgroundColor: COLORS.background,
   },
 
   loadingText: {
-    marginTop: 10,
-    color: "#bdbdbd",
+    marginTop: 12,
+    color: COLORS.textGray,
+    fontWeight: "500",
   },
 
+  // --- OLUŞTURMA FORMU ---
   createBox: {
-    padding: 12,
+    padding: 20,
     borderRadius: 16,
+    backgroundColor: COLORS.cardBg,
+    marginBottom: 20,
+    // Hafif Gölge
+    shadowColor: "#64748b",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: "#2a2a2a",
-    backgroundColor: "#141414",
-    marginBottom: 14,
+    borderColor: COLORS.border,
   },
 
   sectionTitle: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "900",
-    marginBottom: 10,
+    color: COLORS.textDark,
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 16,
+    letterSpacing: 0.5,
   },
 
   input: {
+    backgroundColor: "#F1F5F9", // Hafif gri input zemini
     borderWidth: 1,
-    borderColor: "#2a2a2a",
-    borderRadius: 12,
-    padding: 12,
-    color: "white",
-    marginBottom: 10,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    padding: 14,
+    color: COLORS.textDark,
+    fontSize: 15,
+    marginBottom: 12,
   },
 
   switchRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
 
   switchLabel: {
-    color: "white",
-    fontWeight: "700",
+    color: COLORS.textDark,
+    fontSize: 15,
+    fontWeight: "600",
   },
 
   saveBtn: {
-    marginTop: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: "#1f3b1f",
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
     alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   saveBtnDisabled: {
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#cbd5e1", // Pasif gri
+    shadowOpacity: 0,
+    elevation: 0,
   },
 
   saveText: {
     color: "white",
-    fontWeight: "900",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
+  // --- LİSTE ELEMANLARI ---
   card: {
-    padding: 12,
-    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: COLORS.cardBg,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#2a2a2a",
-    backgroundColor: "#141414",
-    marginBottom: 10,
+    borderColor: COLORS.border,
+  },
+
+  cardContent: {
+    flex: 1,
+    marginRight: 10,
+  },
+
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
 
   cardTitle: {
-    color: "white",
+    color: COLORS.textDark,
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "700",
   },
 
   cardDescription: {
-    color: "#cfcfcf",
-    marginTop: 6,
+    color: COLORS.textGray,
+    fontSize: 13,
+    marginTop: 2,
+    lineHeight: 18,
   },
 
-  active: {
-    marginTop: 6,
-    color: "#7CFF7C",
+  statusBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  
+  statusText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    textTransform: "uppercase",
   },
 
-  passive: {
-    marginTop: 6,
-    color: "#FF7C7C",
+  activeBadge: {
+    backgroundColor: "#dcfce7", // Açık yeşil zemin
+  },
+  activeText: {
+    color: "#166534", // Koyu yeşil yazı
+  },
+
+  passiveBadge: {
+    backgroundColor: "#fee2e2", // Açık kırmızı zemin
+  },
+  passiveText: {
+    color: "#991b1b", // Koyu kırmızı yazı
   },
 
   deleteBtn: {
-    marginTop: 10,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "#3a1b1b",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#fee2e2",
     alignItems: "center",
+    justifyContent: "center",
   },
 
   deleteText: {
-    color: "white",
-    fontWeight: "900",
+    color: COLORS.danger,
+    fontSize: 12,
+    fontWeight: "700",
   },
 
   emptyText: {
-    color: "#bdbdbd",
+    color: COLORS.textGray,
     textAlign: "center",
-    marginTop: 30,
+    marginTop: 40,
+    fontSize: 15,
   },
 });

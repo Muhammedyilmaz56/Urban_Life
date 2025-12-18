@@ -15,7 +15,7 @@ import {
 import axios from "axios";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { BASE_URL } from "../../config";
-
+import client from "../../api/client";
 
 import { ModernResetPasswordStyles as styles } from "../../styles/ModernResetPasswordStyles";
 
@@ -54,7 +54,7 @@ const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
 
     try {
       setLoading(true);
-      await axios.post(`${BASE_URL}/auth/reset-password`, {
+      await client.post(`${BASE_URL}/auth/reset-password`, {
         token: token,
         new_password: newPassword,
       });

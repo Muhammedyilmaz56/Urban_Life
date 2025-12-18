@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Linking,
+  StatusBar,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../../config";
 import styles from "../../styles/WorkersStyles";
-
+import client from "../../api/client";
 type Worker = {
   id: number;
   full_name: string;
@@ -36,10 +38,10 @@ export default function WorkersScreen({ navigation }: any) {
   const load = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
-      const res = await axios.get(`${BASE_URL}/workers`, { headers });
+      const res = await client.get(`${BASE_URL}/workers`, { headers });
       setItems(res.data);
     } catch (e: any) {
-      Alert.alert("Hata", e?.response?.data?.detail ?? "İşçiler alınamadı.");
+      Alert.alert("Hata", e?.response?.data?.detail ?? "Personel listesi alınamadı.");
     } finally {
       setLoading(false);
     }
@@ -59,8 +61,8 @@ export default function WorkersScreen({ navigation }: any) {
 
   const onDelete = (w: Worker) => {
     Alert.alert(
-      "İşçi silinsin mi?",
-      `${w.full_name} silinecek.`,
+      "Personel Silinecek",
+      `"${w.full_name}" adlı personeli silmek istediğinize emin misiniz?`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -72,7 +74,7 @@ export default function WorkersScreen({ navigation }: any) {
               await axios.delete(`${BASE_URL}/workers/${w.id}`, { headers });
               await load();
             } catch (e: any) {
-              Alert.alert("Hata", e?.response?.data?.detail ?? "İşçi silinemedi.");
+              Alert.alert("Hata", e?.response?.data?.detail ?? "Silme işlemi başarısız.");
             }
           },
         },
@@ -80,49 +82,107 @@ export default function WorkersScreen({ navigation }: any) {
     );
   };
 
+  // İsimden baş harfleri çıkaran yardımcı fonksiyon (Ahmet Yılmaz -> AY)
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  // Telefon arama veya Mail atma
+  const handleLink = (type: 'phone' | 'email', value?: string | null) => {
+    if (!value) return;
+    const url = type === 'phone' ? `tel:${value}` : `mailto:${value}`;
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) Linking.openURL(url);
+      else Alert.alert("Hata", "Bu işlem cihazınızda desteklenmiyor.");
+    });
+  };
+
   const renderItem = ({ item }: { item: Worker }) => (
     <View style={styles.card}>
-      <View style={styles.rowBetween}>
-        <Text style={styles.name}>{item.full_name}</Text>
-        <Text style={item.is_active ? styles.active : styles.passive}>
-          {item.is_active ? "Aktif" : "Pasif"}
-        </Text>
+      {/* Üst Kısım: Avatar ve İsim */}
+      <View style={styles.cardHeader}>
+        <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>{getInitials(item.full_name)}</Text>
+        </View>
+        <View style={styles.headerInfo}>
+            <Text style={styles.name}>{item.full_name}</Text>
+            <View style={styles.statusContainer}>
+                <View style={item.is_active ? styles.activeBadge : styles.passiveBadge}>
+                    <Text style={item.is_active ? styles.activeText : styles.passiveText}>
+                        {item.is_active ? "AKTİF PERSONEL" : "PASİF"}
+                    </Text>
+                </View>
+            </View>
+        </View>
       </View>
 
-      {!!item.email && <Text style={styles.subText}>{item.email}</Text>}
-      {!!item.phone && <Text style={styles.subText}>{item.phone}</Text>}
+      {/* İletişim Bilgileri */}
+      <View style={styles.contactContainer}>
+        {item.email ? (
+             <TouchableOpacity style={styles.contactRow} onPress={() => handleLink('email', item.email)}>
+                <Text style={styles.contactLabel}>E-Posta:</Text>
+                <Text style={[styles.contactValue, styles.clickableText]}>{item.email}</Text>
+             </TouchableOpacity>
+        ) : (
+            <View style={styles.contactRow}>
+                 <Text style={styles.contactLabel}>E-Posta:</Text>
+                 <Text style={[styles.contactValue, {color: '#94a3b8', fontStyle: 'italic'}]}>Belirtilmemiş</Text>
+            </View>
+        )}
 
-      
-      <Text style={styles.metaText}>user_id: {item.user_id}</Text>
-      <Text style={styles.metaText}>category_id: {item.category_id}</Text>
+        {item.phone ? (
+            <TouchableOpacity style={styles.contactRow} onPress={() => handleLink('phone', item.phone)}>
+                <Text style={styles.contactLabel}>Telefon:</Text>
+                <Text style={[styles.contactValue, styles.clickableText]}>{item.phone}</Text>
+            </TouchableOpacity>
+        ) : (
+            <View style={styles.contactRow}>
+                <Text style={styles.contactLabel}>Telefon:</Text>
+                <Text style={[styles.contactValue, {color: '#94a3b8', fontStyle: 'italic'}]}>Belirtilmemiş</Text>
+           </View>
+        )}
+      </View>
 
-      <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item)}>
-        <Text style={styles.deleteText}>Sil</Text>
-      </TouchableOpacity>
+      <View style={styles.cardFooter}>
+  <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item)}>
+    <Text style={styles.deleteText}>🗑 Sil</Text>
+  </TouchableOpacity>
+</View>
+
     </View>
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-        <Text style={styles.loadingText}>İşçiler yükleniyor...</Text>
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#1e3a8a" />
+        <Text style={styles.loadingText}>Personel listesi yükleniyor...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.addBtn} onPress={goAdd}>
-        <Text style={styles.addText}>+ İşçi Ekle</Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      
+      <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={goAdd}>
+        <Text style={styles.addText}>+ Yeni Personel Ekle</Text>
       </TouchableOpacity>
 
       <FlatList
         data={items}
         keyExtractor={(it) => String(it.id)}
         renderItem={renderItem}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={<Text style={styles.emptyText}>Henüz işçi yok.</Text>}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1e3a8a" />
+        }
+        ListEmptyComponent={
+            <Text style={styles.emptyText}>Sistemde kayıtlı personel bulunmamaktadır.</Text>
+        }
       />
     </View>
   );

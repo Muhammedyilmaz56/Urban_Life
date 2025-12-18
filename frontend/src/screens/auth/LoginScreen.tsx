@@ -12,12 +12,12 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { BASE_URL } from "../../config";
-
+import client from "../../api/client";
 import LoginStyles from "../../styles/LoginStyles";
-import { AuthContext } from "../../../App"; 
+import { AuthContext } from "../../../App";
 
 const BG_IMAGE =
   "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
@@ -26,8 +26,9 @@ export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
-  const auth = useContext(AuthContext); 
+  const auth = useContext(AuthContext);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -37,7 +38,7 @@ export default function LoginScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${BASE_URL}/auth/login`, {
+      const response = await client.post(`${BASE_URL}/auth/login`, {
         email,
         password,
       });
@@ -45,7 +46,7 @@ export default function LoginScreen({ navigation }: any) {
       const token = response.data.access_token;
       await AsyncStorage.setItem("token", token);
 
-      const meResponse = await axios.get(`${BASE_URL}/auth/me`, {
+      const meResponse = await client.get(`${BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -53,14 +54,10 @@ export default function LoginScreen({ navigation }: any) {
 
       await AsyncStorage.setItem("user", JSON.stringify(userData));
 
-
       auth?.setUser(userData);
       console.log("Login başarılı, kullanıcı:", userData);
 
       setLoading(false);
-
- 
-
     } catch (err: any) {
       setLoading(false);
       console.error("LOGIN ERROR:", err?.response?.data || err.message);
@@ -69,100 +66,111 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <ImageBackground
-      source={{ uri: BG_IMAGE }}
-      style={LoginStyles.background}
-      resizeMode="cover"
-    >
+    <View style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
       <StatusBar
         barStyle="light-content"
         translucent
         backgroundColor="transparent"
       />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={LoginStyles.keyboardView}
+      {/* Loading overlay while image loads */}
+      {imageLoading && (
+        <View style={LoginStyles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#4F46E5" />
+        </View>
+      )}
+
+      <ImageBackground
+        source={{ uri: BG_IMAGE }}
+        style={LoginStyles.background}
+        resizeMode="cover"
+        onLoadEnd={() => setImageLoading(false)}
       >
-        <ScrollView
-          contentContainerStyle={LoginStyles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={LoginStyles.keyboardView}
         >
-          <View style={LoginStyles.overlay}>
-            <View style={LoginStyles.headerContainer}>
-              <Text style={LoginStyles.appTitle}>CityFlow</Text>
-              <Text style={LoginStyles.appSubtitle}>
-                Şehrin kontrolü sende.
-              </Text>
-            </View>
-
-            <View style={LoginStyles.glassFormContainer}>
-              <Text style={LoginStyles.formTitle}>Giriş Yap</Text>
-
-              <View style={LoginStyles.inputWrapper}>
-                <Text style={LoginStyles.inputIcon}>✉️</Text>
-                <TextInput
-                  style={LoginStyles.input}
-                  placeholder="Email Adresi"
-                  placeholderTextColor="rgba(255,255,255,0.6)"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                />
+          <ScrollView
+            contentContainerStyle={LoginStyles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={LoginStyles.overlay}>
+              <View style={LoginStyles.headerContainer}>
+                <Text style={LoginStyles.appTitle}>CityFlow</Text>
+                <Text style={LoginStyles.appSubtitle}>
+                  Şehrin kontrolü sende.
+                </Text>
               </View>
 
-              <View style={LoginStyles.inputWrapper}>
-                <Text style={LoginStyles.inputIcon}>🔒</Text>
-                <TextInput
-                  style={LoginStyles.input}
-                  placeholder="Şifre"
-                  placeholderTextColor="rgba(255,255,255,0.6)"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-                />
-              </View>
+              <View style={LoginStyles.glassFormContainer}>
+                <Text style={LoginStyles.formTitle}>Giriş Yap</Text>
 
-              <TouchableOpacity
-                style={LoginStyles.forgotPasswordContainer}
-                onPress={() => navigation.navigate("ForgotPassword" as never)}
-              >
-                <Text style={LoginStyles.forgotPasswordText}>
-                  Şifremi unuttum?
-                </Text>
-              </TouchableOpacity>
+                <View style={LoginStyles.inputWrapper}>
+                  <Text style={LoginStyles.inputIcon}>✉️</Text>
+                  <TextInput
+                    style={LoginStyles.input}
+                    placeholder="Email Adresi"
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
 
-              <TouchableOpacity
-                style={[
-                  LoginStyles.loginButton,
-                  loading && LoginStyles.loginButtonDisabled,
-                ]}
-                onPress={handleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={LoginStyles.loginButtonText}>GİRİŞ YAP</Text>
-                )}
-              </TouchableOpacity>
+                <View style={LoginStyles.inputWrapper}>
+                  <Text style={LoginStyles.inputIcon}>🔒</Text>
+                  <TextInput
+                    style={LoginStyles.input}
+                    placeholder="Şifre"
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                  />
+                </View>
 
-              <View style={LoginStyles.registerContainer}>
-                <Text style={LoginStyles.registerText}>
-                  Hesabın yok mu?{" "}
-                </Text>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate("Register")}
+                  style={LoginStyles.forgotPasswordContainer}
+                  onPress={() => navigation.navigate("ForgotPassword" as never)}
                 >
-                  <Text style={LoginStyles.registerLink}>Kayıt Ol</Text>
+                  <Text style={LoginStyles.forgotPasswordText}>
+                    Şifremi unuttum?
+                  </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    LoginStyles.loginButton,
+                    loading && LoginStyles.loginButtonDisabled,
+                  ]}
+                  onPress={handleLogin}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={LoginStyles.loginButtonText}>GİRİŞ YAP</Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={LoginStyles.registerContainer}>
+                  <Text style={LoginStyles.registerText}>
+                    Hesabın yok mu?{" "}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate("Register")}
+                  >
+                    <Text style={LoginStyles.registerLink}>Kayıt Ol</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ImageBackground>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </ImageBackground>
+    </View>
   );
 }

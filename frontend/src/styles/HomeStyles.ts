@@ -1,200 +1,229 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
-const { width } = Dimensions.get("window");
+const PRIMARY = "#0B3A6A"; // kurum mavisi
+const PRIMARY_2 = "#1E3A8A"; // alternatif mavi
+const BORDER = "#E5E7EB"; // açık gri
+const BG = "#F6F8FB"; // arka plan
+const TEXT = "#0F172A"; // koyu metin
+const MUTED = "#64748B"; // ikincil metin
+const CARD = "#FFFFFF";
 
 export default StyleSheet.create({
-  // --- ANA KAPLAYICI ---
   container: {
     flex: 1,
-    backgroundColor: "#121212",
-  },
-  
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
+    backgroundColor: BG,
   },
 
-  overlay: {
+  content: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)", // Arka planı biraz daha kararttık (yazılar netleşsin)
+    backgroundColor: BG,
   },
 
-  // --- HEADER (Üst Kısım) ---
+  // HEADER
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 60 : 45,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    zIndex: 10,
+    justifyContent: "space-between",
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    backgroundColor: PRIMARY,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.15)",
   },
-  
-  // SOL ÜSTTEKİ YUVARLAK CAM BUTON (İsteğin Üzerine Eklendi)
+
   glassButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.1)", // Hafif beyaz şeffaflık
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.12)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    // Hafif gölge
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+    borderColor: "rgba(255,255,255,0.18)",
   },
 
   glassButtonIcon: {
-    fontSize: 28,
+    fontSize: 20,
     color: "#FFFFFF",
-    fontWeight: "300",
-    marginTop: -4, // Ortalamak için ince ayar
-    marginLeft: -2
-  },
-  
-  appTitle: {
-    fontSize: 28, // Biraz küçülttük ki sığsın
-    fontWeight: "800",
-    color: "#FFFFFF",
-    letterSpacing: 1,
-    textShadowColor: "rgba(0, 0, 0, 0.9)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    fontWeight: "700",
   },
 
-  // SAĞDAKİ PROFİL RESMİ
+  appTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.2,
+  },
+
   profileButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: "rgba(255,255,255,0.25)",
     overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
-  
+
   profileImage: {
     width: 44,
     height: 44,
   },
 
-  // --- SEKMELER (TABS) ---
+  // PROFILE MENU
+  profileMenu: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 110 : 78,
+    right: 16,
+    backgroundColor: CARD,
+    borderRadius: 12,
+    paddingVertical: 6,
+    width: 220,
+    zIndex: 999,
+    borderWidth: 1,
+    borderColor: BORDER,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+
+  profileMenuItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+
+  profileMenuText: {
+    fontSize: 14,
+    color: TEXT,
+    fontWeight: "600",
+  },
+
+  // ÇIKIŞ (EKLENDİ)
+  profileMenuLogout: {
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    backgroundColor: "rgba(185, 28, 28, 0.06)",
+  },
+
+  profileMenuLogoutText: {
+    color: "#B91C1C",
+    fontWeight: "900",
+  },
+
+  // TABS
   tabsRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-    gap: 12,
-  },
-  
-  tabButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-  },
-  
-  tabButtonActive: {
-    backgroundColor: "#6C63FF",
-    borderColor: "#6C63FF",
-    shadowColor: "#6C63FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#AAAAAA",
-  },
-  
-  tabTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "700",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+    gap: 10,
+    backgroundColor: BG,
   },
 
-  // --- LİSTE ---
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+
+  tabButtonActive: {
+    borderColor: PRIMARY_2,
+    backgroundColor: "#EAF2FF",
+  },
+
+  tabText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: MUTED,
+  },
+
+  tabTextActive: {
+    color: PRIMARY_2,
+  },
+
+  // LIST
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
+    paddingTop: 6,
   },
 
-  // --- KART TASARIMI ---
+  // CARD
   card: {
-    backgroundColor: "rgba(35, 35, 35, 0.85)", // Daha koyu ve net kart
-    borderRadius: 24,
-    marginBottom: 20,
-    padding: 20,
+    backgroundColor: CARD,
+    borderRadius: 14,
+    marginBottom: 14,
+    padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: BORDER,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
 
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  
-  cardTitle: {
-    fontSize: 19,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    flex: 1,
-    marginRight: 10,
-    lineHeight: 26,
+    marginBottom: 10,
+    gap: 10,
   },
 
-  // STATUS BADGES
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: TEXT,
+    flex: 1,
+    lineHeight: 22,
+  },
+
+  // STATUS
   statusBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 6,
     borderRadius: 10,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
-    textTransform: "uppercase",
     overflow: "hidden",
     textAlign: "center",
   },
+
   statusPending: {
-    backgroundColor: "rgba(255, 165, 0, 0.15)",
-    color: "#FFB347",
+    backgroundColor: "#FFF7ED",
+    color: "#9A3412",
     borderWidth: 1,
-    borderColor: "rgba(255, 165, 0, 0.3)",
+    borderColor: "#FED7AA",
   },
+
   statusInProgress: {
-    backgroundColor: "rgba(52, 152, 219, 0.15)",
-    color: "#5DADE2",
+    backgroundColor: "#EFF6FF",
+    color: "#1D4ED8",
     borderWidth: 1,
-    borderColor: "rgba(52, 152, 219, 0.3)",
+    borderColor: "#BFDBFE",
   },
+
   statusResolved: {
-    backgroundColor: "rgba(46, 204, 113, 0.15)",
-    color: "#58D68D",
+    backgroundColor: "#ECFDF5",
+    color: "#065F46",
     borderWidth: 1,
-    borderColor: "rgba(46, 204, 113, 0.3)",
+    borderColor: "#A7F3D0",
   },
 
   cardDescription: {
-    fontSize: 15,
-    color: "#CCCCCC",
-    lineHeight: 22,
-    marginBottom: 16,
+    fontSize: 14,
+    color: MUTED,
+    lineHeight: 20,
+    marginBottom: 12,
   },
 
   // FOOTER
@@ -202,133 +231,105 @@ export default StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 5,
   },
-  
+
   cardDate: {
-    fontSize: 13,
-    color: "#888",
-    fontWeight: "500",
+    fontSize: 12,
+    color: MUTED,
+    fontWeight: "600",
   },
-  
+
   supportButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    backgroundColor: "#EEF2FF",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  
-  supportText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    marginLeft: 6,
+    borderColor: "#E0E7FF",
   },
 
-  // DETAY BUTONU
+  supportText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: PRIMARY_2,
+    marginLeft: 8,
+  },
+
+  // DETAILS
+  cardDetails: { marginTop: 10 },
+
+  detailDescription: {
+    fontSize: 14,
+    color: TEXT,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+
+  photosContainer: {
+    marginBottom: 12,
+    height: 190,
+  },
+
+  detailImage: {
+    width: 260,
+    height: 170,
+    borderRadius: 12,
+    marginRight: 12,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+
+  mapContainer: {
+    height: 180,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: BORDER,
+    marginBottom: 6,
+    backgroundColor: "#F8FAFC",
+  },
+
+  map: { width: "100%", height: "100%" },
+
   expandButtonContainer: {
-    marginTop: 15,
+    marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
+    borderTopColor: BORDER,
     alignItems: "center",
     paddingTop: 10,
   },
-  
+
   expandButton: {
-    flexDirection: "row",
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 5,
-    width: "100%", // Tıklama alanı geniş
+    paddingVertical: 6,
   },
-  
+
   expandText: {
-    color: "#6C63FF",
+    color: PRIMARY_2,
     fontSize: 12,
-    fontWeight: "700",
-    marginRight: 4,
+    fontWeight: "800",
+    letterSpacing: 0.3,
     textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  
-  expandIcon: {
-    fontSize: 16,
-    color: "#6C63FF",
-    fontWeight: "bold",
-    marginTop: -2,
   },
 
-  // --- DETAYLAR ---
-  cardDetails: {
-    marginTop: 15,
-  },
-  detailDescription: {
-    fontSize: 15,
-    color: "#E0E0E0",
-    lineHeight: 24,
-    marginBottom: 20,
-  },
-  photosContainer: {
-    marginBottom: 20,
-    height: 200,
-  },
-  detailImage: {
-    width: 280,
-    height: 180,
-    borderRadius: 16,
-    marginRight: 15,
-    backgroundColor: "#2C2C2C",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  mapContainer: {
-    height: 180,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    marginBottom: 10,
-  },
-  map: {
-    width: "100%",
-    height: "100%",
+  loadingContainer: {
+    marginTop: 100,
+    alignItems: "center",
   },
 
-  // PROFİL MENÜSÜ
-  profileMenu: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 110 : 90,
-    right: 20,
-    backgroundColor: "#1E1E1E",
-    borderRadius: 16,
-    paddingVertical: 5,
-    width: 200,
-    zIndex: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 15,
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: 100,
   },
-  profileMenuItem: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
+
+  emptyText: {
+    color: MUTED,
+    fontSize: 14,
+    fontWeight: "600",
   },
-  profileMenuText: {
-    fontSize: 15,
-    color: "#E0E0E0",
-    fontWeight: "500",
-  },
-  
-  loadingContainer: { marginTop: 100 },
-  emptyContainer: { alignItems: "center", marginTop: 100 },
-  emptyText: { color: "#888", fontSize: 16 },
 });

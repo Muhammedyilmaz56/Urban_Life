@@ -6,59 +6,57 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
-  Image,
-  Alert,
+  StatusBar,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
 import { BASE_URL } from "../../config";
 import styles from "../../styles/EmployeeHomeStyles";
-
-type Complaint = {
-  id: number;
-  title?: string | null;
-  description?: string | null;
-  status?: string;
-  created_at?: string;
-  photos?: { id: number; photo_url: string }[];
+import client from "../../api/client";
+// Helper: Durum Renkleri
+const getStatusTheme = (status: string) => {
+  switch (status) {
+    case "assigned":
+      return { style: styles.status_assigned, textColor: "#1e40af" };
+    case "in_progress":
+      return { style: styles.status_in_progress, textColor: "#854d0e" };
+    case "completed":
+      return { style: styles.status_completed, textColor: "#166534" };
+    case "resolved":
+      return { style: styles.status_completed, textColor: "#15803d" };
+    default:
+      return { style: {}, textColor: "#64748b" };
+  }
 };
 
-type AssignedItem = {
-  assignment_id: number;
-  assignment_status: string;
-  complaint: Complaint;
+const statusLabelMap: Record<string, string> = {
+  assigned: "Yeni Görev",
+  in_progress: "İşlemde",
+  completed: "Tamamlandı",
+  resolved: "Çözüldü",
 };
 
-const resolvePhoto = (url?: string | null) => {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  return `${BASE_URL}${url}`;
-};
+export default function EmployeeHomeScreen() {
+  const navigation = useNavigation<any>();
 
-export default function EmployeeHomeScreen({ navigation }: any) {
-  const [items, setItems] = useState<AssignedItem[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAssigned = useCallback(async () => {
+  // --- Veri Çekme ---
+  const loadData = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        setItems([]);
-        return;
-      }
+      if (!token) return;
 
-      const res = await axios.get(`${BASE_URL}/employee/complaints/assigned`, {
+      const res = await client.get(`${BASE_URL}/employee/complaints/assigned`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setItems(res.data || []);
-    } catch (e: any) {
-      const msg =
-        e?.response?.data?.detail ||
-        e?.message ||
-        "İşler alınamadı. Endpoint/Token kontrol et.";
-      Alert.alert("Hata", String(msg));
+
+    } catch (e) {
+      console.log("Veri çekme hatası:", e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -66,26 +64,25 @@ export default function EmployeeHomeScreen({ navigation }: any) {
   }, []);
 
   useEffect(() => {
-    const unsub = navigation.addListener("focus", fetchAssigned);
-    fetchAssigned();
+    const unsub = navigation.addListener("focus", loadData);
+    loadData();
     return unsub;
-  }, [fetchAssigned, navigation]);
+  }, [loadData, navigation]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchAssigned().finally(() => setRefreshing(false));
+    loadData();
   };
 
-  const renderItem = ({ item }: { item: AssignedItem }) => {
+  // --- Liste Elemanı Render ---
+  const renderItem = ({ item }: { item: any }) => {
     const c = item.complaint;
-
-    const firstPhoto =
-      c.photos && c.photos.length > 0
-        ? resolvePhoto(c.photos[0]?.photo_url)
-        : null;
+    const statusTheme = getStatusTheme(item.assignment_status);
 
     return (
       <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.7}
         onPress={() =>
           navigation.navigate("EmployeeJobDetail", {
             complaintId: c.id,
@@ -93,72 +90,77 @@ export default function EmployeeHomeScreen({ navigation }: any) {
             assignmentStatus: item.assignment_status,
           })
         }
-        style={styles.card}
-        activeOpacity={0.9}
       >
-        {firstPhoto ? (
-          <Image
-            source={{ uri: firstPhoto }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.noPhotoBox}>
-            <Text style={styles.noPhotoText}>Foto yok</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {c.title || "İsimsiz Şikayet"}
+          </Text>
+          <View style={[styles.statusBadge, statusTheme.style]}>
+            <Text style={[styles.statusText, { color: statusTheme.textColor }]}>
+              {statusLabelMap[item.assignment_status] || item.assignment_status}
+            </Text>
           </View>
+        </View>
+
+        {c.address ? (
+           <Text style={styles.addressText} numberOfLines={1}>📍 {c.address}</Text>
+        ) : (
+           <Text style={[styles.addressText, {opacity:0.5}]}>📍 Konum belirtilmemiş</Text>
         )}
 
-        <View style={styles.cardBody}>
-          <Text style={styles.title}>{c.title || `Şikayet #${c.id}`}</Text>
+        <Text style={styles.descriptionText} numberOfLines={2}>
+          {c.description || "Açıklama girilmemiş."}
+        </Text>
 
-          {!!c.description && (
-            <Text style={styles.desc} numberOfLines={2}>
-              {c.description}
-            </Text>
-          )}
-
-          <View style={styles.badgeRow}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                Görev: {item.assignment_status || "-"}
-              </Text>
-            </View>
-
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>ID: {c.id}</Text>
-            </View>
+        <View style={styles.cardFooter}>
+          <Text style={styles.dateText}>
+             📅 {c.created_at ? new Date(c.created_at).toLocaleDateString("tr-TR", { day: 'numeric', month: 'long' }) : "-"}
+          </Text>
+          <View style={styles.detailLink}>
+            <Text style={styles.detailLinkText}>İncele</Text>
+            <Text style={{color: '#1e3a8a'}}>→</Text>
           </View>
         </View>
       </TouchableOpacity>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Bana Atanan İşler</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
 
-      <FlatList
-        data={items}
-        keyExtractor={(x) => String(x.assignment_id)}
-        renderItem={renderItem}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Text style={styles.emptyText}>Şu an atanmış iş yok.</Text>
-          </View>
-        }
-      />
+      {/* HEADER: Sadece Yazı Kaldı */}
+      <View style={styles.headerContainer}>
+           <Text style={styles.welcomeText}>Hoş Geldiniz,</Text>
+           <Text style={styles.headerTitle}>Saha Görevleri</Text>
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1e3a8a" />
+          <Text style={{marginTop: 10, color: '#64748b'}}>Görevler yükleniyor...</Text>
+        </View>
+      ) : items.length === 0 ? (
+        <View style={styles.emptyContainer}>
+            <Text style={{fontSize: 40, marginBottom: 10}}>✅</Text>
+            <Text style={styles.emptyText}>Üzerinize atanmış aktif görev bulunmuyor.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => String(item.assignment_id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+                tintColor="#1e3a8a" 
+            />
+          }
+        />
+      )}
     </View>
   );
 }

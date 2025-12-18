@@ -1,7 +1,7 @@
-import axios from "axios";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../config";
-
+import client from "./client";
 export type AssignedComplaint = {
   id: number;
   title: string;
@@ -22,6 +22,6 @@ const getAuthHeaders = async () => {
 
 export const fetchAssignedComplaints = async (): Promise<AssignedComplaint[]> => {
   const headers = await getAuthHeaders();
-  const res = await axios.get(`${BASE_URL}/employee/complaints/assigned`, { headers });
+  const res = await client.get(`${BASE_URL}/employee/complaints/assigned`, { headers });
   return res.data;
 };

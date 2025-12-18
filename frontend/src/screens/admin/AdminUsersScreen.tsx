@@ -1,22 +1,21 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useState, useContext } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   TextInput,
-  ImageBackground,
   StatusBar,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import styles from "../../styles/AdminUsersStyles";
 import { adminApi } from "../../api/admin";
-
-const BG_IMAGE =
-  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
+import { AuthContext } from "../../../App";
 
 type UserItem = {
   id: number;
@@ -30,9 +29,14 @@ type UserItem = {
 export default function AdminUsersScreen() {
   const navigation = useNavigation<any>();
 
+  const auth = useContext(AuthContext);
+  const setUser = auth?.setUser;
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"ALL" | "citizen" | "employee" | "official" | "admin">("ALL");
+  const [roleFilter, setRoleFilter] = useState<
+    "ALL" | "citizen" | "employee" | "official" | "admin"
+  >("ALL");
   const [activeFilter, setActiveFilter] = useState<"ALL" | "ACTIVE" | "PASSIVE">("ALL");
 
   const [items, setItems] = useState<UserItem[]>([]);
@@ -72,6 +76,7 @@ export default function AdminUsersScreen() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, roleFilter, activeFilter]);
 
   const onRefresh = async () => {
@@ -84,7 +89,6 @@ export default function AdminUsersScreen() {
   };
 
   const filtered = useMemo(() => {
-    
     const q = debouncedSearch.trim().toLowerCase();
     return items.filter((u) => {
       const match =
@@ -103,6 +107,24 @@ export default function AdminUsersScreen() {
     });
   }, [items, debouncedSearch, roleFilter, activeFilter]);
 
+  const logout = () => {
+    Alert.alert("Çıkış", "Çıkış yapmak istiyor musun?", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Çıkış Yap",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("accessToken");
+            await AsyncStorage.removeItem("current_user");
+          } finally {
+            setUser?.(null);
+          }
+        },
+      },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: UserItem }) => (
     <View style={styles.card}>
       <View style={{ flex: 1 }}>
@@ -113,7 +135,14 @@ export default function AdminUsersScreen() {
 
       <View style={styles.badgeWrap}>
         <View style={[styles.badge, item.is_active ? styles.badgeActive : styles.badgePassive]}>
-          <Text style={styles.badgeText}>{item.is_active ? "Aktif" : "Pasif"}</Text>
+          <Text
+            style={[
+              styles.badgeText,
+              item.is_active ? styles.badgeTextActive : styles.badgeTextPassive,
+            ]}
+          >
+            {item.is_active ? "Aktif" : "Pasif"}
+          </Text>
         </View>
       </View>
     </View>
@@ -121,84 +150,107 @@ export default function AdminUsersScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground source={{ uri: BG_IMAGE }} style={styles.bg} resizeMode="cover">
-        <View style={styles.overlay}>
-          <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.backTxt}>‹</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Kullanıcılar</Text>
-            <View style={{ width: 44 }} />
-          </View>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
-          <TextInput
-            style={styles.search}
-            placeholder="İsim veya e-posta ara..."
-            placeholderTextColor="#bdbdbd"
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-          />
+      {/* TOP BAR - Corporate Style */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
 
-          <View style={styles.filterRow}>
-            <TouchableOpacity
-              style={[styles.filterBtn, activeFilter === "ALL" && styles.filterBtnActive]}
-              onPress={() => setActiveFilter("ALL")}
-            >
-              <Text style={[styles.filterTxt, activeFilter === "ALL" && styles.filterTxtActive]}>Tümü</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.filterBtn, activeFilter === "ACTIVE" && styles.filterBtnActive]}
-              onPress={() => setActiveFilter("ACTIVE")}
-            >
-              <Text style={[styles.filterTxt, activeFilter === "ACTIVE" && styles.filterTxtActive]}>Aktif</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.filterBtn, activeFilter === "PASSIVE" && styles.filterBtnActive]}
-              onPress={() => setActiveFilter("PASSIVE")}
-            >
-              <Text style={[styles.filterTxt, activeFilter === "PASSIVE" && styles.filterTxtActive]}>Pasif</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.roleRow}>
-            {(["ALL", "citizen", "employee", "official", "admin"] as const).map((r) => (
-              <TouchableOpacity
-                key={r}
-                style={[styles.roleBtn, roleFilter === r && styles.roleBtnActive]}
-                onPress={() => setRoleFilter(r)}
-              >
-                <Text style={[styles.roleTxt, roleFilter === r && styles.roleTxtActive]}>
-                  {r === "ALL" ? "Hepsi" : r}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {loading ? (
-            <View style={{ paddingTop: 28 }}>
-              <ActivityIndicator />
-            </View>
-          ) : null}
-
-          <FlatList
-            data={filtered}
-            keyExtractor={(x) => String(x.id)}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            ListEmptyComponent={
-              <View style={{ paddingTop: 40 }}>
-                <Text style={{ color: "white", textAlign: "center" }}>Sonuç bulunamadı</Text>
-              </View>
-            }
-          />
+        <View style={styles.titleWrapper}>
+          <Text style={styles.title}>Kullanıcılar</Text>
+          <Text style={styles.subtitle}>Tüm kullanıcı listesi</Text>
         </View>
-      </ImageBackground>
+
+        {/* LOGOUT BUTTON */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.85}>
+          <Text style={styles.logoutTxt}>⎋</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* SEARCH */}
+      <TextInput
+        style={styles.search}
+        placeholder="İsim veya e-posta ara..."
+        placeholderTextColor="#94A3B8"
+        value={search}
+        onChangeText={setSearch}
+        autoCapitalize="none"
+      />
+
+      {/* ACTIVE/PASSIVE FILTER */}
+      <View style={styles.filterRow}>
+        <TouchableOpacity
+          style={[styles.filterBtn, activeFilter === "ALL" && styles.filterBtnActive]}
+          onPress={() => setActiveFilter("ALL")}
+        >
+          <Text style={[styles.filterTxt, activeFilter === "ALL" && styles.filterTxtActive]}>
+            Tümü
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterBtn, activeFilter === "ACTIVE" && styles.filterBtnActive]}
+          onPress={() => setActiveFilter("ACTIVE")}
+        >
+          <Text style={[styles.filterTxt, activeFilter === "ACTIVE" && styles.filterTxtActive]}>
+            Aktif
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterBtn, activeFilter === "PASSIVE" && styles.filterBtnActive]}
+          onPress={() => setActiveFilter("PASSIVE")}
+        >
+          <Text style={[styles.filterTxt, activeFilter === "PASSIVE" && styles.filterTxtActive]}>
+            Pasif
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ROLE FILTER */}
+      <View style={styles.roleRow}>
+        {(["ALL", "citizen", "employee", "official", "admin"] as const).map((r) => (
+          <TouchableOpacity
+            key={r}
+            style={[styles.roleBtn, roleFilter === r && styles.roleBtnActive]}
+            onPress={() => setRoleFilter(r)}
+          >
+            <Text style={[styles.roleTxt, roleFilter === r && styles.roleTxtActive]}>
+              {r === "ALL" ? "Hepsi" : r}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* LOADING */}
+      {loading && (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color="#0B3A6A" />
+        </View>
+      )}
+
+      {/* LIST */}
+      <FlatList
+        data={filtered}
+        keyExtractor={(x) => String(x.id)}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListEmptyComponent={
+          !loading ? (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
+            </View>
+          ) : null
+        }
+      />
     </View>
   );
 }

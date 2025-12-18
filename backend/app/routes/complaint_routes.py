@@ -47,15 +47,9 @@ def create_complaint(
             detail="Sadece vatandaş şikayet oluşturabilir.",
         )
     if not current_user.profile_completed:
-            raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Profil bilgilerinizi tamamlamadan şikayet oluşturamazsınız.",
-        )
-
-    if not current_user.profile_completed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Şikayet oluşturmak için önce profilinizi tamamlamalısınız.",
+            detail="Profil bilgilerinizi tamamlamadan şikayet oluşturamazsınız.",
         )
 
     category = (
@@ -297,3 +291,35 @@ def delete_complaint_photo(
 
     complaint_service.delete_photo(db, photo_id)  
     return
+@router.get("/{complaint_id}/photos", response_model=List[ComplaintPhotoOut])
+def get_complaint_photos(
+    complaint_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
+
+    # Yetki kontrolü (kimler görebilir)
+    if (
+        complaint.user_id != current_user.id
+        and current_user.role not in [
+            UserRole.admin,
+            UserRole.official,
+            UserRole.employee,
+        ]
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Bu şikayetin fotoğraflarını görme yetkiniz yok.",
+        )
+
+    photos = (
+        db.query(ComplaintPhoto)
+        .filter(ComplaintPhoto.complaint_id == complaint_id)
+        .order_by(ComplaintPhoto.created_at.asc())
+        .all()
+    )
+
+    return photos

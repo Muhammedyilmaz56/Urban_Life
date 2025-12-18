@@ -1,7 +1,7 @@
-import axios from "axios";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../config";
-
+import client from "./client";
 export interface OfficialComplaint {
   id: number;
   title: string;
@@ -38,7 +38,7 @@ const getAuthHeaders = async () => {
 
 export const fetchOfficialComplaints = async (): Promise<OfficialComplaint[]> => {
   const headers = await getAuthHeaders();
-  const res = await axios.get(`${BASE_URL}/official/complaints`, { headers });
+  const res = await client.get(`${BASE_URL}/official/complaints`, { headers });
   return res.data;
 };
 
@@ -46,7 +46,7 @@ export const fetchOfficialComplaintDetail = async (
   id: number
 ): Promise<OfficialComplaint> => {
   const headers = await getAuthHeaders();
-  const res = await axios.get(`${BASE_URL}/official/complaints/${id}`, {
+  const res = await client.get(`${BASE_URL}/official/complaints/${id}`, {
     headers,
   });
   return res.data;
@@ -54,7 +54,7 @@ export const fetchOfficialComplaintDetail = async (
 
 export const rejectComplaint = async (id: number, reason: string) => {
   const headers = await getAuthHeaders();
-  const res = await axios.post(
+  const res = await client.post(
     `${BASE_URL}/official/complaints/${id}/reject`,
     null,
     {
@@ -67,7 +67,7 @@ export const rejectComplaint = async (id: number, reason: string) => {
 
 export const fetchWorkers = async (): Promise<Worker[]> => {
   const headers = await getAuthHeaders();
-  const res = await axios.get(`${BASE_URL}/workers`, { headers });
+  const res = await client.get(`${BASE_URL}/workers`, { headers });
   return res.data;
 };
 
@@ -76,7 +76,7 @@ export const assignComplaintToEmployee = async (
   employeeId: number
 ) => {
   const headers = await getAuthHeaders();
-  const res = await axios.post(
+  const res = await client.post(
     `${BASE_URL}/official/complaints/${complaintId}/assign`,
     null,
     {

@@ -7,13 +7,16 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Linking,
+  StatusBar,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { BASE_URL } from "../../config";
 import styles from "../../styles/EmployeeJobDetailStyles";
 import { launchImageLibrary } from "react-native-image-picker";
-
+import client from "../../api/client";
+// Fotoğraf URL'sini tam adrese çeviren fonksiyon
 const resolvePhoto = (url?: string | null) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
@@ -31,14 +34,13 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
 
   const [selectedSolutionImages, setSelectedSolutionImages] = useState<any[]>([]);
   const [solutionUrls, setSolutionUrls] = useState<string[]>([]);
-  const isString = (v: any): v is string => typeof v === "string" && v.length > 0;
 
+  // Çözüm fotoğraflarını parse etme
   const parseSolutionUrls = (raw: any): string[] => {
     if (!raw) return [];
-  
-    
+    const isString = (v: any): v is string => typeof v === "string" && v.length > 0;
+
     if (typeof raw === "string") {
-     
       if (raw.trim().startsWith("[")) {
         try {
           const arr = JSON.parse(raw);
@@ -47,34 +49,47 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
           }
         } catch {}
       }
-  
-      
       const one = resolvePhoto(raw);
       return one ? [one] : [];
     }
-  
-   
     if (Array.isArray(raw)) {
       return raw.map((x: any) => resolvePhoto(String(x))).filter(isString);
     }
-  
     return [];
   };
-  
+
+  // ✅ Yeni: Şikayete ait fotoğrafları GET ile çek
+  const fetchComplaintPhotos = async (token: string) => {
+    try {
+      const res = await client.get(`${BASE_URL}/complaints/${complaintId}/photos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.data || []; // [{id, photo_url, created_at}, ...]
+    } catch (e) {
+      return [];
+    }
+  };
 
   const fetchDetail = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
 
-     
-      const res = await axios.get(`${BASE_URL}/employee/assignments/${assignmentId}`, {
+      // 1) Assignment detayını çek
+      const res = await client.get(`${BASE_URL}/employee/assignments/${assignmentId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-     
       const complaint = res.data?.complaint;
-      setItem(complaint);
+
+      // 2) ✅ Fotoğrafları ayrı endpoint’ten çek (hepsi gelir)
+      const photos = await fetchComplaintPhotos(token);
+
+      // 3) Complaint içine photos'u ekle
+      setItem({
+        ...complaint,
+        photos, // artık item.photos dolu
+      });
 
       const rawSolution = res.data?.solution_photo_url;
       setSolutionUrls(parseSolutionUrls(rawSolution));
@@ -96,17 +111,16 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
 
-      await axios.post(
+      await client.post(
         `${BASE_URL}/employee/assignments/${assignmentId}/start`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Alert.alert("Başarılı", "İş başlatıldı.");
+      Alert.alert("Başarılı", "İş süreci başlatıldı.");
       fetchDetail();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || "Başlatılamadı.";
-      Alert.alert("Hata", String(msg));
+      Alert.alert("Bilgi", "Bu iş zaten başlatılmış veya işlemde.");
     } finally {
       setStarting(false);
     }
@@ -116,7 +130,7 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
     try {
       const result: any = await launchImageLibrary({
         mediaType: "photo",
-        quality: 1,
+        quality: 0.8,
         selectionLimit: 0,
       });
 
@@ -132,7 +146,7 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
 
   const uploadSolutionPhotos = async () => {
     if (selectedSolutionImages.length === 0) {
-      Alert.alert("Uyarı", "Önce fotoğraf seç.");
+      Alert.alert("Uyarı", "Lütfen önce galeriden fotoğraf seçin.");
       return;
     }
 
@@ -152,7 +166,7 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
         } as any);
       });
 
-      const res = await axios.post(
+      const res = await client.post(
         `${BASE_URL}/employee/assignments/${assignmentId}/solution-photos`,
         form,
         {
@@ -163,29 +177,48 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
         }
       );
 
-    
       const urls = (res.data?.solution_photo_urls || [])
         .map((x: string) => resolvePhoto(x))
-        .filter(Boolean);
+        .filter(Boolean) as string[];
 
       setSolutionUrls(urls);
       setSelectedSolutionImages([]);
 
-      Alert.alert("Başarılı", "Çözüm fotoğrafları yüklendi.");
+      Alert.alert("Başarılı", "Çözüm fotoğrafları sisteme yüklendi.");
       fetchDetail();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || "Foto yüklenemedi.";
+      const msg = e?.response?.data?.detail || "Fotoğraf yüklenemedi.";
       Alert.alert("Hata", String(msg));
     } finally {
       setUploading(false);
     }
   };
 
+  const openMap = () => {
+    const lat = parseFloat(item?.latitude);
+    const lng = parseFloat(item?.longitude);
+
+    if (lat && lng) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      Linking.canOpenURL(url).then((supported) => {
+        if (supported) Linking.openURL(url);
+        else Alert.alert("Hata", "Harita uygulaması açılamadı.");
+      });
+    } else {
+      const query = item?.address ? encodeURIComponent(item.address) : "";
+      if (query) {
+        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+      } else {
+        Alert.alert("Hata", "Konum bilgisi (koordinat veya adres) mevcut değil.");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
+        <ActivityIndicator size="large" color="#1e3a8a" />
+        <Text style={styles.loadingText}>İş detayları yükleniyor...</Text>
       </View>
     );
   }
@@ -193,103 +226,133 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
   if (!item) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>Kayıt bulunamadı.</Text>
+        <Text style={{ color: "#64748b" }}>Kayıt bulunamadı.</Text>
       </View>
     );
   }
 
-  const complaintFirstPhoto =
-    item?.photos && item.photos.length > 0
-      ? resolvePhoto(item.photos[0]?.photo_url)
-      : null;
-
- 
-  const heroPhoto = solutionUrls.length > 0 ? solutionUrls[0] : complaintFirstPhoto;
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
-      {heroPhoto ? (
-        <Image source={{ uri: heroPhoto }} style={styles.heroImage} />
-      ) : (
-        <View style={styles.noPhotoBox}>
-          <Text style={styles.noPhotoText}>Foto yok</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+
+      <View style={styles.headerSection}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{item.title || "Başlıksız Şikayet"}</Text>
+          <View style={styles.idBadge}>
+            <Text style={styles.idText}>#{item.id}</Text>
+          </View>
+        </View>
+
+        <View style={styles.addressRow}>
+          <Text>📍</Text>
+          <Text style={styles.addressText}>
+            {item.address || "Adres bilgisi girilmemiş."}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.descriptionCard}>
+        <Text style={styles.descLabel}>VATANDAŞ AÇIKLAMASI:</Text>
+        <Text style={styles.descText}>{item.description || "Açıklama yok."}</Text>
+      </View>
+
+      <View style={styles.mapCard}>
+        <Text style={styles.descLabel}>KONUM İŞLEMLERİ</Text>
+        <TouchableOpacity style={styles.mapButton} onPress={openMap}>
+          <Text>🗺️</Text>
+          <Text style={styles.mapButtonText}>Haritada Yol Tarifi Al</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ✅ VATANDAŞ FOTOĞRAFLARI (GET /complaints/{id}/photos) */}
+      <Text style={styles.sectionTitle}>Şikayet Fotoğrafları</Text>
+      <View style={styles.photosContainer}>
+        {item.photos && item.photos.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {item.photos.map((p: any, index: number) => {
+              const url = resolvePhoto(p.photo_url);
+              if (!url) return null;
+
+              return (
+                <TouchableOpacity key={p.id || index} activeOpacity={0.9}>
+                  <Image
+                    source={{ uri: url as string }}
+                    style={styles.photo}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <Text style={styles.noPhotoText}>Vatandaş fotoğraf yüklememiş.</Text>
+        )}
+      </View>
+
+      <View style={styles.actionSection}>
+        <TouchableOpacity
+          style={[styles.primaryBtn, starting && styles.disabledBtn]}
+          onPress={startJob}
+          disabled={starting}
+        >
+          <Text style={styles.primaryBtnText}>
+            {starting ? "Başlatılıyor..." : "🚀 İşi Başlat / Konuma Vardım"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.secondaryBtn, uploading && styles.disabledBtn]}
+          onPress={pickSolutionImages}
+          disabled={uploading}
+        >
+          <Text style={styles.secondaryBtnText}>📸 Çözüm Fotoğrafı Seç</Text>
+        </TouchableOpacity>
+
+        {selectedSolutionImages.length > 0 && (
+          <TouchableOpacity
+            style={[styles.primaryBtn, { backgroundColor: "#16a34a", marginTop: 10 }]}
+            onPress={uploadSolutionPhotos}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.primaryBtnText}>✅ Seçilenleri Yükle ve Bitir</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {selectedSolutionImages.length > 0 && (
+        <View style={styles.solutionPreviewContainer}>
+          <Text style={styles.previewTitle}>
+            Yüklenecek Fotoğraflar ({selectedSolutionImages.length})
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {selectedSolutionImages.map((img, index) => (
+              <Image key={index} source={{ uri: img.uri }} style={styles.previewImage} />
+            ))}
+          </ScrollView>
         </View>
       )}
 
-      <View style={styles.card}>
-        <Text style={styles.title}>{item.title || `Şikayet #${item.id}`}</Text>
-        {!!item.description && <Text style={styles.desc}>{item.description}</Text>}
-
-        <View style={styles.badgeRow}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Durum: {item.status || "-"}</Text>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>ID: {item.id}</Text>
-          </View>
-        </View>
-
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, starting ? styles.actionBtnDisabled : null]}
-            onPress={startJob}
-            disabled={starting}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.actionBtnText}>
-              {starting ? "Başlatılıyor..." : "İşi Başlat"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, uploading ? styles.actionBtnDisabled : null]}
-            onPress={pickSolutionImages}
-            disabled={uploading}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.actionBtnText}>+ Çözüm Foto Seç</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.actionBtn,
-              uploading || selectedSolutionImages.length === 0 ? styles.actionBtnDisabled : null,
-            ]}
-            onPress={uploadSolutionPhotos}
-            disabled={uploading || selectedSolutionImages.length === 0}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.actionBtnText}>
-              {uploading ? "Yükleniyor..." : "Seçilenleri Yükle"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {selectedSolutionImages.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.previewRow}>
-            {selectedSolutionImages.map((img, index) => (
-              <Image
-                key={img.uri || index}
-                source={{ uri: img.uri }}
-                style={styles.previewImage}
-              />
+      {solutionUrls.length > 0 && (
+        <View
+          style={[
+            styles.solutionPreviewContainer,
+            { backgroundColor: "#fff", borderColor: "#e2e8f0", marginTop: 20 },
+          ]}
+        >
+          <Text style={[styles.previewTitle, { color: "#1e3a8a" }]}>
+            Tamamlanan İş Fotoğrafları
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {solutionUrls.map((u, i) => (
+              <Image key={i} source={{ uri: u }} style={styles.previewImage} />
             ))}
           </ScrollView>
-        )}
-
-        {solutionUrls.length > 0 && (
-          <View style={{ marginTop: 12 }}>
-            <Text style={styles.sectionTitle}>Yüklenen Çözüm Fotoğrafları</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.previewRow}>
-              {solutionUrls.map((u, i) => (
-                <Image key={u + i} source={{ uri: u }} style={styles.previewImage} />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </View>
+        </View>
+      )}
     </ScrollView>
   );
 }

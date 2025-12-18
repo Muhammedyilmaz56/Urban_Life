@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,17 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  StatusBar,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 import styles from "../../styles/AdminCategoriesStyles";
 import { adminApi } from "../../api/admin";
 import type { AdminCategory } from "../../api/admin";
 
 export default function AdminCategoriesScreen() {
+  const navigation = useNavigation<any>();
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -22,14 +26,19 @@ export default function AdminCategoriesScreen() {
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const load = useCallback(async () => {
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
+
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
+      if (!opts?.silent) setLoading(true);
       const data = await adminApi.listCategories();
       setItems(data || []);
     } catch (e: any) {
       Alert.alert("Hata", e?.message || "Kategoriler alınamadı.");
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
       setRefreshing(false);
     }
   }, []);
@@ -40,7 +49,7 @@ export default function AdminCategoriesScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await load();
+    await load({ silent: true });
   };
 
   const canCreate = useMemo(() => name.trim().length >= 2, [name]);
@@ -86,11 +95,17 @@ export default function AdminCategoriesScreen() {
     return (
       <View style={styles.row}>
         <View style={styles.rowLeft}>
-          <Text style={styles.rowTitle}>{item.name}</Text>
-          <Text style={styles.rowSub}>ID: {item.id}</Text>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {item.name}
+          </Text>
+          
         </View>
 
-        <TouchableOpacity onPress={() => onDelete(item.id)} style={styles.deleteBtn}>
+        <TouchableOpacity
+          onPress={() => onDelete(item.id)}
+          style={styles.deleteBtn}
+          activeOpacity={0.85}
+        >
           <Text style={styles.deleteText}>Sil</Text>
         </TouchableOpacity>
       </View>
@@ -100,6 +115,7 @@ export default function AdminCategoriesScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
+        <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
         <ActivityIndicator size="large" />
         <Text style={styles.loadingText}>Yükleniyor...</Text>
       </View>
@@ -108,26 +124,55 @@ export default function AdminCategoriesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Kategoriler</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
-      <View style={styles.createBox}>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Yeni kategori adı..."
-          placeholderTextColor="rgba(255,255,255,0.55)"
-          style={styles.input}
-        />
+      {/* TOP BAR */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
 
-        <TouchableOpacity
-          disabled={!canCreate || creating}
-          onPress={onCreate}
-          style={[styles.createBtn, (!canCreate || creating) ? styles.btnDisabled : null]}
-        >
-          <Text style={styles.createText}>{creating ? "Ekleniyor..." : "Ekle"}</Text>
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>Kategoriler</Text>
+          <Text style={styles.subtitle}>Ekle / Sil</Text>
+        </View>
+
+        <TouchableOpacity style={styles.refreshBtn} onPress={() => load()} activeOpacity={0.85}>
+          <Text style={styles.refreshTxt}>Yenile</Text>
         </TouchableOpacity>
       </View>
 
+      {/* CREATE */}
+      <View style={styles.createCard}>
+        <Text style={styles.sectionTitle}>Yeni Kategori</Text>
+
+        <View style={styles.createBox}>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Kategori adı..."
+            placeholderTextColor="rgba(100,116,139,0.9)"
+            style={styles.input}
+            autoCapitalize="words"
+          />
+
+          <TouchableOpacity
+            disabled={!canCreate || creating}
+            onPress={onCreate}
+            activeOpacity={0.9}
+            style={[
+              styles.createBtn,
+              (!canCreate || creating) ? styles.btnDisabled : null,
+            ]}
+          >
+            <Text style={styles.createText}>{creating ? "Ekleniyor..." : "Ekle"}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.helperText}>Not: Kategori adı en az 2 karakter olmalıdır.</Text>
+      </View>
+
+      {/* LIST */}
       <FlatList
         data={items}
         keyExtractor={(x) => String(x.id)}

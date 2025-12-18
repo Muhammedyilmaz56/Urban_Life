@@ -35,7 +35,7 @@ class UserResponse(BaseModel):
     profile_completed: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserProfileUpdate(BaseModel):

@@ -1,10 +1,9 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
-  ImageBackground,
   StatusBar,
   ActivityIndicator,
   Alert,
@@ -13,9 +12,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import styles from "../../styles/AdminAuditStyles";
 import { adminApi } from "../../api/admin";
-
-const BG_IMAGE =
-  "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop";
 
 type AuditItem = {
   id: number;
@@ -47,21 +43,21 @@ export default function AdminAuditScreen() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const load = async (opts?: { silent?: boolean }) => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
       if (!opts?.silent) setLoading(true);
       const data = await adminApi.audit(100);
       setItems(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      Alert.alert("Hata", e?.response?.data?.detail || "Audit kayıtları alınamadı");
+      Alert.alert("Hata", e?.response?.data?.detail || "Denetim kayıtları alınamadı");
     } finally {
       if (!opts?.silent) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const onRefresh = async () => {
     try {
@@ -79,57 +75,73 @@ export default function AdminAuditScreen() {
 
     return (
       <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.action}>{item.action}</Text>
-          <Text style={styles.time}>{formatDateTR(item.created_at)}</Text>
+        <View style={styles.rowTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.action} numberOfLines={2}>
+              {item.action}
+            </Text>
+            <Text style={styles.time}>{formatDateTR(item.created_at)}</Text>
+          </View>
+
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{who}</Text>
+          </View>
         </View>
 
-        <Text style={styles.meta}>Yapan: {who}</Text>
-        <Text style={styles.meta}>Hedef: {target}</Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.metaLabel}>Hedef</Text>
+          <Text style={styles.metaValue}>{target}</Text>
+        </View>
 
-        {item.detail ? <Text style={styles.detail}>{item.detail}</Text> : null}
+        {item.detail ? (
+          <Text style={styles.detail} numberOfLines={4}>
+            {item.detail}
+          </Text>
+        ) : null}
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground source={{ uri: BG_IMAGE }} style={styles.bg} resizeMode="cover">
-        <View style={styles.overlay}>
-          <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.backTxt}>‹</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Denetim Kayıtları</Text>
-            <TouchableOpacity style={styles.refreshBtn} onPress={() => load()}>
-              <Text style={styles.refreshTxt}>⟲</Text>
-            </TouchableOpacity>
-          </View>
+      <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
-          {loading ? (
-            <View style={{ paddingTop: 28 }}>
-              <ActivityIndicator />
-            </View>
-          ) : null}
+      {/* Kurumsal TopBar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
+          <Text style={styles.backTxt}>‹</Text>
+        </TouchableOpacity>
 
-          <FlatList
-            data={items}
-            keyExtractor={(x) => String(x.id)}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120, paddingTop: 6 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            ListEmptyComponent={
-              <View style={{ paddingTop: 40 }}>
-                <Text style={{ color: "white", textAlign: "center" }}>
-                  Kayıt bulunamadı
-                </Text>
-              </View>
-            }
-          />
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>Denetim Kayıtları</Text>
+          <Text style={styles.subtitle}>Son 100 işlem</Text>
         </View>
-      </ImageBackground>
+
+        <TouchableOpacity style={styles.refreshBtn} onPress={() => load()} activeOpacity={0.85}>
+          <Text style={styles.refreshTxt}>Yenile</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" />
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(x) => String(x.id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyText}>Kayıt bulunamadı.</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }

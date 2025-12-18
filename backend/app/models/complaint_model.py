@@ -6,7 +6,6 @@ from app.models.complaint_photo_model import ComplaintPhoto
 from .base import Base
 from .category_model import Category
 
-photos = relationship("ComplaintPhoto", back_populates="complaint")
 
 class ComplaintStatus(enum.Enum):
     pending = "pending"

@@ -10,7 +10,7 @@ from app.models.audit_log_model import AuditLog
 from app.models.complaint_model import Complaint, ComplaintStatus
 from app.utils.security import hash_password
 
-
+from app.models.category_model import Category
 def _audit(
     db: Session,
     actor_user_id: Optional[int],
@@ -19,6 +19,11 @@ def _audit(
     target_id: int = None,
     detail: str = None,
 ):
+    """
+    Create an audit log entry. 
+    Note: Does NOT commit - caller is responsible for committing the transaction.
+    This prevents session state issues when the main operation and audit are in the same transaction.
+    """
     log = AuditLog(
         actor_user_id=actor_user_id,
         action=action,
@@ -27,7 +32,7 @@ def _audit(
         detail=detail,
     )
     db.add(log)
-    db.commit()
+    # Don't commit here - let the caller handle the commit to keep session consistent
 
 
 def create_official(
@@ -52,10 +57,11 @@ def create_official(
         is_verified=True,
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    db.flush()  # Get the ID without committing
 
     _audit(db, actor.id, "CREATE_OFFICIAL", "user", u.id, f"official created: {u.email}")
+    db.commit()
+    db.refresh(u)
     return u
 
 
@@ -97,10 +103,9 @@ def update_official(
     if is_active is not None:
         u.is_active = bool(is_active)
 
+    _audit(db, actor.id, "UPDATE_OFFICIAL", "user", u.id, f"official updated: {u.email}")
     db.commit()
     db.refresh(u)
-
-    _audit(db, actor.id, "UPDATE_OFFICIAL", "user", u.id, f"official updated: {u.email}")
     return u
 
 
@@ -129,9 +134,17 @@ def stats_overview(db: Session):
         "resolved": int(resolved),
     }
 
-
 def list_audit_logs(db: Session, limit: int = 100):
-    return db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit).all()
+    """
+    Returns audit log entries, ordered by most recent first.
+    Returns an empty list if no audit logs exist.
+    """
+    try:
+        result = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit).all()
+        return result if result else []
+    except Exception:
+        # If there's any DB error (e.g., table doesn't exist), return empty list
+        return []
 
 
 def get_admin_stats(db: Session):
@@ -169,3 +182,65 @@ def get_admin_stats(db: Session):
         "complaints_by_status": {k: int(v) for k, v in complaints_by_status.items()},
         "complaints_last_7_days": int(complaints_last_7_days),
     }
+def list_categories(db: Session, q: Optional[str] = None, is_active: Optional[bool] = None):
+    query = db.query(Category)
+    if is_active is not None:
+        query = query.filter(Category.is_active == is_active)
+    if q:
+        qq = f"%{q.lower().strip()}%"
+        query = query.filter(Category.name.ilike(qq))
+    return query.order_by(Category.id.desc()).all()
+
+def create_category(db: Session, actor: User, name: str, description: Optional[str], is_active: Optional[bool]):
+    n = name.strip()
+    if len(n) < 2:
+        raise HTTPException(status_code=400, detail="Kategori adı en az 2 karakter olmalı.")
+
+    exists = db.query(Category).filter(Category.name.ilike(n)).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="Bu kategori zaten var.")
+
+    c = Category(
+        name=n,
+        description=description.strip() if description else None,
+        is_active=True if is_active is None else bool(is_active),
+    )
+    db.add(c)
+    db.flush()  # Get the ID without committing
+
+    _audit(db, actor.id, "CREATE_CATEGORY", "category", c.id, f"category created: {c.name}")
+    db.commit()
+    db.refresh(c)
+    return c
+
+def update_category(db: Session, actor: User, category_id: int, name: Optional[str], description: Optional[str], is_active: Optional[bool]):
+    c = db.query(Category).filter(Category.id == category_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Kategori bulunamadı.")
+
+    if name is not None:
+        n = name.strip()
+        if len(n) < 2:
+            raise HTTPException(status_code=400, detail="Kategori adı en az 2 karakter olmalı.")
+        c.name = n
+
+    if description is not None:
+        c.description = description.strip() if description else None
+
+    if is_active is not None:
+        c.is_active = bool(is_active)
+
+    _audit(db, actor.id, "UPDATE_CATEGORY", "category", c.id, f"category updated: {c.name}")
+    db.commit()
+    db.refresh(c)
+    return c
+
+def delete_category(db: Session, actor: User, category_id: int):
+    c = db.query(Category).filter(Category.id == category_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Kategori bulunamadı.")
+
+    _audit(db, actor.id, "DELETE_CATEGORY", "category", category_id, "category deleted")
+    db.delete(c)
+    db.commit()
+    return {"ok": True}
