@@ -123,6 +123,43 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Kullanıcının mevcut şifresini doğrulayıp yeni şifreyle değiştirir.
+    """
+    from app.utils.security import verify_password
+    
+    # Mevcut şifreyi doğrula
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mevcut şifre yanlış."
+        )
+    
+    # Yeni şifre en az 6 karakter olmalı
+    if len(payload.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Yeni şifre en az 6 karakter olmalıdır."
+        )
+    
+    # Yeni şifreyi hashle ve kaydet
+    current_user.password_hash = hash_password(payload.new_password)
+    current_user.updated_at = datetime.utcnow()
+    db.add(current_user)
+    db.commit()
+    
+    return {"message": "Şifre başarıyla değiştirildi."}
 
 
 @router.get("/admin-only")

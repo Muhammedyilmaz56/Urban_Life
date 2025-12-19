@@ -14,26 +14,23 @@ const Stack = createNativeStackNavigator();
 
 export default function OfficialNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="OfficialHome"
         component={OfficialHomeScreen}
-        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="OfficialComplaintDetail"
         component={OfficialComplaintDetailScreen}
-        options={{ title: "Şikayet Detayı" }}
       />
-      <Stack.Screen 
-        name="OfficialProfile" 
-        component={OfficialProfileScreen} 
-        options={{ headerShown: false }} 
+      <Stack.Screen
+        name="OfficialProfile"
+        component={OfficialProfileScreen}
       />
-       
-      <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: "Kategoriler" }} />
-      <Stack.Screen name="Workers" component={WorkersScreen} options={{ title: "İşçiler" }} />
-      <Stack.Screen name="AddWorker" component={AddWorkerScreen} options={{ title: "İşçi Ekle" }} />
+
+      <Stack.Screen name="Categories" component={CategoriesScreen} />
+      <Stack.Screen name="Workers" component={WorkersScreen} />
+      <Stack.Screen name="AddWorker" component={AddWorkerScreen} />
 
     </Stack.Navigator>
   );

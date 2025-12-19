@@ -120,10 +120,9 @@ def update_profile(
         current_user.avatar_url = profile_data.avatar_url
 
     # Check if profile is now complete (has required fields)
-    # Required fields: name, tc_kimlik_no, birth_date, phone_number
+    # Required fields: tc_kimlik_no, birth_date, phone_number
     if (
-        current_user.name
-        and current_user.tc_kimlik_no
+        current_user.tc_kimlik_no
         and current_user.birth_date
         and current_user.phone_number
     ):

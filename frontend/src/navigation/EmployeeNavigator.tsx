@@ -66,12 +66,11 @@ function EmployeeTabs() {
 
 export default function EmployeeNavigator() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="EmployeeTabs" component={EmployeeTabs} options={{ headerShown: false }} />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="EmployeeTabs" component={EmployeeTabs} />
       <Stack.Screen
         name="EmployeeJobDetail"
         component={EmployeeJobDetailScreen}
-        options={{ title: "İş Detayı" }}
       />
     </Stack.Navigator>
   );

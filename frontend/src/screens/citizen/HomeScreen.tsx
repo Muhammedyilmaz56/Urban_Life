@@ -31,10 +31,10 @@ type Props = NativeStackScreenProps<any, "Home">;
 const resolveAvatar = (avatar_url?: string | null) =>
   avatar_url
     ? {
-        uri: avatar_url.startsWith("http")
-          ? avatar_url
-          : `${BASE_URL}${avatar_url}?cacheBust=${Date.now()}`,
-      }
+      uri: avatar_url.startsWith("http")
+        ? avatar_url
+        : `${BASE_URL}${avatar_url}?cacheBust=${Date.now()}`,
+    }
     : require("../../../assets/default-avatar.png");
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
@@ -72,19 +72,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const goToCreateComplaint = () => {
-    if (!user?.profile_completed) {
-      Alert.alert("Profil Eksik", "Şikayet oluşturmak için profili tamamlayın.", [
-        {
-          text: "Profil",
-          onPress: () => {
-            closeProfileMenu();
-            navigation.navigate("Profile");
-          },
-        },
-        { text: "Vazgeç", style: "cancel" },
-      ]);
-      return;
-    }
     closeProfileMenu();
     navigation.navigate("CreateComplaint");
   };
@@ -342,10 +329,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     !user?.avatar_url || avatarError
       ? require("../../../assets/default-avatar.png")
       : {
-          uri: user.avatar_url.startsWith("http")
-            ? user.avatar_url
-            : `${BASE_URL}${user.avatar_url}?cacheBust=${Date.now()}`,
-        };
+        uri: user.avatar_url.startsWith("http")
+          ? user.avatar_url
+          : `${BASE_URL}${user.avatar_url}?cacheBust=${Date.now()}`,
+      };
 
   return (
     <View style={HomeScreenStyles.container}>

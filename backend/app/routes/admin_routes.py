@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
@@ -59,7 +59,11 @@ def admin_stats_overview(db: Session = Depends(get_db)):
 
 @router.get("/audit", response_model=List[AuditLogOut], dependencies=[Depends(role_required(UserRole.admin))])
 def admin_audit(limit: int = 100, db: Session = Depends(get_db)):
-    return admin_service.list_audit_logs(db, limit=limit)
+    try:
+        return admin_service.list_audit_logs(db, limit=limit)
+    except Exception as e:
+        print(f"AUDIT_ERROR: {e}")
+        return []
 
 
 @router.get("/stats", response_model=AdminStatsOut, dependencies=[Depends(role_required(UserRole.admin))])
@@ -68,33 +72,62 @@ def admin_stats(db: Session = Depends(get_db)):
 
 @router.get("/categories", response_model=List[CategoryOut], dependencies=[Depends(role_required(UserRole.admin))])
 def admin_list_categories(
-    q: Optional[str] = Query(None),
-    is_active: Optional[bool] = Query(None),
     db: Session = Depends(get_db),
 ):
-    return admin_service.list_categories(db, q, is_active)
+    from app.models.category_model import Category
+    return db.query(Category).order_by(Category.id.desc()).all()
 
 @router.post("/categories", response_model=CategoryOut, dependencies=[Depends(role_required(UserRole.admin))])
 def admin_create_category(
     payload: CategoryCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
-    return admin_service.create_category(db, user, payload.name, payload.description, payload.is_active)
+    from app.models.category_model import Category
+    exists = db.query(Category).filter(Category.name == payload.name).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="Bu kategori zaten var.")
+
+    new_category = Category(**payload.dict())
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+    return new_category
 
 @router.put("/categories/{category_id}", response_model=CategoryOut, dependencies=[Depends(role_required(UserRole.admin))])
 def admin_update_category(
     category_id: int,
     payload: CategoryUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
-    return admin_service.update_category(db, user, category_id, payload.name, payload.description, payload.is_active)
+    from app.models.category_model import Category
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Kategori bulunamadı.")
 
-@router.delete("/categories/{category_id}", dependencies=[Depends(role_required(UserRole.admin))])
+    data = payload.dict(exclude_unset=True)
+    if "name" in data and data["name"]:
+        exists = db.query(Category).filter(Category.name == data["name"], Category.id != category_id).first()
+        if exists:
+            raise HTTPException(status_code=400, detail="Bu isimde başka kategori var.")
+
+    for key, value in data.items():
+        setattr(category, key, value)
+
+    db.commit()
+    db.refresh(category)
+    return category
+
+@router.delete("/categories/{category_id}", status_code=204, dependencies=[Depends(role_required(UserRole.admin))])
 def admin_delete_category(
     category_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
-    return admin_service.delete_category(db, user, category_id)
+    from app.models.category_model import Category
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Kategori bulunamadı.")
+
+    db.delete(category)
+    db.commit()
+    return None
+

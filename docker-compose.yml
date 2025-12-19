@@ -34,6 +34,8 @@ services:
     image: postgres:14
     restart: always
     container_name: urbanlife-db
+    ports:
+      - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password

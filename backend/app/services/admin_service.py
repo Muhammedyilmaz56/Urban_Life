@@ -24,15 +24,19 @@ def _audit(
     Note: Does NOT commit - caller is responsible for committing the transaction.
     This prevents session state issues when the main operation and audit are in the same transaction.
     """
-    log = AuditLog(
-        actor_user_id=actor_user_id,
-        action=action,
-        target_type=target_type,
-        target_id=target_id,
-        detail=detail,
-    )
-    db.add(log)
-    # Don't commit here - let the caller handle the commit to keep session consistent
+    try:
+        log = AuditLog(
+            actor_user_id=actor_user_id,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            detail=detail,
+        )
+        db.add(log)
+    except Exception as e:
+        # If audit_logs table doesn't exist or any other error, log but don't fail
+        print(f"AUDIT_LOG_ERROR: {e}")
+        # Don't commit here - let the caller handle the commit to keep session consistent
 
 
 def create_official(

@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const PRIMARY = "#0B3A6A";
 const BG = "#F6F8FB";
@@ -13,7 +13,7 @@ export default StyleSheet.create({
   // TOP BAR - Matches AdminHomeStyles
   topBar: {
     backgroundColor: PRIMARY,
-    paddingTop: Platform.OS === "ios" ? 58 : 18,
+    paddingTop: Platform.OS === "ios" ? 58 : (StatusBar.currentHeight || 24) + 12,
     paddingBottom: 14,
     paddingHorizontal: 16,
     flexDirection: "row",

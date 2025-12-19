@@ -27,10 +27,10 @@ import {
 import { AuthContext } from "../../../App";
 import { BASE_URL } from "../../config";
 
-const resolveAvatar = (avatar_url?: string | null) => {
+const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) => {
   if (!avatar_url) return null;
   const url = avatar_url.startsWith("http") ? avatar_url : `${BASE_URL}${avatar_url}`;
-  return `${url}${url.includes("?") ? "&" : "?"}cacheBust=${Date.now()}`;
+  return `${url}${url.includes("?") ? "&" : "?"}t=${refreshKey || Date.now()}`;
 };
 
 export default function AdminProfileScreen() {
@@ -40,6 +40,7 @@ export default function AdminProfileScreen() {
 
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<any>(null);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
 
   // profile
   const [fullName, setFullName] = useState("");
@@ -134,9 +135,10 @@ export default function AdminProfileScreen() {
       if (res.didCancel || !res.assets?.[0]?.uri) return;
 
       try {
-        await uploadAvatar(res.assets[0].uri);
+        const result = await uploadAvatar(res.assets[0].uri);
+        setMe((prev: any) => ({ ...(prev || {}), avatar_url: result.avatar_url }));
+        setAvatarRefreshKey(Date.now());
         Alert.alert("Başarılı", "Profil fotoğrafı güncellendi.");
-        await load();
       } catch {
         Alert.alert("Hata", "Fotoğraf yüklenemedi.");
       }
@@ -212,7 +214,7 @@ export default function AdminProfileScreen() {
     );
   }
 
-  const avatarUrl = resolveAvatar(me?.avatar_url);
+  const avatarUrl = resolveAvatar(me?.avatar_url, avatarRefreshKey);
 
   return (
     <View style={styles.container}>

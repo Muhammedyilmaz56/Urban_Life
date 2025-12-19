@@ -55,7 +55,7 @@ const SplashScreen = () => {
 
           {/* Alt Bilgi */}
           <View style={[styles.footer, { bottom: 30 + insets.bottom }]}>
-            <Text style={styles.footerText}>Version 1.0.0</Text>
+            <Text style={styles.footerText}>Version 1.1.0</Text>
           </View>
         </View>
       </ImageBackground>

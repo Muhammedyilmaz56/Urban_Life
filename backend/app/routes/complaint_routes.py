@@ -46,11 +46,7 @@ def create_complaint(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Sadece vatandaş şikayet oluşturabilir.",
         )
-    if not current_user.profile_completed:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Profil bilgilerinizi tamamlamadan şikayet oluşturamazsınız.",
-        )
+    # Profile completion check removed - users can create complaints directly
 
     category = (
         db.query(Category)

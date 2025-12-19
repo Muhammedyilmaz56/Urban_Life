@@ -46,10 +46,10 @@ const InfoRow = ({ label, value, onPress, actionLabel }: any) => (
 const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
   avatar_url
     ? {
-        uri: avatar_url.startsWith("http")
-          ? avatar_url
-          : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
-      }
+      uri: avatar_url.startsWith("http")
+        ? avatar_url
+        : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
+    }
     : require("../../../assets/default-avatar.png");
 
 const ProfileScreen = () => {
@@ -92,16 +92,36 @@ const ProfileScreen = () => {
   }, []);
 
   const handleSelectAvatar = () => {
+    console.log("AVATAR: Starting image picker...");
     launchImageLibrary({ mediaType: "photo", quality: 0.8 }, async (res: any) => {
-      if (res?.didCancel || !res?.assets?.[0]?.uri) return;
+      console.log("AVATAR: Image picker response:", JSON.stringify(res, null, 2));
+
+      if (res?.didCancel) {
+        console.log("AVATAR: User cancelled");
+        return;
+      }
+
+      if (res?.errorCode) {
+        console.log("AVATAR: Error code:", res.errorCode, res.errorMessage);
+        Alert.alert("Hata", res.errorMessage || "Fotoğraf seçilemedi.");
+        return;
+      }
+
+      if (!res?.assets?.[0]?.uri) {
+        console.log("AVATAR: No asset URI found");
+        return;
+      }
 
       try {
+        console.log("AVATAR: Uploading to server...", res.assets[0].uri);
         const result = await uploadAvatar(res.assets[0].uri);
+        console.log("AVATAR: Upload success:", result);
         setUser((prev: any) => ({ ...(prev || {}), avatar_url: result.avatar_url }));
         setAvatarRefreshKey(Date.now());
         Alert.alert("Başarılı", "Profil fotoğrafı güncellendi.");
-      } catch (err) {
-        Alert.alert("Hata", "Fotoğraf yüklenemedi.");
+      } catch (err: any) {
+        console.log("AVATAR: Upload error:", err?.response?.data || err.message);
+        Alert.alert("Hata", err?.response?.data?.detail || "Fotoğraf yüklenemedi.");
       }
     });
   };

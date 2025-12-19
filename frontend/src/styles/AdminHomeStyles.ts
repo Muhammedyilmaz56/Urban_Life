@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const PRIMARY = "#0B3A6A";
 const PRIMARY_2 = "#1E3A8A";
@@ -17,7 +17,7 @@ export default StyleSheet.create({
   // ÜST BAR
   header: {
     backgroundColor: PRIMARY,
-    paddingTop: Platform.OS === "ios" ? 58 : 18,
+    paddingTop: Platform.OS === "ios" ? 58 : (StatusBar.currentHeight || 24) + 12,
     paddingBottom: 14,
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -182,7 +182,7 @@ export default StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.3)", 
+    borderColor: "rgba(255,255,255,0.3)",
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",

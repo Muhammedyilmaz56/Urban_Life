@@ -11,26 +11,22 @@ const Stack = createNativeStackNavigator();
 
 export default function CitizenNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CreateComplaint"
         component={CreateComplaintScreen}
-        options={{ title: "Şikayet Oluştur" }}
       />
       <Stack.Screen
         name="MyComplaints"
         component={MyComplaintsScreen}
-        options={{ title: "Şikayetlerim" }}
       />
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: "Profil" }}
       />
     </Stack.Navigator>
   );
