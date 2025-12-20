@@ -47,9 +47,50 @@ const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
     ? {
       uri: avatar_url.startsWith("http")
         ? avatar_url
-        : `${BASE_URL}${avatar_url}${refreshKey ? `?t=${refreshKey}` : ''}`,
+        : `${BASE_URL}${avatar_url}${refreshKey ? `?t=${refreshKey}` : ""}`,
     }
     : require("../../../assets/default-avatar.png");
+
+// --- İsim gizleme/gösterme yardımcıları (2 mod) ---
+const toInitials = (fullName: string) => {
+  const n = (fullName || "").trim().replace(/\s+/g, " ");
+  if (!n) return "";
+  const parts = n.split(" ");
+  const first = parts[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1] : "";
+  const fi = first ? first[0].toUpperCase() + "." : "";
+  const li = last ? " " + last[0].toUpperCase() + "." : "";
+  return (fi + li).trim();
+};
+
+const maskWord = (w: string) => {
+  if (!w) return "";
+  const t = w.trim();
+  if (t.length === 1) return t + "*";
+  if (t.length === 2) return t[0] + "*";
+  return t.slice(0, 2) + "*".repeat(Math.min(4, t.length - 2));
+};
+
+const toMaskedName = (fullName: string) => {
+  const n = (fullName || "").trim().replace(/\s+/g, " ");
+  if (!n) return "";
+  const parts = n.split(" ");
+  const first = parts[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1] : "";
+  if (!last) return maskWord(first);
+  return `${maskWord(first)} ${maskWord(last)}`;
+};
+
+const displayNameByPrivacy = (fullName: string, isPublic: boolean) => {
+  const name = (fullName || "").trim();
+  if (!name) return "-";
+  if (isPublic) return name;
+
+  const initials = toInitials(name);
+  const masked = toMaskedName(name);
+  if (initials && masked) return `${initials} (${masked})`;
+  return initials || masked || "-";
+};
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
@@ -59,7 +100,9 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
 
-  const [modalType, setModalType] = useState<"NONE" | "INFO" | "PHONE" | "PASSWORD">("NONE");
+  const [modalType, setModalType] = useState<"NONE" | "INFO" | "PHONE" | "PASSWORD">(
+    "NONE"
+  );
 
   const [editName, setEditName] = useState("");
   const [editTc, setEditTc] = useState("");
@@ -71,7 +114,6 @@ const ProfileScreen = () => {
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Hata state'leri
   const [infoError, setInfoError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -97,39 +139,19 @@ const ProfileScreen = () => {
   }, []);
 
   const handleSelectAvatar = () => {
-    console.log("AVATAR: Starting image picker...");
     launchImageLibrary({ mediaType: "photo", quality: 0.8 }, async (res: any) => {
-      console.log("AVATAR: Image picker response:", JSON.stringify(res, null, 2));
-
-      if (res?.didCancel) {
-        console.log("AVATAR: User cancelled");
-        return;
-      }
-
-      if (res?.errorCode) {
-        console.log("AVATAR: Error code:", res.errorCode, res.errorMessage);
-        setSuccessMessage("");
-        // Fotoğraf seçim hatası - sessiz
-        return;
-      }
-
-      if (!res?.assets?.[0]?.uri) {
-        console.log("AVATAR: No asset URI found");
-        return;
-      }
+      if (res?.didCancel) return;
+      if (res?.errorCode) return;
+      if (!res?.assets?.[0]?.uri) return;
 
       try {
-        console.log("AVATAR: Uploading to server...", res.assets[0].uri);
         const result = await uploadAvatar(res.assets[0].uri);
-        console.log("AVATAR: Upload success:", result);
         setUser((prev: any) => ({ ...(prev || {}), avatar_url: result.avatar_url }));
         setAvatarRefreshKey(Date.now());
         setSuccessMessage("Profil fotoğrafı güncellendi.");
         setTimeout(() => setSuccessMessage(""), 3000);
       } catch (err: any) {
-        console.log("AVATAR: Upload error:", err?.response?.data || err.message);
         setSuccessMessage("");
-        // Hata durumunda kullanıcıya gösterilecek mesaj
         setInfoError("Fotoğraf yüklenemedi.");
         setTimeout(() => setInfoError(""), 3000);
       }
@@ -177,7 +199,9 @@ const ProfileScreen = () => {
       return;
     }
 
-    const formattedDate = `${y}-${m.toString().padStart(2, "0")}-${d.toString().padStart(2, "0")}`;
+    const formattedDate = `${y}-${m.toString().padStart(2, "0")}-${d
+      .toString()
+      .padStart(2, "0")}`;
 
     try {
       setIsSaving(true);
@@ -224,6 +248,7 @@ const ProfileScreen = () => {
     }
   };
 
+  // 2 mod: isim açık / gizli (mask + initials)
   const toggleVisibility = async (value: boolean) => {
     setUser((prev: any) => ({ ...(prev || {}), is_name_public: value }));
     try {
@@ -265,7 +290,6 @@ const ProfileScreen = () => {
       await AsyncStorage.multiRemove(["token", "accessToken", "user"]);
       auth?.setUser(null);
     } catch (e) {
-      console.log("Çıkış hatası:", e);
       auth?.setUser(null);
     }
   };
@@ -286,28 +310,52 @@ const ProfileScreen = () => {
     );
   }
 
+  const fullName = user.full_name || user.name || "-";
+  const isPublic = user.is_name_public ?? true;
+  const displayName = displayNameByPrivacy(fullName, isPublic);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
+        >
           <Text style={styles.backButtonIcon}>‹</Text>
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Profil</Text>
-
         <View style={{ width: 44 }} />
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
           {/* Başarı Mesajı */}
           {successMessage !== "" && (
-            <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, marginBottom: 12, borderRadius: 10 }}>
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+            <View
+              style={{
+                backgroundColor: "#10B981",
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                marginBottom: 12,
+                borderRadius: 10,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: "600",
+                  textAlign: "center",
+                }}
+              >
                 ✓ {successMessage}
               </Text>
             </View>
@@ -317,19 +365,63 @@ const ProfileScreen = () => {
           <View style={styles.topCard}>
             <View style={styles.avatarWrap}>
               <Image source={resolveAvatar(user.avatar_url, avatarRefreshKey)} style={styles.avatar} />
-              <TouchableOpacity style={styles.avatarEditButton} onPress={handleSelectAvatar} activeOpacity={0.85}>
+              <TouchableOpacity
+                style={styles.avatarEditButton}
+                onPress={handleSelectAvatar}
+                activeOpacity={0.85}
+              >
                 <Text style={styles.avatarEditText}>+</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.name}>{user.full_name || user.name || "-"}</Text>
-            <Text style={styles.email}>{user.email || "-"}</Text>
+            {/* İSİM + AÇIKLAMA + GÖRÜNÜRLÜK */}
+            <View style={{ width: "100%", alignItems: "center", marginTop: 10 }}>
+              <Text style={styles.name}>{displayName}</Text>
+              <Text style={styles.email}>{user.email || "-"}</Text>
+
+              <Text
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  color: "#64748B",
+                  fontWeight: "600",
+                  textAlign: "center",
+                  paddingHorizontal: 12,
+                }}
+              >
+                İsim görünürlüğünü aşağıdan değiştirebilirsin.
+              </Text>
+
+              {/* 2 mod butonu/switch mantıklı yer: top card altında küçük satır */}
+              <View
+                style={{
+                  marginTop: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  backgroundColor: "#F1F5F9",
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: "#0F172A" }}>
+                  {isPublic ? "İsim: Açık" : "İsim: Gizli"}
+                </Text>
+                <Switch
+                  value={isPublic}
+                  onValueChange={toggleVisibility}
+                  trackColor={{ false: "#CBD5E1", true: "#93C5FD" }}
+                  thumbColor={"#FFFFFF"}
+                />
+              </View>
+            </View>
           </View>
 
           {/* SECTIONS */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Kimlik Bilgileri</Text>
-            <InfoRow label="Ad Soyad" value={user.full_name} onPress={openInfoModal} />
+            <InfoRow label="Ad Soyad" value={fullName} onPress={openInfoModal} />
             <InfoRow label="TC Kimlik No" value={user.tc_kimlik_no} onPress={openInfoModal} />
             <InfoRow
               label="Doğum Tarihi"
@@ -340,20 +432,12 @@ const ProfileScreen = () => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>İletişim</Text>
-            <InfoRow label="Telefon" value={user.phone_number || user.phone} onPress={openPhoneModal} actionLabel="Değiştir" />
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ayarlar</Text>
-            <View style={styles.rowBetween}>
-              <Text style={styles.label}>İsim görünürlüğü</Text>
-              <Switch
-                value={user.is_name_public ?? true}
-                onValueChange={toggleVisibility}
-                trackColor={{ false: "#CBD5E1", true: "#93C5FD" }}
-                thumbColor={"#FFFFFF"}
-              />
-            </View>
+            <InfoRow
+              label="Telefon"
+              value={user.phone_number || user.phone}
+              onPress={openPhoneModal}
+              actionLabel="Değiştir"
+            />
           </View>
 
           <View style={styles.section}>
@@ -372,7 +456,6 @@ const ProfileScreen = () => {
         </ScrollView>
 
         {/* MODALS */}
-
         {/* INFO */}
         <Modal visible={modalType === "INFO"} transparent animationType="fade">
           <View style={styles.modalOverlay}>
@@ -426,19 +509,38 @@ const ProfileScreen = () => {
                 />
               </View>
 
-              {/* Hata Mesajı */}
               {infoError !== "" && (
-                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                <Text
+                  style={{
+                    color: "#EF4444",
+                    fontSize: 13,
+                    fontWeight: "600",
+                    textAlign: "center",
+                    marginTop: 8,
+                  }}
+                >
                   {infoError}
                 </Text>
               )}
 
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => { setModalType("NONE"); setInfoError(""); }} activeOpacity={0.85}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setModalType("NONE");
+                    setInfoError("");
+                  }}
+                  activeOpacity={0.85}
+                >
                   <Text style={styles.cancelButtonText}>İptal</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.primaryButton} onPress={handleUpdatePersonalInfo} disabled={isSaving} activeOpacity={0.9}>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={handleUpdatePersonalInfo}
+                  disabled={isSaving}
+                  activeOpacity={0.9}
+                >
                   {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Kaydet</Text>}
                 </TouchableOpacity>
               </View>
@@ -451,7 +553,9 @@ const ProfileScreen = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <Text style={styles.modalTitle}>Telefon Numarası</Text>
-              <Text style={styles.helperText}>Numaranızı güncellediğinizde doğrulama süreci başlatılabilir.</Text>
+              <Text style={styles.helperText}>
+                Numaranızı güncellediğinizde doğrulama süreci başlatılabilir.
+              </Text>
 
               <TextInput
                 style={styles.input}
@@ -462,19 +566,38 @@ const ProfileScreen = () => {
                 keyboardType="phone-pad"
               />
 
-              {/* Hata Mesajı */}
               {phoneError !== "" && (
-                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                <Text
+                  style={{
+                    color: "#EF4444",
+                    fontSize: 13,
+                    fontWeight: "600",
+                    textAlign: "center",
+                    marginTop: 8,
+                  }}
+                >
                   {phoneError}
                 </Text>
               )}
 
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => { setModalType("NONE"); setPhoneError(""); }} activeOpacity={0.85}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setModalType("NONE");
+                    setPhoneError("");
+                  }}
+                  activeOpacity={0.85}
+                >
                   <Text style={styles.cancelButtonText}>İptal</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.primaryButton} onPress={handleUpdatePhone} disabled={isSaving} activeOpacity={0.9}>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={handleUpdatePhone}
+                  disabled={isSaving}
+                  activeOpacity={0.9}
+                >
                   {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Güncelle</Text>}
                 </TouchableOpacity>
               </View>
@@ -513,19 +636,38 @@ const ProfileScreen = () => {
                 onChangeText={(t) => setPasswords((p) => ({ ...p, confirm: t }))}
               />
 
-              {/* Hata Mesajı */}
               {passwordError !== "" && (
-                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                <Text
+                  style={{
+                    color: "#EF4444",
+                    fontSize: 13,
+                    fontWeight: "600",
+                    textAlign: "center",
+                    marginTop: 8,
+                  }}
+                >
                   {passwordError}
                 </Text>
               )}
 
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => { setModalType("NONE"); setPasswordError(""); }} activeOpacity={0.85}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setModalType("NONE");
+                    setPasswordError("");
+                  }}
+                  activeOpacity={0.85}
+                >
                   <Text style={styles.cancelButtonText}>İptal</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.primaryButton} onPress={handleChangePassword} disabled={isSaving} activeOpacity={0.9}>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={handleChangePassword}
+                  disabled={isSaving}
+                  activeOpacity={0.9}
+                >
                   {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Değiştir</Text>}
                 </TouchableOpacity>
               </View>

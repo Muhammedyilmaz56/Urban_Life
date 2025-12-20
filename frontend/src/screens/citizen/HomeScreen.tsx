@@ -171,6 +171,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderItem = ({ item }: { item: Complaint }) => {
     const expanded = expandedIds.includes(item.id);
+    const supported = !!(item as any).user_supported;
 
     // İlk fotoğrafı göster (varsa)
     const displayPhoto = item.photos && item.photos.length > 0
@@ -250,12 +251,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
 
             <TouchableOpacity
-              style={HomeScreenStyles.supportButton}
+              style={[
+                HomeScreenStyles.supportButton,
+                supported && HomeScreenStyles.supportButtonActive,
+              ]}
               onPress={() => handleSupport(item.id)}
               activeOpacity={0.7}
             >
-              <Text style={{ fontSize: 18 }}>👍</Text>
-              <Text style={HomeScreenStyles.supportText}>
+              <Text style={{ fontSize: 18 }}>
+                {supported ? "👍🏻" : "👍"}
+              </Text>
+              <Text
+                style={[
+                  HomeScreenStyles.supportText,
+                  supported && HomeScreenStyles.supportTextActive,
+                ]}
+              >
                 {item.support_count ?? 0}
               </Text>
             </TouchableOpacity>

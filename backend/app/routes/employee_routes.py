@@ -25,6 +25,8 @@ async def upload_solution_photos(
     db: Session = Depends(get_db),
     current_user: User = Depends(role_required(UserRole.employee)),
 ):
+    from app.models.complaint_resolution_photo_model import ComplaintResolutionPhoto
+    
     assignment = (
         db.query(Assignment)
         .filter(Assignment.id == assignment_id, Assignment.employee_id == current_user.id)
@@ -46,6 +48,13 @@ async def upload_solution_photos(
 
         public_path = f"/media/solutions/{safe_name}"
         saved_paths.append(public_path)
+        
+        # Yeni resolution_photos tablosuna ekle
+        resolution_photo = ComplaintResolutionPhoto(
+            complaint_id=assignment.complaint_id,
+            photo_url=public_path
+        )
+        db.add(resolution_photo)
 
 
     prev: List[str] = []

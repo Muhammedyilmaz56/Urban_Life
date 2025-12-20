@@ -53,3 +53,4 @@ class Complaint(Base):
     user = relationship("User", backref="complaints")
     category = relationship("Category", back_populates="complaints")
     photos = relationship("ComplaintPhoto", back_populates="complaint", cascade="all, delete")
+    resolution_photos = relationship("ComplaintResolutionPhoto", back_populates="complaint", cascade="all, delete-orphan")

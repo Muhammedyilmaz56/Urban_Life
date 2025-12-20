@@ -43,7 +43,7 @@ const SplashScreen = () => {
         <View style={styles.overlay}>
           {/* Logo Alanı */}
           <View style={[styles.logoContainer, { marginTop: height * 0.25 }]}>
-            <Text style={styles.logoText}>UrbanLife</Text>
+            <Text style={styles.logoText}>CityFlow</Text>
             <Text style={styles.tagline}>Şehrin Ritmini Yakala</Text>
           </View>
 

@@ -84,6 +84,14 @@ class ComplaintPhotoOut(BaseModel):
         from_attributes = True
 
 
+class ResolutionPhotoOut(BaseModel):
+    id: int
+    photo_url: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 
 class ComplaintOut(BaseModel):
     id: int
@@ -109,6 +117,7 @@ class ComplaintOut(BaseModel):
     updated_at: datetime
 
     photos: Optional[List[ComplaintPhotoOut]] = []
+    resolution_photos: Optional[List[ResolutionPhotoOut]] = []
     user_supported: Optional[bool] = False
 
     class Config:

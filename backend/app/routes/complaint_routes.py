@@ -206,8 +206,13 @@ def get_complaints_feed(
     sort: Optional[str] = Query("newest"),
 ):
     from app.models.complaint_support_model import ComplaintSupport
+    from sqlalchemy.orm import joinedload
     
-    query = db.query(Complaint)
+    query = db.query(Complaint).options(
+        joinedload(Complaint.photos),
+        joinedload(Complaint.resolution_photos),
+        joinedload(Complaint.user),
+    )
 
     if sort == "newest":
         query = query.order_by(Complaint.created_at.desc())
@@ -249,19 +254,35 @@ def get_complaints_feed(
             else:
                 user_name = full_name
         
-        # Çözüm fotoğraflarını assignments tablosundan al
+        # Çözüm fotoğraflarını al (yeni model + eski assignments tablosu)
         import json
+        from datetime import datetime as dt
         resolution_photos = []
-        assignments = db.query(Assignment).filter(Assignment.complaint_id == complaint.id).all()
-        for assignment in assignments:
-            if assignment.solution_photo_url:
-                try:
-                    urls = json.loads(assignment.solution_photo_url)
-                    if isinstance(urls, list):
-                        for idx, url in enumerate(urls):
-                            resolution_photos.append({"id": idx + 1, "url": url})
-                except:
-                    pass
+        
+        # Önce yeni resolution_photos relationship'ten al
+        for photo in complaint.resolution_photos:
+            resolution_photos.append({
+                "id": photo.id,
+                "photo_url": photo.photo_url,
+                "created_at": photo.created_at,
+            })
+        
+        # Eski assignments tablosundan da al (geriye uyumluluk)
+        if not resolution_photos:
+            assignments = db.query(Assignment).filter(Assignment.complaint_id == complaint.id).all()
+            for assignment in assignments:
+                if assignment.solution_photo_url:
+                    try:
+                        urls = json.loads(assignment.solution_photo_url)
+                        if isinstance(urls, list):
+                            for idx, url in enumerate(urls):
+                                resolution_photos.append({
+                                    "id": idx + 1000 + len(resolution_photos),
+                                    "photo_url": url,
+                                    "created_at": assignment.updated_at or dt.utcnow(),
+                                })
+                    except:
+                        pass
         
         complaint_dict = {
             "id": complaint.id,

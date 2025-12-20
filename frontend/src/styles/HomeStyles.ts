@@ -316,11 +316,20 @@ export default StyleSheet.create({
     borderColor: "#E0E7FF",
   },
 
+  supportButtonActive: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+  },
+
   supportText: {
     fontSize: 13,
     fontWeight: "800",
     color: PRIMARY_2,
     marginLeft: 8,
+  },
+
+  supportTextActive: {
+    color: "#065F46",
   },
 
   // DETAILS
