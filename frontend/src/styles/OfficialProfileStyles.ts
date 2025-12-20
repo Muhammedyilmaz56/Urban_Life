@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform, Dimensions, StatusBar } from "react-native";
 
 const COLORS = {
   primary: "#1e3a8a", // Kurumsal Lacivert
@@ -15,12 +15,12 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  
+
   // --- HEADER (MAVİ ALAN) ---
   // Artık ekranı kaplamıyor, sadece üst bar görevi görüyor.
   headerBackground: {
     backgroundColor: COLORS.primary,
-    paddingTop: Platform.OS === "ios" ? 50 : 20, // Çentik payı
+    paddingTop: Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 24) + 12, // Çentik payı
     paddingBottom: 20, // Alt boşluk
     paddingHorizontal: 20,
     borderBottomLeftRadius: 24,
@@ -29,7 +29,7 @@ export default StyleSheet.create({
     justifyContent: "center",
     zIndex: 1, // Üstte kalsın ama kartı ezmesin
   },
-  
+
   headerTitle: {
     color: "#FFFFFF",
     fontSize: 18,
@@ -40,7 +40,7 @@ export default StyleSheet.create({
   // --- PROFİL KARTI ---
   // marginTop: 20 diyerek mavi alandan AŞAĞI itiyoruz (önceden -60 idi)
   profileCard: {
-    marginTop: 20, 
+    marginTop: 20,
     marginHorizontal: 20,
     backgroundColor: COLORS.cardBg,
     borderRadius: 16,
@@ -64,7 +64,7 @@ export default StyleSheet.create({
     marginBottom: 16,
     // marginTop değerini sildik, normal akışta duracak.
   },
-  
+
   avatar: {
     width: 100,
     height: 100,
@@ -73,7 +73,7 @@ export default StyleSheet.create({
     borderColor: COLORS.border,
     backgroundColor: "#f8fafc",
   },
-  
+
   editIconBadge: {
     position: "absolute",
     bottom: 0,
@@ -87,7 +87,7 @@ export default StyleSheet.create({
     borderWidth: 3,
     borderColor: COLORS.cardBg,
   },
-  
+
   editIconText: {
     color: "#FFFFFF",
     fontSize: 18,
@@ -102,7 +102,7 @@ export default StyleSheet.create({
     marginBottom: 4,
     textAlign: "center",
   },
-  
+
   userRole: {
     fontSize: 12,
     color: COLORS.primary,
@@ -128,7 +128,7 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 20, // Kartlar arası boşluk
   },
-  
+
   sectionTitle: {
     fontSize: 13,
     fontWeight: "700",
@@ -156,14 +156,14 @@ export default StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
   },
-  
+
   rowLabel: {
     fontSize: 14,
     color: COLORS.textGray,
     fontWeight: "500",
     flex: 1,
   },
-  
+
   rowValue: {
     fontSize: 15,
     color: COLORS.textDark,
@@ -179,7 +179,7 @@ export default StyleSheet.create({
     backgroundColor: "#f0f9ff",
     borderRadius: 8,
   },
-  
+
   actionText: {
     color: COLORS.primary,
     fontWeight: "600",
@@ -198,7 +198,7 @@ export default StyleSheet.create({
     borderColor: COLORS.border,
     marginBottom: 20,
   },
-  
+
   menuText: {
     fontSize: 15,
     fontWeight: "600",
@@ -218,7 +218,7 @@ export default StyleSheet.create({
     borderColor: "#fecdd3",
     marginTop: 10,
   },
-  
+
   logoutText: {
     color: COLORS.danger,
     fontSize: 15,
@@ -240,14 +240,14 @@ export default StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  
+
   modalContainer: {
     width: "100%",
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 24,
   },
-  
+
   modalTitle: {
     fontSize: 18,
     fontWeight: "800",
@@ -255,7 +255,7 @@ export default StyleSheet.create({
     marginBottom: 8,
     textAlign: "center",
   },
-  
+
   modalSubtitle: {
     fontSize: 14,
     color: COLORS.textGray,
@@ -270,7 +270,7 @@ export default StyleSheet.create({
     marginBottom: 6,
     marginLeft: 4,
   },
-  
+
   input: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
@@ -289,7 +289,7 @@ export default StyleSheet.create({
     gap: 12,
     marginTop: 10,
   },
-  
+
   modalCancelButton: {
     flex: 1,
     paddingVertical: 12,
@@ -297,13 +297,13 @@ export default StyleSheet.create({
     backgroundColor: "#f1f5f9",
     alignItems: "center",
   },
-  
+
   modalCancelText: {
     fontSize: 14,
     fontWeight: "600",
     color: COLORS.textGray,
   },
-  
+
   modalConfirmButton: {
     flex: 1,
     paddingVertical: 12,
@@ -311,13 +311,13 @@ export default StyleSheet.create({
     backgroundColor: COLORS.primary,
     alignItems: "center",
   },
-  
+
   modalConfirmText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  
+
   resendLink: {
     alignSelf: 'center',
     marginTop: 16,

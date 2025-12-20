@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   ScrollView,
   Modal,
   TextInput,
@@ -48,7 +47,7 @@ const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
     ? {
       uri: avatar_url.startsWith("http")
         ? avatar_url
-        : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
+        : `${BASE_URL}${avatar_url}${refreshKey ? `?t=${refreshKey}` : ''}`,
     }
     : require("../../../assets/default-avatar.png");
 
@@ -58,7 +57,7 @@ const ProfileScreen = () => {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
 
   const [modalType, setModalType] = useState<"NONE" | "INFO" | "PHONE" | "PASSWORD">("NONE");
 
@@ -71,6 +70,12 @@ const ProfileScreen = () => {
   const [editPhone, setEditPhone] = useState("");
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Hata state'leri
+  const [infoError, setInfoError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -103,7 +108,8 @@ const ProfileScreen = () => {
 
       if (res?.errorCode) {
         console.log("AVATAR: Error code:", res.errorCode, res.errorMessage);
-        Alert.alert("Hata", res.errorMessage || "Fotoğraf seçilemedi.");
+        setSuccessMessage("");
+        // Fotoğraf seçim hatası - sessiz
         return;
       }
 
@@ -118,10 +124,14 @@ const ProfileScreen = () => {
         console.log("AVATAR: Upload success:", result);
         setUser((prev: any) => ({ ...(prev || {}), avatar_url: result.avatar_url }));
         setAvatarRefreshKey(Date.now());
-        Alert.alert("Başarılı", "Profil fotoğrafı güncellendi.");
+        setSuccessMessage("Profil fotoğrafı güncellendi.");
+        setTimeout(() => setSuccessMessage(""), 3000);
       } catch (err: any) {
         console.log("AVATAR: Upload error:", err?.response?.data || err.message);
-        Alert.alert("Hata", err?.response?.data?.detail || "Fotoğraf yüklenemedi.");
+        setSuccessMessage("");
+        // Hata durumunda kullanıcıya gösterilecek mesaj
+        setInfoError("Fotoğraf yüklenemedi.");
+        setTimeout(() => setInfoError(""), 3000);
       }
     });
   };
@@ -146,13 +156,15 @@ const ProfileScreen = () => {
   };
 
   const handleUpdatePersonalInfo = async () => {
+    setInfoError("");
+
     if (!editName.trim() || !editTc.trim()) {
-      Alert.alert("Uyarı", "Ad Soyad ve TC Kimlik zorunludur.");
+      setInfoError("Ad Soyad ve TC Kimlik zorunludur.");
       return;
     }
 
     if (editTc.trim().length !== 11) {
-      Alert.alert("Uyarı", "TC Kimlik 11 haneli olmalıdır.");
+      setInfoError("TC Kimlik 11 haneli olmalıdır.");
       return;
     }
 
@@ -161,7 +173,7 @@ const ProfileScreen = () => {
     const y = parseInt(birthYear, 10);
 
     if (!d || !m || !y || d > 31 || m > 12 || y < 1900 || y > new Date().getFullYear()) {
-      Alert.alert("Uyarı", "Geçerli bir tarih giriniz.");
+      setInfoError("Geçerli bir tarih giriniz.");
       return;
     }
 
@@ -176,9 +188,10 @@ const ProfileScreen = () => {
       });
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "Kimlik bilgileri güncellendi.");
+      setSuccessMessage("Kimlik bilgileri güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Güncelleme başarısız.");
+      setInfoError(err?.response?.data?.detail || "Güncelleme başarısız.");
     } finally {
       setIsSaving(false);
     }
@@ -190,8 +203,10 @@ const ProfileScreen = () => {
   };
 
   const handleUpdatePhone = async () => {
+    setPhoneError("");
+
     if (editPhone.trim().length < 10) {
-      Alert.alert("Uyarı", "Geçerli bir numara giriniz.");
+      setPhoneError("Geçerli bir numara giriniz.");
       return;
     }
 
@@ -200,9 +215,10 @@ const ProfileScreen = () => {
       await updateProfile({ phone_number: editPhone.trim() });
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "Telefon numarası güncellendi.");
+      setSuccessMessage("Telefon numarası güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", "Telefon güncellenemedi.");
+      setPhoneError("Telefon güncellenemedi.");
     } finally {
       setIsSaving(false);
     }
@@ -218,14 +234,15 @@ const ProfileScreen = () => {
   };
 
   const handleChangePassword = async () => {
+    setPasswordError("");
     const { current, new: newPass, confirm } = passwords;
 
     if (!current || !newPass || !confirm) {
-      Alert.alert("Uyarı", "Tüm alanları doldurunuz.");
+      setPasswordError("Tüm alanları doldurunuz.");
       return;
     }
     if (newPass !== confirm) {
-      Alert.alert("Uyarı", "Yeni şifreler uyuşmuyor.");
+      setPasswordError("Yeni şifreler uyuşmuyor.");
       return;
     }
 
@@ -234,9 +251,10 @@ const ProfileScreen = () => {
       await changePassword({ current_password: current, new_password: newPass });
       setModalType("NONE");
       setPasswords({ current: "", new: "", confirm: "" });
-      Alert.alert("Başarılı", "Şifreniz değiştirildi.");
+      setSuccessMessage("Şifreniz değiştirildi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Şifre değiştirilemedi.");
+      setPasswordError(err?.response?.data?.detail || "Şifre değiştirilemedi.");
     } finally {
       setIsSaving(false);
     }
@@ -285,6 +303,16 @@ const ProfileScreen = () => {
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+
+          {/* Başarı Mesajı */}
+          {successMessage !== "" && (
+            <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, marginBottom: 12, borderRadius: 10 }}>
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+                ✓ {successMessage}
+              </Text>
+            </View>
+          )}
+
           {/* TOP CARD */}
           <View style={styles.topCard}>
             <View style={styles.avatarWrap}>
@@ -398,8 +426,15 @@ const ProfileScreen = () => {
                 />
               </View>
 
+              {/* Hata Mesajı */}
+              {infoError !== "" && (
+                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                  {infoError}
+                </Text>
+              )}
+
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setModalType("NONE")} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => { setModalType("NONE"); setInfoError(""); }} activeOpacity={0.85}>
                   <Text style={styles.cancelButtonText}>İptal</Text>
                 </TouchableOpacity>
 
@@ -427,8 +462,15 @@ const ProfileScreen = () => {
                 keyboardType="phone-pad"
               />
 
+              {/* Hata Mesajı */}
+              {phoneError !== "" && (
+                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                  {phoneError}
+                </Text>
+              )}
+
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setModalType("NONE")} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => { setModalType("NONE"); setPhoneError(""); }} activeOpacity={0.85}>
                   <Text style={styles.cancelButtonText}>İptal</Text>
                 </TouchableOpacity>
 
@@ -471,8 +513,15 @@ const ProfileScreen = () => {
                 onChangeText={(t) => setPasswords((p) => ({ ...p, confirm: t }))}
               />
 
+              {/* Hata Mesajı */}
+              {passwordError !== "" && (
+                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                  {passwordError}
+                </Text>
+              )}
+
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setModalType("NONE")} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => { setModalType("NONE"); setPasswordError(""); }} activeOpacity={0.85}>
                   <Text style={styles.cancelButtonText}>İptal</Text>
                 </TouchableOpacity>
 

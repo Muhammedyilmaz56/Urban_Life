@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions, Platform } from "react-native";
+import { StyleSheet, Dimensions, Platform, StatusBar } from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -17,6 +17,7 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
   },
   content: {
     padding: 20,
@@ -34,7 +35,7 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
     color: COLORS.textGray,
     fontWeight: "500",
   },
-  
+
   headerSection: {
     marginBottom: 20,
   },
@@ -100,7 +101,7 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
     color: "#334155",
     lineHeight: 24,
   },
-  
+
   rejectContainer: {
     backgroundColor: "#FEF2F2",
     padding: 12,
@@ -214,7 +215,7 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.6)", 
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
@@ -249,7 +250,7 @@ const OfficialComplaintDetailStyles = StyleSheet.create({
     color: COLORS.textDark,
     marginBottom: 20,
   },
-  
+
   employeeList: {
     maxHeight: 250,
     marginBottom: 20,

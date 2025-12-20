@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const PRIMARY = "#0B3A6A";
 const PRIMARY_2 = "#1E3A8A";
@@ -35,7 +35,7 @@ export default StyleSheet.create({
   // HEADER (TOP BAR)
   header: {
     backgroundColor: PRIMARY,
-    paddingTop: Platform.OS === "ios" ? 60 : 18,
+    paddingTop: Platform.OS === "ios" ? 60 : (StatusBar.currentHeight || 24) + 12,
     paddingBottom: 14,
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -102,8 +102,8 @@ export default StyleSheet.create({
   avatar: {
     width: 92,
     height: 92,
-    borderRadius: 46, 
-    borderWidth: 2,   
+    borderRadius: 46,
+    borderWidth: 2,
     borderColor: "#EAF2FF",
   },
 

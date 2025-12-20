@@ -14,6 +14,7 @@ import {
   Linking,
   Dimensions,
 } from "react-native";
+import { IconButton } from "react-native-paper";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import MapView, { Marker } from "react-native-maps";
 
@@ -33,7 +34,7 @@ const resolveAvatar = (avatar_url?: string | null) =>
     ? {
       uri: avatar_url.startsWith("http")
         ? avatar_url
-        : `${BASE_URL}${avatar_url}?cacheBust=${Date.now()}`,
+        : `${BASE_URL}${avatar_url}`,
     }
     : require("../../../assets/default-avatar.png");
 
@@ -59,11 +60,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const goToProfile = () => {
     closeProfileMenu();
     navigation.navigate("Profile");
-  };
-
-  const goToAnnouncements = () => {
-    closeProfileMenu();
-    navigation.navigate("Announcements");
   };
 
   const goToMyComplaints = () => {
@@ -136,7 +132,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       const res = await toggleSupport(id);
       setComplaints((prev) =>
         prev.map((c) =>
-          c.id === id ? { ...c, support_count: res.support_count } : c
+          c.id === id
+            ? {
+              ...c,
+              support_count: res.support_count,
+              user_supported: res.status === "added",
+            }
+            : c
         )
       );
     } catch (err) {
@@ -170,51 +172,94 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const renderItem = ({ item }: { item: Complaint }) => {
     const expanded = expandedIds.includes(item.id);
 
+    // İlk fotoğrafı göster (varsa)
+    const displayPhoto = item.photos && item.photos.length > 0
+      ? (item.photos[0].photo_url.startsWith("http")
+        ? item.photos[0].photo_url
+        : `${BASE_URL}${item.photos[0].photo_url}`)
+      : null;
+
     return (
       <View style={HomeScreenStyles.card}>
-        <View style={HomeScreenStyles.cardHeader}>
-          <Text style={HomeScreenStyles.cardTitle} numberOfLines={2}>
-            {item.title ? item.title : "Şikayet"}
-          </Text>
-
-          <Text
-            style={[
-              HomeScreenStyles.statusBadge,
-              item.status === "pending" && HomeScreenStyles.statusPending,
-              item.status === "in_progress" && HomeScreenStyles.statusInProgress,
-              item.status === "resolved" && HomeScreenStyles.statusResolved,
-            ]}
-          >
-            {renderStatus(item.status)}
-          </Text>
-        </View>
-
-        {!expanded && (
-          <Text style={HomeScreenStyles.cardDescription} numberOfLines={3}>
-            {item.description}
-          </Text>
+        {/* Görsel Alanı (Bulanık Arka Plan) */}
+        {displayPhoto && (
+          <View style={{ position: 'relative' }}>
+            <Image
+              source={{ uri: displayPhoto }}
+              style={HomeScreenStyles.cardImageCover}
+              resizeMode="cover"
+              blurRadius={3}
+            />
+            {/* Karartma Overlay */}
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+            }} />
+          </View>
         )}
 
-        <View style={HomeScreenStyles.cardFooter}>
-          <Text style={HomeScreenStyles.cardDate}>
-            {new Date(item.created_at).toLocaleDateString("tr-TR", {
-              day: "numeric",
-              month: "long",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-
-          <TouchableOpacity
-            style={HomeScreenStyles.supportButton}
-            onPress={() => handleSupport(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={{ fontSize: 14 }}>Destek</Text>
-            <Text style={HomeScreenStyles.supportText}>
-              {item.support_count ?? 0}
+        {/* Kart İçeriği */}
+        <View style={HomeScreenStyles.cardBody}>
+          <View style={HomeScreenStyles.cardHeader}>
+            <Text style={HomeScreenStyles.cardTitle} numberOfLines={2}>
+              {item.title ? item.title : "Şikayet"}
             </Text>
-          </TouchableOpacity>
+
+            <Text
+              style={[
+                HomeScreenStyles.statusBadge,
+                item.status === "pending" && HomeScreenStyles.statusPending,
+                item.status === "in_progress" && HomeScreenStyles.statusInProgress,
+                item.status === "resolved" && HomeScreenStyles.statusResolved,
+              ]}
+            >
+              {renderStatus(item.status)}
+            </Text>
+          </View>
+
+          {/* Şikayetçi Adı */}
+          {item.user_name && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={{ fontSize: 12, marginRight: 4 }}>👤</Text>
+              <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>
+                {item.user_name}
+              </Text>
+            </View>
+          )}
+
+          {(item as any).address ? (
+            <Text style={HomeScreenStyles.addressText} numberOfLines={1}>📍 {(item as any).address}</Text>
+          ) : null}
+
+          {!expanded && (
+            <Text style={HomeScreenStyles.cardDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+          )}
+
+          <View style={HomeScreenStyles.cardFooter}>
+            <Text style={HomeScreenStyles.cardDate}>
+              {new Date(item.created_at).toLocaleDateString("tr-TR", {
+                day: "numeric",
+                month: "long",
+              })}
+            </Text>
+
+            <TouchableOpacity
+              style={HomeScreenStyles.supportButton}
+              onPress={() => handleSupport(item.id)}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 18 }}>👍</Text>
+              <Text style={HomeScreenStyles.supportText}>
+                {item.support_count ?? 0}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {expanded && (
@@ -246,6 +291,47 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         <Image
                           source={{ uri: fullUrl }}
                           style={HomeScreenStyles.detailImage}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Çözüm Fotoğrafları */}
+            {(item as any).resolution_photos && (item as any).resolution_photos.length > 0 && (
+              <View style={{ marginTop: 16, backgroundColor: "#ecfdf5", borderRadius: 12, padding: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                  <View style={{ backgroundColor: "#10b981", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 8 }}>
+                    <Text style={{ color: "#fff", fontSize: 14, fontWeight: "bold" }}>✓</Text>
+                  </View>
+                  <Text style={{ fontSize: 13, fontWeight: "800", color: "#047857", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Çözüm Kanıtları
+                  </Text>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 10 }}
+                >
+                  {(item as any).resolution_photos.map((p: any) => {
+                    const rawUrl = p.photo_url || p.url;
+                    const fullUrl = rawUrl?.startsWith("http")
+                      ? rawUrl
+                      : `${BASE_URL}${rawUrl}`;
+                    return (
+                      <TouchableOpacity
+                        key={p.id}
+                        onPress={() => {
+                          setSelectedImage(fullUrl);
+                          setFullImageVisible(true);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <Image
+                          source={{ uri: fullUrl }}
+                          style={{ width: 100, height: 100, borderRadius: 10, borderWidth: 3, borderColor: "#10b981" }}
                         />
                       </TouchableOpacity>
                     );
@@ -331,7 +417,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       : {
         uri: user.avatar_url.startsWith("http")
           ? user.avatar_url
-          : `${BASE_URL}${user.avatar_url}?cacheBust=${Date.now()}`,
+          : `${BASE_URL}${user.avatar_url}`,
       };
 
   return (
@@ -364,50 +450,66 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* PROFILE MENU */}
+        {/* SIDEBAR MENU */}
         {profileMenuVisible && (
-          <View style={HomeScreenStyles.profileMenu}>
+          <>
             <TouchableOpacity
-              style={HomeScreenStyles.profileMenuItem}
-              onPress={goToProfile}
-            >
-              <Text style={HomeScreenStyles.profileMenuText}>Profil</Text>
-            </TouchableOpacity>
+              style={HomeScreenStyles.menuOverlay}
+              onPress={closeProfileMenu}
+              activeOpacity={1}
+            />
+            <View style={HomeScreenStyles.sidebarMenu}>
+              {/* Kullanıcı Bilgisi */}
+              <View style={HomeScreenStyles.sidebarHeader}>
+                <Image
+                  source={avatarSource}
+                  style={HomeScreenStyles.sidebarAvatar}
+                />
+                <Text style={HomeScreenStyles.sidebarName}>
+                  {user?.full_name || user?.name || "Kullanıcı"}
+                </Text>
+                <Text style={HomeScreenStyles.sidebarEmail}>
+                  {user?.email || ""}
+                </Text>
+              </View>
 
-            <TouchableOpacity
-              style={HomeScreenStyles.profileMenuItem}
-              onPress={goToMyComplaints}
-            >
-              <Text style={HomeScreenStyles.profileMenuText}>Şikayetlerim</Text>
-            </TouchableOpacity>
+              {/* Menü Öğeleri */}
+              <View style={HomeScreenStyles.sidebarContent}>
+                <TouchableOpacity
+                  style={HomeScreenStyles.sidebarMenuItem}
+                  onPress={goToProfile}
+                  activeOpacity={0.7}
+                >
+                  <Text style={HomeScreenStyles.sidebarMenuText}>Profil</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={HomeScreenStyles.profileMenuItem}
-              onPress={goToCreateComplaint}
-            >
-              <Text style={HomeScreenStyles.profileMenuText}>
-                Şikayet Oluştur
-              </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={HomeScreenStyles.sidebarMenuItem}
+                  onPress={goToMyComplaints}
+                  activeOpacity={0.7}
+                >
+                  <Text style={HomeScreenStyles.sidebarMenuText}>Şikayetlerim</Text>
+                </TouchableOpacity>
 
-            {/* ÇIKIŞ */}
-            <TouchableOpacity
-              style={[
-                HomeScreenStyles.profileMenuItem,
-                HomeScreenStyles.profileMenuLogout,
-              ]}
-              onPress={handleLogout}
-            >
-              <Text
-                style={[
-                  HomeScreenStyles.profileMenuText,
-                  HomeScreenStyles.profileMenuLogoutText,
-                ]}
+                <TouchableOpacity
+                  style={HomeScreenStyles.sidebarMenuItem}
+                  onPress={goToCreateComplaint}
+                  activeOpacity={0.7}
+                >
+                  <Text style={HomeScreenStyles.sidebarMenuText}>Şikayet Oluştur</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Çıkış */}
+              <TouchableOpacity
+                style={HomeScreenStyles.sidebarLogout}
+                onPress={handleLogout}
+                activeOpacity={0.7}
               >
-                Çıkış Yap
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <Text style={HomeScreenStyles.sidebarLogoutText}>Çıkış Yap</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
         {/* TABS */}

@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchOfficialComplaints, OfficialComplaint } from "../../api/official";
 import { getCurrentUser } from "../../api/user";
 import { BASE_URL } from "../../config";
-import styles from "../../styles/OfficialHomeStyles"; 
+import styles from "../../styles/OfficialHomeStyles";
 import { AuthContext } from "../../../App";
 
 
@@ -39,7 +39,7 @@ const getStatusTheme = (status: string) => {
 const statusLabelMap: Record<string, string> = {
   pending: "Beklemede",
   in_progress: "İşlemde",
-  assigned: "Ekiplere İletildi", 
+  assigned: "Ekiplere İletildi",
   resolved: "Çözüldü",
   rejected: "Reddedildi",
 };
@@ -47,10 +47,10 @@ const statusLabelMap: Record<string, string> = {
 const resolveAvatar = (avatar_url?: string | null) =>
   avatar_url
     ? {
-        uri: avatar_url.startsWith("http")
-          ? avatar_url
-          : `${BASE_URL}${avatar_url}?cacheBust=${Date.now()}`,
-      }
+      uri: avatar_url.startsWith("http")
+        ? avatar_url
+        : `${BASE_URL}${avatar_url}`,
+    }
     : require("../../../assets/default-avatar.png");
 
 const OfficialHomeScreen = () => {
@@ -69,7 +69,7 @@ const OfficialHomeScreen = () => {
     try {
       const userData = await getCurrentUser();
       setUser(userData);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const loadComplaints = async () => {
@@ -77,7 +77,7 @@ const OfficialHomeScreen = () => {
       setLoading(true);
       const data = await fetchOfficialComplaints();
       setComplaints(data);
-    } catch (error) {} finally {
+    } catch (error) { } finally {
       setLoading(false);
     }
   };
@@ -110,7 +110,7 @@ const OfficialHomeScreen = () => {
         text: "Çıkış Yap",
         style: "destructive",
         onPress: async () => {
-          try { await AsyncStorage.removeItem("token"); } catch (e) {}
+          try { await AsyncStorage.removeItem("token"); } catch (e) { }
           auth?.setUser(null);
         },
       },
@@ -120,6 +120,13 @@ const OfficialHomeScreen = () => {
   const renderItem = ({ item }: { item: OfficialComplaint }) => {
     const statusTheme = getStatusTheme(item.status);
 
+    // İlk fotoğrafı göster (varsa)
+    const displayPhoto = (item as any).photos && (item as any).photos.length > 0
+      ? ((item as any).photos[0].photo_url.startsWith("http")
+        ? (item as any).photos[0].photo_url
+        : `${BASE_URL}${(item as any).photos[0].photo_url}`)
+      : null;
+
     return (
       <TouchableOpacity
         style={styles.card}
@@ -128,44 +135,68 @@ const OfficialHomeScreen = () => {
           navigation.navigate("OfficialComplaintDetail", { complaintId: item.id })
         }
       >
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={[styles.statusBadge, statusTheme.style]}>
-            <Text style={[styles.statusText, { color: statusTheme.textColor }]}>
-              {statusLabelMap[item.status] || item.status}
-            </Text>
+        {/* Görsel Alanı (Bulanık Arka Plan) */}
+        {displayPhoto && (
+          <View style={{ position: 'relative' }}>
+            <Image
+              source={{ uri: displayPhoto }}
+              style={styles.cardImageCover}
+              resizeMode="cover"
+              blurRadius={3}
+            />
+            {/* Karartma Overlay */}
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+            }} />
           </View>
-        </View>
+        )}
 
-        {/* Kategori ve Adres Bilgileri */}
-        <View>
+        {/* Kart İçeriği */}
+        <View style={styles.cardBody}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <View style={[styles.statusBadge, statusTheme.style]}>
+              <Text style={[styles.statusText, { color: statusTheme.textColor }]}>
+                {statusLabelMap[item.status] || item.status}
+              </Text>
+            </View>
+          </View>
+
+          {/* Kategori ve Adres Bilgileri */}
+          <View>
             {item.category && (
-            <Text style={styles.categoryText}>📂 {item.category.name}</Text>
+              <Text style={styles.categoryText}>📂 {item.category.name}</Text>
             )}
             {item.address && (
-            <Text style={styles.addressText} numberOfLines={1}>
+              <Text style={styles.addressText} numberOfLines={1}>
                 📍 {item.address}
-            </Text>
+              </Text>
             )}
-        </View>
+          </View>
 
-        <Text style={styles.descriptionText} numberOfLines={3}>
-          {item.description}
-        </Text>
-
-        <View style={styles.cardFooter}>
-          <Text style={styles.dateText}>
-            📅 {new Date(item.created_at).toLocaleDateString("tr-TR", { day: 'numeric', month: 'long', hour: '2-digit', minute:'2-digit' })}
+          <Text style={styles.descriptionText} numberOfLines={2}>
+            {item.description}
           </Text>
 
-          {typeof item.support_count === "number" && (
-            <View style={styles.supportContainer}>
+          <View style={styles.cardFooter}>
+            <Text style={styles.dateText}>
+              {new Date(item.created_at).toLocaleDateString("tr-TR", { day: 'numeric', month: 'long' })}
+            </Text>
+
+            {typeof item.support_count === "number" && (
+              <View style={styles.supportContainer}>
                 <Text>👍</Text>
                 <Text style={styles.supportText}>{item.support_count}</Text>
-            </View>
-          )}
+              </View>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -183,10 +214,10 @@ const OfficialHomeScreen = () => {
 
       <View style={styles.headerContainer}>
         <View>
-             <Text style={[styles.headerTitle, {fontSize: 14, opacity: 0.8, fontWeight: '400'}]}>Hoş Geldiniz,</Text>
-             <Text style={styles.headerTitle}>Personel Paneli</Text>
+          <Text style={[styles.headerTitle, { fontSize: 14, opacity: 0.8, fontWeight: '400' }]}>Hoş Geldiniz,</Text>
+          <Text style={styles.headerTitle}>Personel Paneli</Text>
         </View>
-       
+
         <TouchableOpacity onPress={toggleMenu} activeOpacity={0.8}>
           <Image
             source={avatarSource}
@@ -208,24 +239,24 @@ const OfficialHomeScreen = () => {
               <Text style={styles.menuItemText}>Profilim</Text>
             </TouchableOpacity>
 
-            
+
 
             <TouchableOpacity style={styles.menuItem} onPress={goToCategories}>
-               <Text>🏷️</Text>
+              <Text>🏷️</Text>
               <Text style={styles.menuItemText}>Kategori Yönetimi</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.menuItem} onPress={goToWorkers}>
-               <Text>👷</Text>
+              <Text>👷</Text>
               <Text style={styles.menuItemText}>Personel Listesi</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-               <Text>🚪</Text>
+              <Text>🚪</Text>
               <Text style={[styles.menuItemText, { color: "#dc2626" }]}>
                 Güvenli Çıkış
               </Text>
@@ -241,7 +272,7 @@ const OfficialHomeScreen = () => {
         </View>
       ) : complaints.length === 0 ? (
         <View style={styles.emptyContainer}>
-            <Text style={{fontSize: 40, marginBottom: 10}}>📭</Text>
+          <Text style={{ fontSize: 40, marginBottom: 10 }}>📭</Text>
           <Text style={styles.emptyText}>Şu anda sistemde bekleyen veya işlem gören bir şikayet bulunmamaktadır.</Text>
         </View>
       ) : (
@@ -252,11 +283,11 @@ const OfficialHomeScreen = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl 
-                refreshing={refreshing} 
-                onRefresh={onRefresh} 
-                tintColor="#1e3a8a" 
-                colors={["#1e3a8a"]} 
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#1e3a8a"
+              colors={["#1e3a8a"]}
             />
           }
         />

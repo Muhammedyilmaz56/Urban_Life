@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { BASE_URL } from "../../config";
-import styles from "../../styles/EmployeeCompletedStyles"; 
+import styles from "../../styles/EmployeeCompletedStyles";
 import client from "../../api/client";
 // --- TİP TANIMLARI ---
 type Complaint = {
@@ -86,8 +86,8 @@ export default function EmployeeCompletedScreen() {
     const c = item.complaint;
 
     // Fotoğraf Önceliği: 1. Çözüm Fotosu, 2. Şikayet Fotosu, 3. Yok
-    const displayPhoto = resolvePhoto(item.solution_photo_url) || 
-                         (c.photos && c.photos.length > 0 ? resolvePhoto(c.photos[0]?.photo_url) : null);
+    const displayPhoto = resolvePhoto(item.solution_photo_url) ||
+      (c.photos && c.photos.length > 0 ? resolvePhoto(c.photos[0]?.photo_url) : null);
 
     return (
       <TouchableOpacity
@@ -101,17 +101,29 @@ export default function EmployeeCompletedScreen() {
           })
         }
       >
-        {/* Görsel Alanı (Varsa Göster) */}
+        {/* Görsel Alanı (Bulanık Arka Plan) */}
         {displayPhoto && (
-          <Image 
-            source={{ uri: displayPhoto }} 
-            style={styles.cardImageCover} // Yeni stil (aşağıda ekleyeceğiz)
-            resizeMode="cover"
-          />
+          <View style={{ position: 'relative' }}>
+            <Image
+              source={{ uri: displayPhoto }}
+              style={styles.cardImageCover}
+              resizeMode="cover"
+              blurRadius={3}
+            />
+            {/* Karartma Overlay */}
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+            }} />
+          </View>
         )}
 
         {/* Kart İçeriği */}
-        <View style={{ padding: 16 }}> 
+        <View style={{ padding: 16 }}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle} numberOfLines={1}>
               {c.title || `Şikayet #${c.id}`}
@@ -125,7 +137,7 @@ export default function EmployeeCompletedScreen() {
           </View>
 
           {c.address ? (
-             <Text style={styles.addressText} numberOfLines={1}>📍 {c.address}</Text>
+            <Text style={styles.addressText} numberOfLines={1}>📍 {c.address}</Text>
           ) : null}
 
           <Text style={styles.descriptionText} numberOfLines={2}>
@@ -134,11 +146,11 @@ export default function EmployeeCompletedScreen() {
 
           <View style={styles.cardFooter}>
             <Text style={styles.dateText}>
-              ✅ {item.assignment_status === 'resolved' ? 'Çözüldü' : 'Tamamlandı'}
+              ✔️ {item.assignment_status === 'resolved' ? 'Başarıyla Çözüldü' : 'Başarıyla Tamamlandı'}
             </Text>
             <View style={styles.detailLink}>
               <Text style={styles.detailLinkText}>Detaylar</Text>
-              <Text style={{color: '#1e3a8a'}}>→</Text>
+              <Text style={{ color: '#1e3a8a' }}>→</Text>
             </View>
           </View>
         </View>
@@ -168,11 +180,11 @@ export default function EmployeeCompletedScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1e3a8a" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1e3a8a" />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={{fontSize: 40, marginBottom: 10}}>📂</Text>
+              <Text style={{ fontSize: 40, marginBottom: 10 }}>📂</Text>
               <Text style={styles.emptyText}>Henüz tamamlanmış bir göreviniz yok.</Text>
             </View>
           }

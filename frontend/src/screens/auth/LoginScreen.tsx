@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   TouchableOpacity,
   ImageBackground,
   StatusBar,
@@ -27,12 +26,15 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const auth = useContext(AuthContext);
 
   const handleLogin = async () => {
+    setErrorMessage("");
+
     if (!email || !password) {
-      Alert.alert("Uyarı", "Lütfen email ve şifrenizi giriniz.");
+      setErrorMessage("Lütfen email ve şifrenizi giriniz.");
       return;
     }
 
@@ -61,8 +63,13 @@ export default function LoginScreen({ navigation }: any) {
     } catch (err: any) {
       setLoading(false);
       console.error("LOGIN ERROR:", err?.response?.data || err.message);
-      Alert.alert("Giriş Başarısız", "Email veya şifre hatalı.");
+      setErrorMessage("Email veya şifre hatalı.");
     }
+  };
+
+  const handleInputChange = (setter: (val: string) => void, value: string) => {
+    setErrorMessage("");
+    setter(value);
   };
 
   return (
@@ -116,7 +123,7 @@ export default function LoginScreen({ navigation }: any) {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(val) => handleInputChange(setEmail, val)}
                   />
                 </View>
 
@@ -128,9 +135,32 @@ export default function LoginScreen({ navigation }: any) {
                     placeholderTextColor="rgba(255,255,255,0.6)"
                     secureTextEntry
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(val) => handleInputChange(setPassword, val)}
                   />
                 </View>
+
+                {/* Hata Mesajı */}
+                {errorMessage !== "" && (
+                  <View style={{
+                    backgroundColor: "rgba(239, 68, 68, 0.15)",
+                    borderWidth: 1,
+                    borderColor: "#EF4444",
+                    borderRadius: 10,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginTop: 8,
+                    marginBottom: 4,
+                  }}>
+                    <Text style={{
+                      color: "#EF4444",
+                      fontSize: 13,
+                      fontWeight: "700",
+                      textAlign: "center",
+                    }}>
+                      ⚠️ {errorMessage}
+                    </Text>
+                  </View>
+                )}
 
                 <TouchableOpacity
                   style={LoginStyles.forgotPasswordContainer}

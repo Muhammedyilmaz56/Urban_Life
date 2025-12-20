@@ -14,7 +14,13 @@ const Stack = createNativeStackNavigator();
 
 export default function OfficialNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        animationDuration: 200,
+      }}
+    >
       <Stack.Screen
         name="OfficialHome"
         component={OfficialHomeScreen}

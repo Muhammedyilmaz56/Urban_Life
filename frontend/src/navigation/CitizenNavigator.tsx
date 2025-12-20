@@ -11,7 +11,13 @@ const Stack = createNativeStackNavigator();
 
 export default function CitizenNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        animationDuration: 200,
+      }}
+    >
       <Stack.Screen
         name="Home"
         component={HomeScreen}

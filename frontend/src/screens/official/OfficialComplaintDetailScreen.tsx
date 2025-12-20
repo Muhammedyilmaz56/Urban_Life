@@ -77,13 +77,18 @@ export default function OfficialComplaintDetailScreen() {
 
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Mesaj state'leri
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   const loadComplaint = async () => {
     try {
       setLoading(true);
       const data = await fetchOfficialComplaintDetail(complaintId);
       setComplaint(data);
     } catch (error) {
-      Alert.alert("Hata", "Şikayet detayı yüklenirken bir hata oluştu.");
+      setErrorMessage("Şikayet detayı yüklenirken bir hata oluştu.");
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setLoading(false);
     }
@@ -94,14 +99,15 @@ export default function OfficialComplaintDetailScreen() {
       const list = await fetchWorkers();
       setWorkers(list.filter((w) => w.is_active));
     } catch (error) {
-      Alert.alert("Hata", "Personel listesi alınamadı.");
+      setErrorMessage("Personel listesi alınamadı.");
+      setTimeout(() => setErrorMessage(""), 4000);
     }
   };
 
   useEffect(() => {
     if (!complaintId) {
-      Alert.alert("Hata", "Şikayet bulunamadı.");
-      navigation.goBack();
+      setErrorMessage("Şikayet bulunamadı.");
+      setTimeout(() => navigation.goBack(), 2000);
       return;
     }
     loadComplaint();
@@ -109,7 +115,8 @@ export default function OfficialComplaintDetailScreen() {
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      Alert.alert("Uyarı", "Lütfen red için geçerli bir sebep girin.");
+      setErrorMessage("Lütfen red için geçerli bir sebep girin.");
+      setTimeout(() => setErrorMessage(""), 4000);
       return;
     }
     try {
@@ -118,9 +125,11 @@ export default function OfficialComplaintDetailScreen() {
       setComplaint(updated);
       setRejectModalVisible(false);
       setRejectReason("");
-      Alert.alert("İşlem Başarılı", "Şikayet kaydı reddedildi.");
+      setSuccessMessage("Şikayet kaydı reddedildi.");
+      setTimeout(() => setSuccessMessage(""), 4000);
     } catch (error) {
-      Alert.alert("Hata", "İşlem sırasında bir hata oluştu.");
+      setErrorMessage("İşlem sırasında bir hata oluştu.");
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setActionLoading(false);
     }
@@ -134,7 +143,8 @@ export default function OfficialComplaintDetailScreen() {
 
   const handleAssign = async () => {
     if (!selectedWorker) {
-      Alert.alert("Uyarı", "Lütfen bir personel seçin.");
+      setErrorMessage("Lütfen bir personel seçin.");
+      setTimeout(() => setErrorMessage(""), 4000);
       return;
     }
     try {
@@ -146,9 +156,11 @@ export default function OfficialComplaintDetailScreen() {
       setComplaint(updated);
       setAssignModalVisible(false);
       setSelectedWorker(null);
-      Alert.alert("Atama Başarılı", "Şikayet ilgili personele iletildi.");
+      setSuccessMessage("Şikayet ilgili personele iletildi.");
+      setTimeout(() => setSuccessMessage(""), 4000);
     } catch (error) {
-      Alert.alert("Hata", "Atama işlemi başarısız oldu.");
+      setErrorMessage("Atama işlemi başarısız oldu.");
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setActionLoading(false);
     }
@@ -170,22 +182,40 @@ export default function OfficialComplaintDetailScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
+
+        {/* Başarı Mesajı */}
+        {successMessage !== "" && (
+          <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 16 }}>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+              ✓ {successMessage}
+            </Text>
+          </View>
+        )}
+
+        {/* Hata Mesajı */}
+        {errorMessage !== "" && (
+          <View style={{ backgroundColor: "#EF4444", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 16 }}>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+              ✕ {errorMessage}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.headerSection}>
-            <View style={styles.headerRow}>
-                <Text style={styles.title}>{complaint.title}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: statusTheme.bg, borderColor: statusTheme.border }]}>
-                    <Text style={[styles.statusText, { color: statusTheme.text }]}>{statusLabel}</Text>
-                </View>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>{complaint.title}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: statusTheme.bg, borderColor: statusTheme.border }]}>
+              <Text style={[styles.statusText, { color: statusTheme.text }]}>{statusLabel}</Text>
             </View>
+          </View>
 
-            {complaint.category && (
+          {complaint.category && (
             <Text style={styles.categoryText}>📂 {complaint.category.name}</Text>
-            )}
+          )}
 
-            {complaint.address && (
+          {complaint.address && (
             <Text style={styles.addressText}>📍 {complaint.address}</Text>
-            )}
+          )}
         </View>
 
         {typeof complaint.latitude === "number" &&
@@ -229,24 +259,24 @@ export default function OfficialComplaintDetailScreen() {
           )}
 
         <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Vatandaş Açıklaması</Text>
-            <Text style={styles.description}>{complaint.description}</Text>
+          <Text style={styles.sectionTitle}>Vatandaş Açıklaması</Text>
+          <Text style={styles.description}>{complaint.description}</Text>
 
-            {complaint.reject_reason && (
-                <View style={styles.rejectContainer}>
-                    <Text style={styles.rejectLabel}>⚠️ Reddedilme Sebebi:</Text>
-                    <Text style={styles.rejectText}>{complaint.reject_reason}</Text>
-                </View>
-            )}
-
-            <View style={styles.metaContainer}>
-                <Text style={styles.metaText}>
-                    📅 {new Date(complaint.created_at).toLocaleString("tr-TR")}
-                </Text>
-                {typeof complaint.support_count === "number" && (
-                    <Text style={styles.metaText}>👍 {complaint.support_count} Destek</Text>
-                )}
+          {complaint.reject_reason && (
+            <View style={styles.rejectContainer}>
+              <Text style={styles.rejectLabel}>⚠️ Reddedilme Sebebi:</Text>
+              <Text style={styles.rejectText}>{complaint.reject_reason}</Text>
             </View>
+          )}
+
+          <View style={styles.metaContainer}>
+            <Text style={styles.metaText}>
+              📅 {new Date(complaint.created_at).toLocaleString("tr-TR")}
+            </Text>
+            {typeof complaint.support_count === "number" && (
+              <Text style={styles.metaText}>👍 {complaint.support_count} Destek</Text>
+            )}
+          </View>
         </View>
 
         {complaint.photos && complaint.photos.length > 0 && (
@@ -322,8 +352,8 @@ export default function OfficialComplaintDetailScreen() {
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.rejectButton, 
-                (complaint.status === "rejected" || complaint.status === "resolved") && { opacity: 0.5 }
+            style={[styles.actionButton, styles.rejectButton,
+            (complaint.status === "rejected" || complaint.status === "resolved") && { opacity: 0.5 }
             ]}
             onPress={() => setRejectModalVisible(true)}
             disabled={complaint.status === "rejected" || complaint.status === "resolved"}
@@ -333,7 +363,7 @@ export default function OfficialComplaintDetailScreen() {
 
           <TouchableOpacity
             style={[styles.actionButton, styles.assignButton,
-                (complaint.status === "resolved" || complaint.status === "rejected") && { opacity: 0.5 }
+            (complaint.status === "resolved" || complaint.status === "rejected") && { opacity: 0.5 }
             ]}
             onPress={openAssignModal}
             disabled={complaint.status === "resolved" || complaint.status === "rejected"}
@@ -408,13 +438,13 @@ export default function OfficialComplaintDetailScreen() {
                     onPress={() => setSelectedWorker(w)}
                   >
                     <View style={styles.employeeAvatarPlaceholder}>
-                        <Text style={styles.employeeInitials}>
-                            {w.full_name ? w.full_name.charAt(0).toUpperCase() : "?"}
-                        </Text>
+                      <Text style={styles.employeeInitials}>
+                        {w.full_name ? w.full_name.charAt(0).toUpperCase() : "?"}
+                      </Text>
                     </View>
                     <View style={styles.employeeInfo}>
-                        <Text style={styles.employeeName}>{w.full_name}</Text>
-                        <Text style={styles.employeeEmail}>ID: {w.user_id}</Text>
+                      <Text style={styles.employeeName}>{w.full_name}</Text>
+                      <Text style={styles.employeeEmail}>ID: {w.user_id}</Text>
                     </View>
                     {selectedWorker?.id === w.id && <Text>✅</Text>}
                   </TouchableOpacity>

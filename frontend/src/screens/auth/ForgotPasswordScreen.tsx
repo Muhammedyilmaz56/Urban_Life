@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   ImageBackground,
   StatusBar,
   KeyboardAvoidingView,
@@ -27,13 +26,26 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
+  // Inline mesajlar
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
   const handleForgotPassword = async () => {
+    setSuccessMessage("");
+    setErrorMessage("");
+
     if (!email.trim()) {
-      Alert.alert("Eksik Bilgi", "Lütfen e-posta adresinizi girin.");
+      setErrorMessage("Lütfen e-posta adresinizi girin.");
+      return;
+    }
+
+    // Basit e-posta formatı kontrolü
+    if (!email.includes("@") || !email.includes(".")) {
+      setErrorMessage("Geçerli bir e-posta adresi girin.");
       return;
     }
 
@@ -41,17 +53,25 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(true);
       await client.post(`${BASE_URL}/auth/forgot-password`, { email });
 
-      Alert.alert(
-        "Bağlantı Gönderildi 🚀",
-        "E-posta adresinize şifre sıfırlama linki gönderildi.",
-        [{ text: "Tamam", onPress: () => navigation.navigate("Login" as never) }]
-      );
+      setSuccessMessage("Şifre sıfırlama linki e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol edin.");
+      setTimeout(() => {
+        navigation.navigate("Login" as never);
+      }, 3000);
     } catch (err: any) {
-      console.error(err);
-      Alert.alert(
-        "Hata",
-        "İşlem başarısız. Lütfen e-posta adresinizi kontrol edin."
-      );
+      const detail = err.response?.data?.detail || err.response?.data?.message || "";
+      const detailLower = String(detail).toLowerCase();
+
+      if (detailLower.includes("not found") || detailLower.includes("bulunamadı") || detailLower.includes("does not exist")) {
+        setErrorMessage("Bu e-posta adresi ile kayıtlı bir hesap bulunamadı.");
+      } else if (detailLower.includes("invalid") || detailLower.includes("geçersiz")) {
+        setErrorMessage("Geçersiz e-posta formatı.");
+      } else if (detailLower.includes("too many") || detailLower.includes("limit")) {
+        setErrorMessage("Çok fazla deneme yaptınız. Lütfen birkaç dakika bekleyin.");
+      } else if (detail) {
+        setErrorMessage(detail);
+      } else {
+        setErrorMessage("İşlem başarısız oldu. Lütfen tekrar deneyin.");
+      }
     } finally {
       setLoading(false);
     }
@@ -109,6 +129,24 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
                   için güvenli bir bağlantı göndereceğiz.
                 </Text>
 
+                {/* Başarı Mesajı */}
+                {successMessage !== "" && (
+                  <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 12 }}>
+                    <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600", textAlign: "center" }}>
+                      ✓ {successMessage}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Hata Mesajı */}
+                {errorMessage !== "" && (
+                  <View style={{ backgroundColor: "#EF4444", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 12 }}>
+                    <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600", textAlign: "center" }}>
+                      ✕ {errorMessage}
+                    </Text>
+                  </View>
+                )}
+
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputIcon}>✉️</Text>
                   <TextInput
@@ -118,7 +156,10 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(val) => {
+                      setEmail(val);
+                      setErrorMessage("");
+                    }}
                   />
                 </View>
 

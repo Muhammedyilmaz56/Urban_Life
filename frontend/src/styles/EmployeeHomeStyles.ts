@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform, Dimensions, StatusBar } from "react-native";
 
 const COLORS = {
   primary: "#1e3a8a", // Kurumsal Lacivert
@@ -7,7 +7,7 @@ const COLORS = {
   textDark: "#0f172a",
   textGray: "#64748b",
   border: "#e2e8f0",
-  
+
   // Durum Renkleri
   status: {
     assigned: { bg: "#eff6ff", text: "#1e40af", border: "#dbeafe" }, // Mavi
@@ -21,13 +21,13 @@ const EmployeeHomeStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  
+
   // --- HEADER (SADE) ---
   headerContainer: {
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 50 : 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
     paddingBottom: 25,
-    backgroundColor: COLORS.primary, 
+    backgroundColor: COLORS.primary,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     shadowColor: "#1e3a8a",
@@ -38,14 +38,14 @@ const EmployeeHomeStyles = StyleSheet.create({
     marginBottom: 10,
     justifyContent: 'center',
   },
-  
+
   welcomeText: {
-    fontSize: 14, 
-    color: '#bfdbfe', 
+    fontSize: 14,
+    color: '#bfdbfe',
     fontWeight: '500',
     marginBottom: 4,
   },
-  
+
   headerTitle: {
     fontSize: 24,
     fontWeight: '800',
@@ -65,7 +65,7 @@ const EmployeeHomeStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  
+
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -84,24 +84,36 @@ const EmployeeHomeStyles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
     shadowColor: "#64748b",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+    overflow: 'hidden',
   },
-  
+
+  // Kartın en üstündeki resim
+  cardImageCover: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#cbd5e1',
+  },
+
+  // Kart içerik alanı
+  cardBody: {
+    padding: 16,
+  },
+
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
   },
-  
+
   cardTitle: {
     flex: 1,
     fontSize: 17,
@@ -110,7 +122,7 @@ const EmployeeHomeStyles = StyleSheet.create({
     marginRight: 10,
     lineHeight: 22,
   },
-  
+
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -118,13 +130,13 @@ const EmployeeHomeStyles = StyleSheet.create({
     borderWidth: 1,
     alignSelf: 'flex-start',
   },
-  
+
   statusText: {
     fontSize: 11,
     fontWeight: "700",
     textTransform: 'uppercase',
   },
-  
+
   // Durum stilleri
   status_assigned: {
     backgroundColor: COLORS.status.assigned.bg,
@@ -145,14 +157,14 @@ const EmployeeHomeStyles = StyleSheet.create({
     marginBottom: 8,
     fontStyle: 'italic',
   },
-  
+
   descriptionText: {
     fontSize: 14,
     color: "#334155",
     marginBottom: 12,
     lineHeight: 20,
   },
-  
+
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -161,13 +173,13 @@ const EmployeeHomeStyles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#f1f5f9",
   },
-  
+
   dateText: {
     fontSize: 12,
     color: "#94a3b8",
     fontWeight: '500',
   },
-  
+
   detailLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -178,7 +190,7 @@ const EmployeeHomeStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  
+
   detailLinkText: {
     fontSize: 12,
     fontWeight: "600",

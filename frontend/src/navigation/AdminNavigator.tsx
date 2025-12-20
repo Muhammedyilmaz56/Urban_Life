@@ -15,59 +15,56 @@ const Stack = createNativeStackNavigator();
 
 export default function AdminNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        animationDuration: 200,
+      }}
+    >
       <Stack.Screen
         name="AdminHome"
         component={AdminHomeScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminOfficials"
         component={AdminOfficialsScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminCreateOfficial"
         component={AdminCreateOfficialScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminOfficialDetail"
         component={AdminOfficialDetailScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminCategories"
         component={AdminCategoriesScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminStats"
         component={AdminStatsScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminAudit"
         component={AdminAuditScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminUsers"
         component={AdminUsersScreen}
-        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="AdminProfile"
         component={AdminProfileScreen}
-        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

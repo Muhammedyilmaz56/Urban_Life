@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   TouchableOpacity,
   ImageBackground,
   StatusBar,
@@ -26,11 +25,39 @@ export default function RegisterScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
+  // Hata state'leri
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [generalError, setGeneralError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const clearErrors = () => {
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setGeneralError("");
+  };
+
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert("Uyarı", "Lütfen tüm alanları doldurun.");
-      return;
+    clearErrors();
+    setSuccessMessage("");
+    let hasError = false;
+
+    if (!name.trim()) {
+      setNameError("Ad Soyad zorunludur.");
+      hasError = true;
     }
+    if (!email.trim()) {
+      setEmailError("Email adresi zorunludur.");
+      hasError = true;
+    }
+    if (!password.trim()) {
+      setPasswordError("Şifre zorunludur.");
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     setLoading(true);
     try {
@@ -41,22 +68,56 @@ export default function RegisterScreen({ navigation }: any) {
         role: "citizen",
       });
 
-      Alert.alert(
-        "Başarılı!",
-        "Kayıt işleminiz tamamlandı. Lütfen giriş yapın."
-      );
+      setSuccessMessage("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...");
       setTimeout(() => {
         setLoading(false);
         navigation.navigate("Login");
-      }, 500);
+      }, 1500);
     } catch (err: any) {
       setLoading(false);
-      const errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.detail ||
-        "Kayıt sırasında bir hata oluştu.";
-      Alert.alert("Hata", errorMessage);
+      const detail = err.response?.data?.detail || err.response?.data?.message || "";
+      const detailLower = String(detail).toLowerCase();
+
+      // E-posta hataları
+      if (detailLower.includes("email") && (detailLower.includes("already") || detailLower.includes("exists") || detailLower.includes("kayıtlı") || detailLower.includes("registered"))) {
+        setEmailError("Bu e-posta adresi zaten kayıtlı.");
+      } else if (detailLower.includes("email") && (detailLower.includes("invalid") || detailLower.includes("geçersiz"))) {
+        setEmailError("Geçerli bir e-posta adresi girin.");
+      }
+      // Şifre hataları
+      else if (detailLower.includes("password") && (detailLower.includes("short") || detailLower.includes("kısa"))) {
+        setPasswordError("Şifre en az 6 karakter olmalı.");
+      } else if (detailLower.includes("password") && (detailLower.includes("weak") || detailLower.includes("zayıf"))) {
+        setPasswordError("Şifre çok zayıf. Daha güçlü bir şifre seçin.");
+      }
+      // İsim hataları
+      else if (detailLower.includes("name") && (detailLower.includes("short") || detailLower.includes("kısa"))) {
+        setNameError("Ad Soyad en az 2 karakter olmalı.");
+      }
+      // Genel hatalar
+      else if (detail) {
+        setGeneralError(detail);
+      } else {
+        setGeneralError("Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.");
+      }
     }
+  };
+
+  // Hata stili
+  const errorStyle = {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "600" as const,
+    marginTop: 4,
+    marginLeft: 4,
+  };
+
+  const successStyle = {
+    color: "#10B981",
+    fontSize: 13,
+    fontWeight: "600" as const,
+    textAlign: "center" as const,
+    marginBottom: 8,
   };
 
   return (
@@ -106,6 +167,24 @@ export default function RegisterScreen({ navigation }: any) {
               <View style={styles.glassFormContainer}>
                 <Text style={styles.formTitle}>Yeni Hesap Oluştur</Text>
 
+                {/* Success Message */}
+                {successMessage !== "" && (
+                  <Text style={successStyle}>{successMessage}</Text>
+                )}
+
+                {/* General Error */}
+                {generalError !== "" && (
+                  <Text style={{
+                    color: "#EF4444",
+                    fontSize: 13,
+                    fontWeight: "600",
+                    textAlign: "center",
+                    marginBottom: 8,
+                  }}>
+                    {generalError}
+                  </Text>
+                )}
+
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputIcon}>👤</Text>
                   <TextInput
@@ -113,9 +192,13 @@ export default function RegisterScreen({ navigation }: any) {
                     placeholder="Ad Soyad"
                     placeholderTextColor="rgba(255,255,255,0.6)"
                     value={name}
-                    onChangeText={setName}
+                    onChangeText={(val) => {
+                      setName(val);
+                      setNameError("");
+                    }}
                   />
                 </View>
+                {nameError !== "" && <Text style={errorStyle}>{nameError}</Text>}
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputIcon}>✉️</Text>
@@ -126,9 +209,13 @@ export default function RegisterScreen({ navigation }: any) {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(val) => {
+                      setEmail(val);
+                      setEmailError("");
+                    }}
                   />
                 </View>
+                {emailError !== "" && <Text style={errorStyle}>{emailError}</Text>}
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputIcon}>🔒</Text>
@@ -138,9 +225,13 @@ export default function RegisterScreen({ navigation }: any) {
                     placeholderTextColor="rgba(255,255,255,0.6)"
                     secureTextEntry
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(val) => {
+                      setPassword(val);
+                      setPasswordError("");
+                    }}
                   />
                 </View>
+                {passwordError !== "" && <Text style={errorStyle}>{passwordError}</Text>}
 
                 <TouchableOpacity
                   style={[

@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions, Platform } from "react-native";
+import { StyleSheet, Dimensions, Platform, StatusBar } from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -18,6 +18,7 @@ export default StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
   },
 
   center: {
@@ -25,7 +26,7 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  
+
   loadingText: {
     marginTop: 12,
     color: COLORS.textGray,
@@ -47,7 +48,7 @@ export default StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  
+
   addText: {
     color: "#FFFFFF",
     fontSize: 16,
@@ -96,7 +97,7 @@ export default StyleSheet.create({
     borderColor: "#dbeafe",
     marginRight: 12,
   },
-  
+
   avatarText: {
     fontSize: 18,
     fontWeight: "700",
@@ -118,28 +119,28 @@ export default StyleSheet.create({
   statusContainer: {
     flexDirection: 'row',
   },
-  
+
   activeBadge: {
     backgroundColor: "#dcfce7",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  
+
   activeText: {
     fontSize: 11,
     fontWeight: "700",
     color: "#166534",
     textTransform: "uppercase",
   },
-  
+
   passiveBadge: {
     backgroundColor: "#fee2e2",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  
+
   passiveText: {
     fontSize: 11,
     fontWeight: "700",
@@ -164,7 +165,7 @@ export default StyleSheet.create({
   contactLabel: {
     fontSize: 13,
     color: COLORS.textGray,
-    width: 60, 
+    width: 60,
   },
 
   contactValue: {
@@ -172,7 +173,7 @@ export default StyleSheet.create({
     color: COLORS.textDark,
     fontWeight: "500",
   },
-  
+
   clickableText: {
     color: COLORS.secondary,
     textDecorationLine: 'underline',
@@ -215,7 +216,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: "#fee2e2",
   },
-  
+
   deleteText: {
     fontSize: 12,
     fontWeight: "700",

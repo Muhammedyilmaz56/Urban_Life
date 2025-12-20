@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const COLORS = {
   primary: "#1e3a8a", // Kurumsal Lacivert
@@ -14,7 +14,8 @@ const COLORS = {
 export default StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
     backgroundColor: COLORS.background,
   },
 
@@ -147,7 +148,7 @@ export default StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  
+
   statusText: {
     fontSize: 10,
     fontWeight: "bold",

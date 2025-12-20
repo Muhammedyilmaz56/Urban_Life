@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform, Dimensions, StatusBar } from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -18,14 +18,14 @@ const EmployeeProfileStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  
+
   // --- ÜST BAŞLIK ALANI (LACİVERT) ---
   headerBackground: {
     backgroundColor: COLORS.primary,
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 16,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     alignItems: 'center',
     shadowColor: "#1e3a8a",
     shadowOffset: { width: 0, height: 4 },
@@ -34,15 +34,15 @@ const EmployeeProfileStyles = StyleSheet.create({
     elevation: 10,
     zIndex: 1,
   },
-  
+
   headerTopRow: {
     width: '100%',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  
+
   backButton: {
     padding: 8,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -58,18 +58,18 @@ const EmployeeProfileStyles = StyleSheet.create({
   // --- AVATAR ALANI ---
   avatarContainer: {
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 4,
   },
   avatarWrap: {
     position: 'relative',
-    padding: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)', // Avatar etrafındaki halka
-    borderRadius: 60,
+    padding: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 45,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 2,
     borderColor: '#fff',
     backgroundColor: '#cbd5e1',
@@ -138,7 +138,7 @@ const EmployeeProfileStyles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  
+
   // Satır (Row) Yapısı
   infoRow: {
     flexDirection: 'row',
@@ -227,7 +227,7 @@ const EmployeeProfileStyles = StyleSheet.create({
     borderColor: '#e2e8f0',
     marginBottom: 12,
   },
-  
+
   // Modal Butonları
   modalButtonRow: {
     flexDirection: 'row',

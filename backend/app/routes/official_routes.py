@@ -33,7 +33,7 @@ def list_complaints_for_official(
 
     return query.order_by(Complaint.created_at.desc()).all()
 
-@router.get("/complaints/{complaint_id}", response_model=ComplaintOut)
+@router.get("/complaints/{complaint_id}")
 def get_complaint_detail(
     complaint_id: int,
     db: Session = Depends(get_db),
@@ -44,7 +44,43 @@ def get_complaint_detail(
     if not complaint:
         raise HTTPException(status_code=404, detail="Şikayet bulunamadı.")
 
-    return complaint
+    # Çözüm fotoğraflarını assignments tablosundan al
+    import json
+    resolution_photos = []
+    assignments = db.query(Assignment).filter(Assignment.complaint_id == complaint_id).all()
+    for assignment in assignments:
+        if assignment.solution_photo_url:
+            try:
+                urls = json.loads(assignment.solution_photo_url)
+                if isinstance(urls, list):
+                    for idx, url in enumerate(urls):
+                        resolution_photos.append({"id": idx + 1, "url": url})
+            except:
+                pass
+
+    # Complaint'i dict'e çevir ve resolution_photos ekle
+    result = {
+        "id": complaint.id,
+        "user_id": complaint.user_id,
+        "title": complaint.title,
+        "description": complaint.description,
+        "category_id": complaint.category_id,
+        "category": complaint.category,
+        "status": complaint.status.value if hasattr(complaint.status, 'value') else complaint.status,
+        "priority": complaint.priority.value if hasattr(complaint.priority, 'value') else complaint.priority,
+        "latitude": complaint.latitude,
+        "longitude": complaint.longitude,
+        "address": complaint.address,
+        "photo_url": complaint.photo_url,
+        "is_anonymous": complaint.is_anonymous,
+        "support_count": complaint.support_count,
+        "reject_reason": complaint.reject_reason,
+        "created_at": complaint.created_at,
+        "updated_at": complaint.updated_at,
+        "photos": complaint.photos,
+        "resolution_photos": resolution_photos,
+    }
+    return result
 @router.post("/complaints/{complaint_id}/reject", response_model=ComplaintOut)
 def reject_complaint(
     complaint_id: int,

@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions, Platform, StatusBar } from "react-native";
 
 const COLORS = {
   primary: "#1e3a8a", // Kurumsal Lacivert
@@ -13,7 +13,8 @@ const COLORS = {
 export default StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
     backgroundColor: COLORS.background,
   },
 
@@ -39,7 +40,7 @@ export default StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
   },
-  
+
   headerSubtitle: {
     fontSize: 14,
     color: COLORS.textGray,
@@ -101,7 +102,7 @@ export default StyleSheet.create({
     fontWeight: "500",
     color: COLORS.textDark,
   },
-  
+
   selectIcon: {
     fontSize: 12,
     color: COLORS.textGray,
@@ -185,12 +186,12 @@ export default StyleSheet.create({
     color: COLORS.textDark,
     fontWeight: "500",
   },
-  
+
   modalItemSelected: {
     backgroundColor: "#eff6ff",
     borderRadius: 8,
   },
-  
+
   modalItemTextSelected: {
     color: COLORS.primary,
     fontWeight: "700",

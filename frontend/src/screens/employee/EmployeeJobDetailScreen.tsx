@@ -35,6 +35,10 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
   const [selectedSolutionImages, setSelectedSolutionImages] = useState<any[]>([]);
   const [solutionUrls, setSolutionUrls] = useState<string[]>([]);
 
+  // Mesaj state'leri
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   // Çözüm fotoğraflarını parse etme
   const parseSolutionUrls = (raw: any): string[] => {
     if (!raw) return [];
@@ -47,7 +51,7 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
           if (Array.isArray(arr)) {
             return arr.map((x: any) => resolvePhoto(String(x))).filter(isString);
           }
-        } catch {}
+        } catch { }
       }
       const one = resolvePhoto(raw);
       return one ? [one] : [];
@@ -95,7 +99,8 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
       setSolutionUrls(parseSolutionUrls(rawSolution));
     } catch (e: any) {
       const msg = e?.response?.data?.detail || e?.message || "Detay alınamadı.";
-      Alert.alert("Hata", String(msg));
+      setErrorMessage(String(msg));
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setLoading(false);
     }
@@ -117,10 +122,12 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Alert.alert("Başarılı", "İş süreci başlatıldı.");
+      setSuccessMessage("İş süreci başlatıldı.");
+      setTimeout(() => setSuccessMessage(""), 4000);
       fetchDetail();
     } catch (e: any) {
-      Alert.alert("Bilgi", "Bu iş zaten başlatılmış veya işlemde.");
+      setErrorMessage("Bu iş zaten başlatılmış veya işlemde.");
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setStarting(false);
     }
@@ -140,13 +147,15 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
         setSelectedSolutionImages((prev) => [...prev, ...result.assets]);
       }
     } catch (error) {
-      Alert.alert("Hata", "Fotoğraf seçerken bir hata oluştu.");
+      setErrorMessage("Fotoğraf seçerken bir hata oluştu.");
+      setTimeout(() => setErrorMessage(""), 4000);
     }
   };
 
   const uploadSolutionPhotos = async () => {
     if (selectedSolutionImages.length === 0) {
-      Alert.alert("Uyarı", "Lütfen önce galeriden fotoğraf seçin.");
+      setErrorMessage("Lütfen önce galeriden fotoğraf seçin.");
+      setTimeout(() => setErrorMessage(""), 4000);
       return;
     }
 
@@ -184,11 +193,13 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
       setSolutionUrls(urls);
       setSelectedSolutionImages([]);
 
-      Alert.alert("Başarılı", "Çözüm fotoğrafları sisteme yüklendi.");
+      setSuccessMessage("Çözüm fotoğrafları sisteme yüklendi. İş tamamlandı!");
+      setTimeout(() => setSuccessMessage(""), 4000);
       fetchDetail();
     } catch (e: any) {
       const msg = e?.response?.data?.detail || "Fotoğraf yüklenemedi.";
-      Alert.alert("Hata", String(msg));
+      setErrorMessage(String(msg));
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setUploading(false);
     }
@@ -202,14 +213,18 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
       const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
       Linking.canOpenURL(url).then((supported) => {
         if (supported) Linking.openURL(url);
-        else Alert.alert("Hata", "Harita uygulaması açılamadı.");
+        else {
+          setErrorMessage("Harita uygulaması açılamadı.");
+          setTimeout(() => setErrorMessage(""), 4000);
+        }
       });
     } else {
       const query = item?.address ? encodeURIComponent(item.address) : "";
       if (query) {
         Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
       } else {
-        Alert.alert("Hata", "Konum bilgisi (koordinat veya adres) mevcut değil.");
+        setErrorMessage("Konum bilgisi (koordinat veya adres) mevcut değil.");
+        setTimeout(() => setErrorMessage(""), 4000);
       }
     }
   };
@@ -234,6 +249,24 @@ export default function EmployeeJobDetailScreen({ route, navigation }: any) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+
+      {/* Başarı Mesajı */}
+      {successMessage !== "" && (
+        <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 16 }}>
+          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+            ✓ {successMessage}
+          </Text>
+        </View>
+      )}
+
+      {/* Hata Mesajı */}
+      {errorMessage !== "" && (
+        <View style={{ backgroundColor: "#EF4444", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 16 }}>
+          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+            ✕ {errorMessage}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.headerSection}>
         <View style={styles.titleRow}>

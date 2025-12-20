@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   ScrollView,
   Modal,
   TextInput,
@@ -48,10 +47,10 @@ const InfoRow = ({ label, value, onPress, actionLabel, lastItem }: any) => (
 const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
   avatar_url
     ? {
-        uri: avatar_url.startsWith("http")
-          ? avatar_url
-          : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
-      }
+      uri: avatar_url.startsWith("http")
+        ? avatar_url
+        : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
+    }
     : require("../../../assets/default-avatar.png");
 
 export default function EmployeeProfileScreen() {
@@ -88,6 +87,13 @@ export default function EmployeeProfileScreen() {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  // Hata ve başarı state'leri
+  const [infoError, setInfoError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
@@ -119,9 +125,11 @@ export default function EmployeeProfileScreen() {
           const result = await uploadAvatar(res.assets[0].uri);
           setUser((prev: any) => ({ ...(prev || {}), avatar_url: result.avatar_url }));
           setAvatarRefreshKey(Date.now());
-          Alert.alert("Başarılı", "Profil fotoğrafı güncellendi.");
+          setSuccessMessage("Profil fotoğrafı güncellendi.");
+          setTimeout(() => setSuccessMessage(""), 3000);
         } catch (err) {
-          Alert.alert("Hata", "Fotoğraf yüklenemedi.");
+          setInfoError("Fotoğraf yüklenemedi.");
+          setTimeout(() => setInfoError(""), 3000);
         }
       }
     );
@@ -146,8 +154,11 @@ export default function EmployeeProfileScreen() {
   };
 
   const handleUpdatePersonalInfo = async () => {
-    if (!editName.trim() || !editTc.trim())
-      return Alert.alert("Uyarı", "Ad ve TC zorunludur.");
+    setInfoError("");
+    if (!editName.trim() || !editTc.trim()) {
+      setInfoError("Ad ve TC zorunludur.");
+      return;
+    }
 
     const formattedDate =
       birthYear && birthMonth && birthDay
@@ -163,9 +174,10 @@ export default function EmployeeProfileScreen() {
       });
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "Bilgiler güncellendi.");
+      setSuccessMessage("Bilgiler güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Güncelleme başarısız.");
+      setInfoError(err?.response?.data?.detail || "Güncelleme başarısız.");
     } finally {
       setIsSaving(false);
     }
@@ -177,32 +189,38 @@ export default function EmployeeProfileScreen() {
   };
 
   const handleUpdatePhone = async () => {
+    setPhoneError("");
     try {
       setIsSaving(true);
       await updateProfile({ phone_number: editPhone.trim() });
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "Telefon güncellendi.");
+      setSuccessMessage("Telefon güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      Alert.alert("Hata", "İşlem başarısız.");
+      setPhoneError("İşlem başarısız.");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleChangePassword = async () => {
+    setPasswordError("");
     const { current, new: newPass, confirm } = passwords;
-    if (newPass !== confirm)
-      return Alert.alert("Uyarı", "Yeni şifreler uyuşmuyor.");
+    if (newPass !== confirm) {
+      setPasswordError("Yeni şifreler uyuşmuyor.");
+      return;
+    }
 
     try {
       setIsSaving(true);
       await changePassword({ current_password: current, new_password: newPass });
       setModalType("NONE");
       setPasswords({ current: "", new: "", confirm: "" });
-      Alert.alert("Başarılı", "Şifre değiştirildi.");
+      setSuccessMessage("Şifre değiştirildi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Şifre değiştirilemedi.");
+      setPasswordError(err?.response?.data?.detail || "Şifre değiştirilemedi.");
     } finally {
       setIsSaving(false);
     }
@@ -216,27 +234,31 @@ export default function EmployeeProfileScreen() {
   };
 
   const handleRequestEmailChange = async () => {
+    setEmailError("");
     try {
       setIsSaving(true);
       await requestEmailChange(newEmail.trim());
       setEmailStep("CODE");
-      Alert.alert("Bilgi", "Doğrulama kodu gönderildi.");
+      setSuccessMessage("Doğrulama kodu gönderildi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", "Kod gönderilemedi.");
+      setEmailError("Kod gönderilemedi.");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleConfirmEmailChange = async () => {
+    setEmailError("");
     try {
       setIsSaving(true);
       await confirmEmailChange(emailCode.trim());
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "E-posta güncellendi.");
+      setSuccessMessage("E-posta güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", "Kod geçersiz.");
+      setEmailError("Kod geçersiz.");
     } finally {
       setIsSaving(false);
     }
@@ -310,6 +332,15 @@ export default function EmployeeProfileScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Başarı Mesajı */}
+          {successMessage !== "" && (
+            <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, marginBottom: 12, borderRadius: 10 }}>
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+                ✓ {successMessage}
+              </Text>
+            </View>
+          )}
+
           {/* KART 1 */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Kimlik Bilgileri</Text>
@@ -419,10 +450,17 @@ export default function EmployeeProfileScreen() {
               />
             </View>
 
+            {/* Hata Mesajı */}
+            {infoError !== "" && (
+              <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                {infoError}
+              </Text>
+            )}
+
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setModalType("NONE")}
+                onPress={() => { setModalType("NONE"); setInfoError(""); }}
               >
                 <Text style={styles.cancelButtonText}>İptal</Text>
               </TouchableOpacity>
@@ -456,10 +494,18 @@ export default function EmployeeProfileScreen() {
               keyboardType="phone-pad"
               placeholderTextColor="#94a3b8"
             />
+
+            {/* Hata Mesajı */}
+            {phoneError !== "" && (
+              <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                {phoneError}
+              </Text>
+            )}
+
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setModalType("NONE")}
+                onPress={() => { setModalType("NONE"); setPhoneError(""); }}
               >
                 <Text style={styles.cancelButtonText}>İptal</Text>
               </TouchableOpacity>
@@ -511,10 +557,17 @@ export default function EmployeeProfileScreen() {
               placeholderTextColor="#94a3b8"
             />
 
+            {/* Hata Mesajı */}
+            {passwordError !== "" && (
+              <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                {passwordError}
+              </Text>
+            )}
+
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setModalType("NONE")}
+                onPress={() => { setModalType("NONE"); setPasswordError(""); }}
               >
                 <Text style={styles.cancelButtonText}>İptal</Text>
               </TouchableOpacity>
@@ -553,10 +606,17 @@ export default function EmployeeProfileScreen() {
                   placeholderTextColor="#94a3b8"
                 />
 
+                {/* Hata Mesajı */}
+                {emailError !== "" && (
+                  <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                    {emailError}
+                  </Text>
+                )}
+
                 <View style={styles.modalButtonRow}>
                   <TouchableOpacity
                     style={styles.cancelButton}
-                    onPress={() => setModalType("NONE")}
+                    onPress={() => { setModalType("NONE"); setEmailError(""); }}
                   >
                     <Text style={styles.cancelButtonText}>İptal</Text>
                   </TouchableOpacity>

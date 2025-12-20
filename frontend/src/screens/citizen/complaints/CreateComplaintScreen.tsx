@@ -40,6 +40,12 @@ const CreateComplaintScreen = ({ navigation }: any) => {
 
   const [submitting, setSubmitting] = useState(false);
 
+  // Hata state'leri
+  const [titleError, setTitleError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
+  const [categoryError, setCategoryError] = useState("");
+  const [locationError, setLocationError] = useState("");
+
   const mapRef = useRef<MapView | null>(null);
   const hasCenteredOnUser = useRef(false);
 
@@ -54,7 +60,8 @@ const CreateComplaintScreen = ({ navigation }: any) => {
         setCategoryId(String(data[0].id));
       }
     } catch (e: any) {
-      Alert.alert("Hata", e?.response?.data?.detail || "Kategoriler alınamadı.");
+      // Sessiz hata
+      console.log("Kategori hatası:", e?.response?.data?.detail);
     } finally {
       setCategoriesLoading(false);
     }
@@ -88,6 +95,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
   const handleMapPress = (e: MapPressEvent) => {
     const coord = e.nativeEvent.coordinate;
     setPickedLocation(coord);
+    setLocationError("");
   };
 
   const handleUserLocationChange = (e: any) => {
@@ -104,6 +112,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
       };
       mapRef.current?.animateToRegion(region, 800);
       setPickedLocation(coord);
+      setLocationError("");
     }
   };
 
@@ -121,7 +130,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
         setSelectedImages((prev) => [...prev, ...result.assets]);
       }
     } catch (error) {
-      Alert.alert("Hata", "Fotoğraf seçerken bir hata oluştu.");
+      console.log("Fotoğraf seçme hatası:", error);
     }
   };
 
@@ -129,13 +138,37 @@ const CreateComplaintScreen = ({ navigation }: any) => {
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const clearErrors = () => {
+    setTitleError("");
+    setDescriptionError("");
+    setCategoryError("");
+    setLocationError("");
+  };
+
   const handleSubmit = async () => {
     if (submitting) return;
 
-    if (!title.trim()) return Alert.alert("Eksik Bilgi", "Başlık zorunludur.");
-    if (!description.trim()) return Alert.alert("Eksik Bilgi", "Açıklama zorunludur.");
-    if (!categoryId) return Alert.alert("Eksik Bilgi", "Kategori seçmelisiniz.");
-    if (!pickedLocation) return Alert.alert("Eksik Bilgi", "Haritadan konum seçmelisiniz.");
+    clearErrors();
+    let hasError = false;
+
+    if (!title.trim()) {
+      setTitleError("Başlık zorunludur.");
+      hasError = true;
+    }
+    if (!description.trim()) {
+      setDescriptionError("Açıklama zorunludur.");
+      hasError = true;
+    }
+    if (!categoryId) {
+      setCategoryError("Kategori seçmelisiniz.");
+      hasError = true;
+    }
+    if (!pickedLocation) {
+      setLocationError("Haritadan konum seçmelisiniz.");
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     const payload: CreateComplaintDto = {
       title: title.trim(),
@@ -178,6 +211,14 @@ const CreateComplaintScreen = ({ navigation }: any) => {
     longitudeDelta: 0.05,
   };
 
+  // Hata stili
+  const errorStyle = {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "600" as const,
+    marginTop: 6,
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0B3A6A" />
@@ -204,25 +245,33 @@ const CreateComplaintScreen = ({ navigation }: any) => {
         <View style={styles.card}>
           <Text style={styles.label}>Başlık</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, titleError ? { borderColor: "#EF4444", borderWidth: 1 } : {}]}
             placeholder="Örn: Yolda çukur var"
             placeholderTextColor="#94A3B8"
             value={title}
-            onChangeText={setTitle}
+            onChangeText={(val) => {
+              setTitle(val);
+              setTitleError("");
+            }}
           />
+          {titleError !== "" && <Text style={errorStyle}>{titleError}</Text>}
         </View>
 
         {/* DESC */}
         <View style={styles.card}>
           <Text style={styles.label}>Açıklama</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, descriptionError ? { borderColor: "#EF4444", borderWidth: 1 } : {}]}
             placeholder="Detaylı açıklama yazınız..."
             placeholderTextColor="#94A3B8"
             value={description}
-            onChangeText={setDescription}
+            onChangeText={(val) => {
+              setDescription(val);
+              setDescriptionError("");
+            }}
             multiline
           />
+          {descriptionError !== "" && <Text style={errorStyle}>{descriptionError}</Text>}
         </View>
 
         {/* CATEGORY */}
@@ -230,8 +279,11 @@ const CreateComplaintScreen = ({ navigation }: any) => {
           <Text style={styles.label}>Kategori</Text>
 
           <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => setCategoryModalVisible(true)}
+            style={[styles.selectButton, categoryError ? { borderColor: "#EF4444", borderWidth: 1 } : {}]}
+            onPress={() => {
+              setCategoryModalVisible(true);
+              setCategoryError("");
+            }}
             activeOpacity={0.85}
           >
             <Text style={styles.selectButtonText} numberOfLines={1}>
@@ -239,6 +291,8 @@ const CreateComplaintScreen = ({ navigation }: any) => {
             </Text>
             <Text style={styles.selectChevron}>›</Text>
           </TouchableOpacity>
+
+          {categoryError !== "" && <Text style={errorStyle}>{categoryError}</Text>}
 
           <Text style={styles.helperText}>
             Doğru kategori seçimi, şikayetinizin ilgili birime daha hızlı yönlendirilmesini sağlar.
@@ -248,7 +302,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
         {/* MAP */}
         <View style={styles.card}>
           <Text style={styles.label}>Konum</Text>
-          <View style={styles.mapContainer}>
+          <View style={[styles.mapContainer, locationError ? { borderColor: "#EF4444", borderWidth: 2 } : {}]}>
             <MapView
               ref={mapRef}
               style={styles.map}
@@ -262,9 +316,13 @@ const CreateComplaintScreen = ({ navigation }: any) => {
             </MapView>
           </View>
 
-          <Text style={styles.mapHint}>
-            {pickedLocation ? "Konum seçildi." : "Konum seçmek için haritaya dokunun."}
-          </Text>
+          {locationError !== "" ? (
+            <Text style={errorStyle}>{locationError}</Text>
+          ) : (
+            <Text style={styles.mapHint}>
+              {pickedLocation ? "Konum seçildi." : "Konum seçmek için haritaya dokunun."}
+            </Text>
+          )}
         </View>
 
         {/* PHOTOS */}
@@ -333,7 +391,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
           onPress={() => setCategoryModalVisible(false)}
           style={styles.modalOverlay}
         >
-          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalCard}>
+          <TouchableOpacity activeOpacity={1} onPress={() => { }} style={styles.modalCard}>
             <Text style={styles.modalTitle}>Kategori Seç</Text>
 
             {categoriesLoading ? (
@@ -354,6 +412,7 @@ const CreateComplaintScreen = ({ navigation }: any) => {
                       onPress={() => {
                         setCategoryId(String(item.id));
                         setCategoryModalVisible(false);
+                        setCategoryError("");
                       }}
                       activeOpacity={0.85}
                     >
@@ -378,3 +437,4 @@ const CreateComplaintScreen = ({ navigation }: any) => {
 };
 
 export default CreateComplaintScreen;
+

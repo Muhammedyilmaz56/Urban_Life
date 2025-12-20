@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform, Dimensions, StatusBar } from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -22,7 +22,7 @@ const EmployeeCompletedStyles = StyleSheet.create({
   // --- HEADER (Ortak Kimlik) ---
   headerContainer: {
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 50 : 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
     paddingBottom: 25,
     backgroundColor: COLORS.primary,
     borderBottomLeftRadius: 24,
@@ -103,7 +103,7 @@ const EmployeeCompletedStyles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 8,
   },
-  
+
   cardTitle: {
     flex: 1,
     fontSize: 18,

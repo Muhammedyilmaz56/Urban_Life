@@ -78,7 +78,20 @@ if (localPropertiesFile.exists()) {
         localProperties.load(reader)
     }
 }
-def MAPS_API_KEY = localProperties.getProperty('MAPS_API_KEY') ?: ""
+
+// .env dosyasından GOOGLE_MAPS_API_KEY okuma (proje kökünde)
+def envFile = rootProject.file('../../.env')
+def envMapsKey = ""
+if (envFile.exists()) {
+    envFile.eachLine { line ->
+        if (line.startsWith('GOOGLE_MAPS_API_KEY=')) {
+            envMapsKey = line.replace('GOOGLE_MAPS_API_KEY=', '').trim()
+        }
+    }
+}
+
+// Öncelik: local.properties > .env dosyası > environment variable
+def MAPS_API_KEY = localProperties.getProperty('MAPS_API_KEY') ?: envMapsKey ?: System.getenv('GOOGLE_MAPS_API_KEY') ?: ""
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -89,8 +102,8 @@ android {
         applicationId "com.frontend"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.1.0"
+        versionCode 5
+        versionName "1.2.0"
         manifestPlaceholders = [
             MAPS_API_KEY: MAPS_API_KEY
         ]

@@ -8,15 +8,16 @@ export type ComplaintPhoto = {
 export type Complaint = {
   id: number;
   user_id: number;
-  title: string | null;       
+  user_name?: string | null;
+  title: string | null;
   description: string;
   category_id?: number | null;
-  status: "pending" | "in_progress" | "resolved"| "assigned"|"rejected";
+  status: "pending" | "in_progress" | "resolved" | "assigned" | "rejected";
   priority: "low" | "medium" | "high";
   latitude?: number | null;
   longitude?: number | null;
 
-  
+
   photo_url?: string | null;
 
   is_anonymous: boolean;
@@ -25,7 +26,8 @@ export type Complaint = {
   created_at: string;
   updated_at: string;
 
-  photos?: ComplaintPhoto[];   
+  photos?: ComplaintPhoto[];
+  user_supported?: boolean;
 };
 
 export interface CreateComplaintDto {

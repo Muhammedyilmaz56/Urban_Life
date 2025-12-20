@@ -39,6 +39,10 @@ export default function CategoriesScreen() {
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Mesaj state'leri
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   // Kaydet butonu aktiflik kontrolü
   const canSave = useMemo(
     () => name.trim().length >= 2 && !saving,
@@ -51,7 +55,8 @@ export default function CategoriesScreen() {
       const res = await client.get(`${BASE_URL}/official/categories`, { headers });
       setItems(res.data);
     } catch (e: any) {
-      Alert.alert("Hata", e?.response?.data?.detail ?? "Kategoriler yüklenirken sorun oluştu.");
+      setErrorMessage(e?.response?.data?.detail ?? "Kategoriler yüklenirken sorun oluştu.");
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setLoading(false);
     }
@@ -69,11 +74,12 @@ export default function CategoriesScreen() {
 
   const onCreate = async () => {
     if (!canSave) return;
-    
+
     // Klavyeyi kapat
     Keyboard.dismiss();
     setSaving(true);
-    
+    setErrorMessage("");
+
     try {
       const headers = await getAuthHeaders();
       await client.post(
@@ -85,16 +91,18 @@ export default function CategoriesScreen() {
         },
         { headers }
       );
-      
+
       // Formu sıfırla
       setName("");
       setDescription("");
       setIsActive(true);
-      
-      Alert.alert("Başarılı", "Yeni kategori sisteme eklendi.");
+
+      setSuccessMessage("Yeni kategori sisteme eklendi.");
+      setTimeout(() => setSuccessMessage(""), 4000);
       await load();
     } catch (e: any) {
-      Alert.alert("Hata", e?.response?.data?.detail ?? "Kategori oluşturulamadı.");
+      setErrorMessage(e?.response?.data?.detail ?? "Kategori oluşturulamadı.");
+      setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setSaving(false);
     }
@@ -113,9 +121,12 @@ export default function CategoriesScreen() {
             try {
               const headers = await getAuthHeaders();
               await axios.delete(`${BASE_URL}/official/categories/${cat.id}`, { headers });
+              setSuccessMessage("Kategori silindi.");
+              setTimeout(() => setSuccessMessage(""), 4000);
               await load();
             } catch (e: any) {
-              Alert.alert("Hata", e?.response?.data?.detail ?? "Silme işlemi başarısız.");
+              setErrorMessage(e?.response?.data?.detail ?? "Silme işlemi başarısız.");
+              setTimeout(() => setErrorMessage(""), 4000);
             }
           },
         },
@@ -127,27 +138,27 @@ export default function CategoriesScreen() {
     <View style={styles.card}>
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{item.name}</Text>
-            <View style={[styles.statusBadge, item.is_active ? styles.activeBadge : styles.passiveBadge]}>
-                <Text style={[styles.statusText, item.is_active ? styles.activeText : styles.passiveText]}>
-                    {item.is_active ? "AKTİF" : "PASİF"}
-                </Text>
-            </View>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <View style={[styles.statusBadge, item.is_active ? styles.activeBadge : styles.passiveBadge]}>
+            <Text style={[styles.statusText, item.is_active ? styles.activeText : styles.passiveText]}>
+              {item.is_active ? "AKTİF" : "PASİF"}
+            </Text>
+          </View>
         </View>
-        
+
         {item.description ? (
           <Text style={styles.cardDescription} numberOfLines={2}>
             {item.description}
           </Text>
         ) : (
-           <Text style={[styles.cardDescription, { fontStyle: 'italic', opacity: 0.7 }]}>
+          <Text style={[styles.cardDescription, { fontStyle: 'italic', opacity: 0.7 }]}>
             Açıklama yok
           </Text>
         )}
       </View>
 
-      <TouchableOpacity 
-        style={styles.deleteBtn} 
+      <TouchableOpacity
+        style={styles.deleteBtn}
         activeOpacity={0.7}
         onPress={() => onDelete(item)}
       >
@@ -168,7 +179,7 @@ export default function CategoriesScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-      
+
       <FlatList
         data={items}
         keyExtractor={(it) => String(it.id)}
@@ -178,47 +189,65 @@ export default function CategoriesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1e3a8a" />
         }
         ListHeaderComponent={
-            <View style={styles.createBox}>
-                <Text style={styles.sectionTitle}>📂 Kategori Yönetimi</Text>
-        
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Kategori Adı (Örn: Park ve Bahçeler)"
-                  placeholderTextColor="#94a3b8"
-                  style={styles.input}
-                />
-        
-                <TextInput
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Kısa açıklama (Opsiyonel)"
-                  placeholderTextColor="#94a3b8"
-                  style={[styles.input, { minHeight: 60, textAlignVertical: 'top' }]}
-                  multiline
-                />
-        
-                <View style={styles.switchRow}>
-                  <Text style={styles.switchLabel}>Durum: {isActive ? "Aktif" : "Pasif"}</Text>
-                  <Switch 
-                    value={isActive} 
-                    onValueChange={setIsActive} 
-                    trackColor={{ false: "#e2e8f0", true: "#bfdbfe" }}
-                    thumbColor={isActive ? "#1e3a8a" : "#94a3b8"}
-                  />
-                </View>
-        
-                <TouchableOpacity
-                  style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}
-                  onPress={onCreate}
-                  disabled={!canSave}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.saveText}>
-                    {saving ? "İşleniyor..." : "Kategoriyi Kaydet"}
-                  </Text>
-                </TouchableOpacity>
+          <View style={styles.createBox}>
+            {/* Başarı Mesajı */}
+            {successMessage !== "" && (
+              <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 16 }}>
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+                  ✓ {successMessage}
+                </Text>
               </View>
+            )}
+
+            {/* Hata Mesajı */}
+            {errorMessage !== "" && (
+              <View style={{ backgroundColor: "#EF4444", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 16 }}>
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+                  ✕ {errorMessage}
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.sectionTitle}>📂 Kategori Yönetimi</Text>
+
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Kategori Adı (Örn: Park ve Bahçeler)"
+              placeholderTextColor="#94a3b8"
+              style={styles.input}
+            />
+
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Kısa açıklama (Opsiyonel)"
+              placeholderTextColor="#94a3b8"
+              style={[styles.input, { minHeight: 60, textAlignVertical: 'top' }]}
+              multiline
+            />
+
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Durum: {isActive ? "Aktif" : "Pasif"}</Text>
+              <Switch
+                value={isActive}
+                onValueChange={setIsActive}
+                trackColor={{ false: "#e2e8f0", true: "#bfdbfe" }}
+                thumbColor={isActive ? "#1e3a8a" : "#94a3b8"}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}
+              onPress={onCreate}
+              disabled={!canSave}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.saveText}>
+                {saving ? "İşleniyor..." : "Kategoriyi Kaydet"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         }
         ListEmptyComponent={
           <Text style={styles.emptyText}>Sistemde kayıtlı kategori bulunmamaktadır.</Text>

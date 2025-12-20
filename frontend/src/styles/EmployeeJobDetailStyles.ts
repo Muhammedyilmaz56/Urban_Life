@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions, Platform, StatusBar } from "react-native";
 
 const COLORS = {
   primary: "#1e3a8a", // Kurumsal Lacivert
@@ -15,6 +15,7 @@ export default StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
   },
 
   content: {
@@ -27,7 +28,7 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  
+
   loadingText: {
     marginTop: 10,
     color: COLORS.textGray,
@@ -37,14 +38,14 @@ export default StyleSheet.create({
   headerSection: {
     marginBottom: 20,
   },
-  
+
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
   },
-  
+
   title: {
     flex: 1,
     fontSize: 20,
@@ -53,7 +54,7 @@ export default StyleSheet.create({
     marginRight: 10,
     lineHeight: 28,
   },
-  
+
   idBadge: {
     backgroundColor: "#eff6ff",
     paddingHorizontal: 10,
@@ -62,7 +63,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: "#dbeafe",
   },
-  
+
   idText: {
     fontSize: 12,
     fontWeight: "700",
@@ -74,7 +75,7 @@ export default StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  
+
   addressText: {
     fontSize: 14,
     color: COLORS.textGray,
@@ -91,7 +92,7 @@ export default StyleSheet.create({
     borderColor: COLORS.border,
     marginBottom: 20,
   },
-  
+
   descLabel: {
     fontSize: 12,
     fontWeight: "700",
@@ -99,7 +100,7 @@ export default StyleSheet.create({
     marginBottom: 4,
     textTransform: "uppercase",
   },
-  
+
   descText: {
     fontSize: 15,
     color: COLORS.textDark,
@@ -140,7 +141,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: '#bae6fd',
   },
-  
+
   mapButtonText: {
     color: COLORS.primary,
     fontWeight: "700",
@@ -152,7 +153,7 @@ export default StyleSheet.create({
   photosContainer: {
     marginBottom: 24,
   },
-  
+
   photo: {
     width: 120,
     height: 120,
@@ -162,7 +163,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  
+
   noPhotoText: {
     color: COLORS.textGray,
     fontStyle: 'italic',
@@ -173,7 +174,7 @@ export default StyleSheet.create({
   actionSection: {
     marginTop: 10,
   },
-  
+
   primaryBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
@@ -187,13 +188,13 @@ export default StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  
+
   primaryBtnText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
   },
-  
+
   secondaryBtn: {
     backgroundColor: "#FFFFFF",
     borderWidth: 2,
@@ -204,13 +205,13 @@ export default StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  
+
   secondaryBtnText: {
     color: COLORS.primary,
     fontSize: 15,
     fontWeight: "700",
   },
-  
+
   disabledBtn: {
     backgroundColor: "#94a3b8",
     borderColor: "#94a3b8",
@@ -227,14 +228,14 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: "#bbf7d0",
   },
-  
+
   previewTitle: {
     fontSize: 14,
     fontWeight: "700",
     color: "#15803d",
     marginBottom: 8,
   },
-  
+
   previewImage: {
     width: 80,
     height: 80,

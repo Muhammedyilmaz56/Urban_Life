@@ -26,9 +26,25 @@ export default function AdminCategoriesScreen() {
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  // Inline mesajlar
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setErrorMessage("");
+    setTimeout(() => setSuccessMessage(""), 4000);
+  };
+
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+    setSuccessMessage("");
+    setTimeout(() => setErrorMessage(""), 4000);
+  };
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -36,7 +52,7 @@ export default function AdminCategoriesScreen() {
       const data = await adminApi.listCategories();
       setItems(data || []);
     } catch (e: any) {
-      Alert.alert("Hata", e?.message || "Kategoriler alınamadı.");
+      showError(e?.response?.data?.detail || e?.message || "Kategoriler alınamadı.");
     } finally {
       if (!opts?.silent) setLoading(false);
       setRefreshing(false);
@@ -57,7 +73,7 @@ export default function AdminCategoriesScreen() {
   const onCreate = async () => {
     const n = name.trim();
     if (n.length < 2) {
-      Alert.alert("Uyarı", "Kategori adı en az 2 karakter olmalı.");
+      showError("Kategori adı en az 2 karakter olmalı.");
       return;
     }
 
@@ -66,15 +82,16 @@ export default function AdminCategoriesScreen() {
       const created = await adminApi.createCategory({ name: n });
       setName("");
       setItems((prev) => [created, ...prev]);
+      showSuccess(`"${n}" kategorisi başarıyla eklendi.`);
     } catch (e: any) {
-      Alert.alert("Hata", e?.message || "Kategori eklenemedi.");
+      showError(e?.response?.data?.detail || e?.message || "Kategori eklenemedi.");
     } finally {
       setCreating(false);
     }
   };
 
-  const onDelete = async (id: number) => {
-    Alert.alert("Silinsin mi?", "Bu kategoriyi silmek istiyor musun?", [
+  const onDelete = async (id: number, categoryName: string) => {
+    Alert.alert("Silinsin mi?", `"${categoryName}" kategorisini silmek istiyor musun?`, [
       { text: "Vazgeç", style: "cancel" },
       {
         text: "Sil",
@@ -83,8 +100,9 @@ export default function AdminCategoriesScreen() {
           try {
             await adminApi.deleteCategory(id);
             setItems((prev) => prev.filter((x) => x.id !== id));
+            showSuccess(`"${categoryName}" kategorisi silindi.`);
           } catch (e: any) {
-            Alert.alert("Hata", e?.message || "Kategori silinemedi.");
+            showError(e?.response?.data?.detail || e?.message || "Kategori silinemedi.");
           }
         },
       },
@@ -98,11 +116,11 @@ export default function AdminCategoriesScreen() {
           <Text style={styles.rowTitle} numberOfLines={1}>
             {item.name}
           </Text>
-          
+
         </View>
 
         <TouchableOpacity
-          onPress={() => onDelete(item.id)}
+          onPress={() => onDelete(item.id, item.name)}
           style={styles.deleteBtn}
           activeOpacity={0.85}
         >
@@ -144,6 +162,24 @@ export default function AdminCategoriesScreen() {
 
       {/* CREATE */}
       <View style={styles.createCard}>
+        {/* Başarı Mesajı */}
+        {successMessage !== "" && (
+          <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 12 }}>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+              ✓ {successMessage}
+            </Text>
+          </View>
+        )}
+
+        {/* Hata Mesajı */}
+        {errorMessage !== "" && (
+          <View style={{ backgroundColor: "#EF4444", paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, marginBottom: 12 }}>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+              ✕ {errorMessage}
+            </Text>
+          </View>
+        )}
+
         <Text style={styles.sectionTitle}>Yeni Kategori</Text>
 
         <View style={styles.createBox}>

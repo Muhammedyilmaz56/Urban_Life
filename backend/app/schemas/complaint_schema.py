@@ -88,6 +88,7 @@ class ComplaintPhotoOut(BaseModel):
 class ComplaintOut(BaseModel):
     id: int
     user_id: int
+    user_name: Optional[str] = None
 
     title: Optional[str]
     description: str
@@ -108,6 +109,7 @@ class ComplaintOut(BaseModel):
     updated_at: datetime
 
     photos: Optional[List[ComplaintPhotoOut]] = []
+    user_supported: Optional[bool] = False
 
     class Config:
         from_attributes = True

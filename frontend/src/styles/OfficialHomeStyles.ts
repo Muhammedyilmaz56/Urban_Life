@@ -1,23 +1,23 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Platform, Dimensions, StatusBar } from "react-native";
 
 const { width } = Dimensions.get("window");
 
 
 const COLORS = {
-  primary: "#1e3a8a", 
-  background: "#F8FAFC", 
+  primary: "#1e3a8a",
+  background: "#F8FAFC",
   cardBg: "#FFFFFF",
-  textDark: "#0f172a", 
+  textDark: "#0f172a",
   textGray: "#64748b",
-  border: "#e2e8f0", 
-  
- 
+  border: "#e2e8f0",
+
+
   status: {
     pending: { bg: "#fff7ed", text: "#9a3412", border: "#ffedd5" },
-    in_progress: { bg: "#eff6ff", text: "#1e40af", border: "#dbeafe" }, 
+    in_progress: { bg: "#eff6ff", text: "#1e40af", border: "#dbeafe" },
     assigned: { bg: "#f0fdf4", text: "#166534", border: "#dcfce7" },
-    resolved: { bg: "#ecfdf5", text: "#047857", border: "#d1fae5" }, 
-    rejected: { bg: "#fef2f2", text: "#991b1b", border: "#fee2e2" }, 
+    resolved: { bg: "#ecfdf5", text: "#047857", border: "#d1fae5" },
+    rejected: { bg: "#fef2f2", text: "#991b1b", border: "#fee2e2" },
   }
 };
 
@@ -26,17 +26,17 @@ const OfficialHomeStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  
+
 
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 50 : 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 20,
     paddingBottom: 25,
-    backgroundColor: COLORS.primary, 
-    borderBottomLeftRadius: 24, 
+    backgroundColor: COLORS.primary,
+    borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -48,7 +48,7 @@ const OfficialHomeStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#FFFFFF', 
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   avatar: {
@@ -56,13 +56,13 @@ const OfficialHomeStyles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.8)', 
+    borderColor: 'rgba(255,255,255,0.8)',
   },
 
   menuOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.2)', 
+    backgroundColor: 'rgba(0,0,0,0.2)',
     zIndex: 20,
   },
   menuContainer: {
@@ -130,24 +130,36 @@ const OfficialHomeStyles = StyleSheet.create({
     lineHeight: 24,
   },
 
- 
+
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
     shadowColor: "#64748b",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
-    elevation: 3,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+
+  // Kartın en üstündeki resim
+  cardImageCover: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#cbd5e1',
+  },
+
+  // Kart içerik alanı
+  cardBody: {
+    padding: 16,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start", 
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   cardTitle: {
@@ -158,8 +170,8 @@ const OfficialHomeStyles = StyleSheet.create({
     marginRight: 10,
     lineHeight: 22,
   },
-  
-  
+
+
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -170,9 +182,9 @@ const OfficialHomeStyles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: "700",
-    textTransform: 'uppercase', 
+    textTransform: 'uppercase',
   },
-  
+
   status_pending: {
     backgroundColor: COLORS.status.pending.bg,
     borderColor: COLORS.status.pending.border,
@@ -194,7 +206,7 @@ const OfficialHomeStyles = StyleSheet.create({
     borderColor: COLORS.status.rejected.border,
   },
 
-  
+
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -202,7 +214,7 @@ const OfficialHomeStyles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 13,
-    color: COLORS.primary, 
+    color: COLORS.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -210,15 +222,15 @@ const OfficialHomeStyles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textGray,
     marginBottom: 10,
-    fontStyle: 'italic', 
+    fontStyle: 'italic',
   },
   descriptionText: {
     fontSize: 14,
-    color: "#334155", 
+    color: "#334155",
     marginBottom: 12,
     lineHeight: 20,
   },
-  
+
 
   cardFooter: {
     flexDirection: "row",

@@ -15,7 +15,26 @@ import styles from "../../styles/AdminStatsStyles";
 import { adminApi } from "../../api/admin";
 import type { AdminStatsDetail } from "../../api/admin";
 
-const formatKey = (k: string) => k.replace(/_/g, " ").toUpperCase();
+// Rol isimlerini Türkçe'ye çevir
+const roleTranslations: Record<string, string> = {
+  citizen: "Vatandaş",
+  official: "Yetkili",
+  admin: "Yönetici",
+  employee: "Saha Personeli",
+};
+
+// Durum isimlerini Türkçe'ye çevir
+const statusTranslations: Record<string, string> = {
+  pending: "Beklemede",
+  in_progress: "İşlemde",
+  assigned: "Atandı",
+  resolved: "Çözüldü",
+  rejected: "Reddedildi",
+  completed: "Tamamlandı",
+};
+
+const translateRole = (key: string) => roleTranslations[key.toLowerCase()] || key.replace(/_/g, " ").toUpperCase();
+const translateStatus = (key: string) => statusTranslations[key.toLowerCase()] || key.replace(/_/g, " ").toUpperCase();
 
 export default function AdminStatsScreen() {
   const navigation = useNavigation<any>();
@@ -125,7 +144,7 @@ export default function AdminStatsScreen() {
             ) : (
               roleRows.map(([role, count]) => (
                 <View key={role} style={styles.row}>
-                  <Text style={styles.rowKey}>{formatKey(role)}</Text>
+                  <Text style={styles.rowKey}>{translateRole(role)}</Text>
                   <Text style={styles.rowVal}>{count}</Text>
                 </View>
               ))
@@ -140,7 +159,7 @@ export default function AdminStatsScreen() {
             ) : (
               statusRows.map(([st, count]) => (
                 <View key={st} style={styles.row}>
-                  <Text style={styles.rowKey}>{formatKey(st)}</Text>
+                  <Text style={styles.rowKey}>{translateStatus(st)}</Text>
                   <Text style={styles.rowVal}>{count}</Text>
                 </View>
               ))

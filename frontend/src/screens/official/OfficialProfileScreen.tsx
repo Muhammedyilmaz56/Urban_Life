@@ -30,10 +30,10 @@ import { BASE_URL } from "../../config";
 const resolveAvatar = (avatar_url?: string | null, refreshKey?: number) =>
   avatar_url
     ? {
-        uri: avatar_url.startsWith("http")
-          ? avatar_url
-          : `${BASE_URL}${avatar_url}?t=${refreshKey}`,
-      }
+      uri: avatar_url.startsWith("http")
+        ? avatar_url
+        : `${BASE_URL}${avatar_url}${refreshKey ? `?t=${refreshKey}` : ''}`,
+    }
     : require("../../../assets/default-avatar.png");
 
 const InfoRow = ({ label, value, onPress, actionLabel }: any) => (
@@ -48,11 +48,50 @@ const InfoRow = ({ label, value, onPress, actionLabel }: any) => (
   </View>
 );
 
+// API hatalarını Türkçe anlaşılır mesajlara çevir
+const translateError = (error: any, defaultMsg: string): string => {
+  const detail = error?.response?.data?.detail || error?.message || "";
+  const detailLower = String(detail).toLowerCase();
+
+  // Şifre hataları
+  if (detailLower.includes("incorrect password") || detailLower.includes("wrong password") || detailLower.includes("current password")) {
+    return "Mevcut şifreniz yanlış.";
+  }
+  if (detailLower.includes("password") && detailLower.includes("weak")) {
+    return "Şifre çok zayıf. Daha güçlü bir şifre seçin.";
+  }
+  if (detailLower.includes("password") && detailLower.includes("short")) {
+    return "Şifre çok kısa. En az 6 karakter olmalı.";
+  }
+
+  // E-posta hataları
+  if (detailLower.includes("email") && (detailLower.includes("already") || detailLower.includes("exists") || detailLower.includes("registered"))) {
+    return "Bu e-posta adresi zaten kayıtlı.";
+  }
+  if (detailLower.includes("invalid email") || detailLower.includes("email format")) {
+    return "Geçersiz e-posta formatı.";
+  }
+  if (detailLower.includes("code") && (detailLower.includes("invalid") || detailLower.includes("expired"))) {
+    return "Doğrulama kodu geçersiz veya süresi dolmuş.";
+  }
+
+  // Genel hatalar
+  if (detailLower.includes("unauthorized") || detailLower.includes("not authenticated")) {
+    return "Oturumunuz sonlanmış. Lütfen tekrar giriş yapın.";
+  }
+  if (detailLower.includes("not found")) {
+    return "Kayıt bulunamadı.";
+  }
+
+  // API'den gelen mesaj varsa onu göster, yoksa default mesaj
+  return detail || defaultMsg;
+};
+
 const OfficialProfileScreen = () => {
   const navigation = useNavigation<any>();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
 
   const [modalType, setModalType] = useState<"NONE" | "INFO" | "PASSWORD" | "EMAIL">("NONE");
 
@@ -65,6 +104,12 @@ const OfficialProfileScreen = () => {
   const [emailStep, setEmailStep] = useState<"INPUT" | "CODE">("INPUT");
 
   const [isSaving, setIsSaving] = useState(false);
+
+  // Hata ve başarı state'leri
+  const [infoError, setInfoError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -93,9 +138,11 @@ const OfficialProfileScreen = () => {
         const result = await uploadAvatar(res.assets[0].uri);
         setUser((prev: any) => ({ ...prev, avatar_url: result.avatar_url }));
         setAvatarRefreshKey(Date.now());
-        Alert.alert("Başarılı", "Profil fotoğrafı güncellendi.");
+        setSuccessMessage("Profil fotoğrafı güncellendi.");
+        setTimeout(() => setSuccessMessage(""), 3000);
       } catch (err) {
-        Alert.alert("Hata", "Fotoğraf yüklenemedi.");
+        setInfoError("Fotoğraf yüklenemedi.");
+        setTimeout(() => setInfoError(""), 3000);
       }
     });
   };
@@ -108,8 +155,9 @@ const OfficialProfileScreen = () => {
   };
 
   const handleUpdateInfo = async () => {
+    setInfoError("");
     if (!editName.trim()) {
-      Alert.alert("Uyarı", "Ad Soyad boş bırakılamaz.");
+      setInfoError("Ad Soyad boş bırakılamaz.");
       return;
     }
 
@@ -121,22 +169,24 @@ const OfficialProfileScreen = () => {
       });
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "Bilgileriniz güncellendi.");
+      setSuccessMessage("Bilgileriniz güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Güncelleme başarısız.");
+      setInfoError(err?.response?.data?.detail || "Güncelleme başarısız.");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleChangePassword = async () => {
+    setPasswordError("");
     const { current, new: newPass, confirm } = passwords;
     if (!current || !newPass || !confirm) {
-      Alert.alert("Uyarı", "Tüm alanları doldurunuz.");
+      setPasswordError("Tüm alanları doldurunuz.");
       return;
     }
     if (newPass !== confirm) {
-      Alert.alert("Uyarı", "Yeni şifreler uyuşmuyor.");
+      setPasswordError("Yeni şifreler uyuşmuyor.");
       return;
     }
 
@@ -145,9 +195,10 @@ const OfficialProfileScreen = () => {
       await changePassword({ current_password: current, new_password: newPass });
       setModalType("NONE");
       setPasswords({ current: "", new: "", confirm: "" });
-      Alert.alert("Başarılı", "Şifreniz değiştirildi.");
+      setSuccessMessage("Şifreniz değiştirildi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Şifre değiştirilemedi.");
+      setPasswordError(translateError(err, "Şifre değiştirilemedi."));
     } finally {
       setIsSaving(false);
     }
@@ -161,8 +212,9 @@ const OfficialProfileScreen = () => {
   };
 
   const handleRequestEmailChange = async () => {
+    setEmailError("");
     if (!newEmail.trim()) {
-      Alert.alert("Uyarı", "Yeni e-posta giriniz.");
+      setEmailError("Yeni e-posta giriniz.");
       return;
     }
 
@@ -170,17 +222,19 @@ const OfficialProfileScreen = () => {
       setIsSaving(true);
       await requestEmailChange(newEmail.trim());
       setEmailStep("CODE");
-      Alert.alert("Başarılı", "Doğrulama kodu gönderildi.");
+      setSuccessMessage("Doğrulama kodu gönderildi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Kod gönderilemedi.");
+      setEmailError(translateError(err, "Kod gönderilemedi."));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleConfirmEmailChange = async () => {
+    setEmailError("");
     if (!emailCode.trim() || emailCode.trim().length !== 6) {
-      Alert.alert("Uyarı", "6 haneli kod giriniz.");
+      setEmailError("6 haneli kod giriniz.");
       return;
     }
 
@@ -189,9 +243,10 @@ const OfficialProfileScreen = () => {
       await confirmEmailChange(emailCode.trim());
       await loadUser();
       setModalType("NONE");
-      Alert.alert("Başarılı", "E-posta güncellendi.");
+      setSuccessMessage("E-posta güncellendi.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
-      Alert.alert("Hata", err?.response?.data?.detail || "Kod doğrulanamadı.");
+      setEmailError(translateError(err, "Kod doğrulanamadı."));
     } finally {
       setIsSaving(false);
     }
@@ -206,8 +261,8 @@ const OfficialProfileScreen = () => {
         onPress: async () => {
           await AsyncStorage.removeItem("accessToken");
           await AsyncStorage.removeItem("current_user");
-  
-          
+
+
           setUser?.(null);
         },
       },
@@ -224,7 +279,7 @@ const OfficialProfileScreen = () => {
   if (!user)
     return (
       <View style={styles.center}>
-        <Text style={{color: '#64748b'}}>Kullanıcı bilgileri yüklenemedi.</Text>
+        <Text style={{ color: '#64748b' }}>Kullanıcı bilgileri yüklenemedi.</Text>
       </View>
     );
 
@@ -232,22 +287,39 @@ const OfficialProfileScreen = () => {
     <View style={styles.container}>
       {/* Header Rengi ile Status Bar Rengi Aynı Olsun */}
       <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
-      
+
       {/* ÜST MAVİ BAŞLIK - Artık Kartın Arkasına Geçmiyor */}
       <View style={styles.headerBackground}>
         <Text style={styles.headerTitle}>Hesap Bilgileri</Text>
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+
+          {/* Başarı Mesajı */}
+          {successMessage !== "" && (
+            <View style={{ backgroundColor: "#10B981", paddingVertical: 12, paddingHorizontal: 16, marginHorizontal: 16, marginTop: 12, borderRadius: 10 }}>
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>
+                ✓ {successMessage}
+              </Text>
+            </View>
+          )}
+
           {/* PROFİL KARTI - Mavi Alandan Sonra Başlıyor */}
           <View style={styles.profileCard}>
             <View style={styles.avatarContainer}>
-                <Image source={resolveAvatar(user.avatar_url, avatarRefreshKey)} style={styles.avatar} />
-                <TouchableOpacity style={styles.editIconBadge} onPress={handleSelectAvatar}>
-                    <Text style={styles.editIconText}>+</Text>
-                </TouchableOpacity>
+              <Image source={resolveAvatar(user.avatar_url, avatarRefreshKey)} style={styles.avatar} />
+              <TouchableOpacity style={styles.editIconBadge} onPress={handleSelectAvatar}>
+                <Text style={styles.editIconText}>+</Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.userName}>{user.full_name || user.name}</Text>
             <Text style={styles.userRole}>{user.role === "admin" ? "Yönetici" : "Belediye Personeli"}</Text>
@@ -257,19 +329,19 @@ const OfficialProfileScreen = () => {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
             <View style={styles.infoCard}>
-                <InfoRow label="Ad Soyad" value={user.full_name} onPress={openInfoModal} />
-                <InfoRow
-                  label="E-Posta"
-                  value={user.email}
-                  onPress={openEmailModal}
-                  actionLabel="Değiştir"
-                />
-                <InfoRow
-                  label="Telefon"
-                  value={user.phone_number || user.phone}
-                  onPress={openInfoModal}
-                  actionLabel="Düzenle"
-                />
+              <InfoRow label="Ad Soyad" value={user.full_name} onPress={openInfoModal} />
+              <InfoRow
+                label="E-Posta"
+                value={user.email}
+                onPress={openEmailModal}
+                actionLabel="Değiştir"
+              />
+              <InfoRow
+                label="Telefon"
+                value={user.phone_number || user.phone}
+                onPress={openInfoModal}
+                actionLabel="Düzenle"
+              />
             </View>
           </View>
 
@@ -277,7 +349,7 @@ const OfficialProfileScreen = () => {
             <Text style={styles.sectionTitle}>Güvenlik</Text>
             <TouchableOpacity style={styles.menuItem} onPress={() => setModalType("PASSWORD")}>
               <Text style={styles.menuText}>🔒 Şifre Değiştir</Text>
-              <Text style={{color: '#94a3b8'}}>❯</Text>
+              <Text style={{ color: '#94a3b8' }}>❯</Text>
             </TouchableOpacity>
           </View>
 
@@ -311,8 +383,15 @@ const OfficialProfileScreen = () => {
                 keyboardType="phone-pad"
               />
 
+              {/* Hata Mesajı */}
+              {infoError !== "" && (
+                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                  {infoError}
+                </Text>
+              )}
+
               <View style={styles.modalButtonRow}>
-                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setModalType("NONE")}>
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => { setModalType("NONE"); setInfoError(""); }}>
                   <Text style={styles.modalCancelText}>Vazgeç</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirmButton} onPress={handleUpdateInfo} disabled={isSaving}>
@@ -327,7 +406,7 @@ const OfficialProfileScreen = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <Text style={styles.modalTitle}>E-Posta Değişikliği</Text>
-              
+
               {emailStep === "INPUT" ? (
                 <>
                   <Text style={styles.modalSubtitle}>Yeni e-posta adresinizi giriniz</Text>
@@ -340,8 +419,15 @@ const OfficialProfileScreen = () => {
                     keyboardType="email-address"
                   />
 
+                  {/* Hata Mesajı */}
+                  {emailError !== "" && (
+                    <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                      {emailError}
+                    </Text>
+                  )}
+
                   <View style={styles.modalButtonRow}>
-                    <TouchableOpacity style={styles.modalCancelButton} onPress={() => setModalType("NONE")}>
+                    <TouchableOpacity style={styles.modalCancelButton} onPress={() => { setModalType("NONE"); setEmailError(""); }}>
                       <Text style={styles.modalCancelText}>İptal</Text>
                     </TouchableOpacity>
 
@@ -357,7 +443,7 @@ const OfficialProfileScreen = () => {
                   </Text>
 
                   <TextInput
-                    style={[styles.input, {textAlign: 'center', letterSpacing: 5, fontSize: 18}]}
+                    style={[styles.input, { textAlign: 'center', letterSpacing: 5, fontSize: 18 }]}
                     placeholder="______"
                     value={emailCode}
                     onChangeText={setEmailCode}
@@ -365,12 +451,20 @@ const OfficialProfileScreen = () => {
                     maxLength={6}
                   />
 
+                  {/* Hata Mesajı */}
+                  {emailError !== "" && (
+                    <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                      {emailError}
+                    </Text>
+                  )}
+
                   <View style={styles.modalButtonRow}>
                     <TouchableOpacity
                       style={styles.modalCancelButton}
                       onPress={() => {
                         setEmailStep("INPUT");
                         setEmailCode("");
+                        setEmailError("");
                       }}
                     >
                       <Text style={styles.modalCancelText}>Geri</Text>
@@ -414,8 +508,15 @@ const OfficialProfileScreen = () => {
                 onChangeText={(t) => setPasswords((p) => ({ ...p, confirm: t }))}
               />
 
+              {/* Hata Mesajı */}
+              {passwordError !== "" && (
+                <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600", textAlign: "center", marginTop: 8 }}>
+                  {passwordError}
+                </Text>
+              )}
+
               <View style={styles.modalButtonRow}>
-                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setModalType("NONE")}>
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => { setModalType("NONE"); setPasswordError(""); }}>
                   <Text style={styles.modalCancelText}>Vazgeç</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirmButton} onPress={handleChangePassword} disabled={isSaving}>

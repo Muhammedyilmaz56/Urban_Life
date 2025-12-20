@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const PRIMARY = "#0B3A6A"; // kurum mavisi
 const PRIMARY_2 = "#1E3A8A"; // alternatif mavi
@@ -24,7 +24,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    paddingTop: Platform.OS === "ios" ? 60 : (StatusBar.currentHeight || 24) + 12,
     paddingHorizontal: 16,
     paddingBottom: 14,
     backgroundColor: PRIMARY,
@@ -71,46 +71,93 @@ export default StyleSheet.create({
     height: 44,
   },
 
-  // PROFILE MENU
-  profileMenu: {
+  // SIDEBAR MENU
+  menuOverlay: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 110 : 78,
-    right: 16,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 998,
+  },
+
+  sidebarMenu: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: 280,
     backgroundColor: CARD,
-    borderRadius: 12,
-    paddingVertical: 6,
-    width: 220,
     zIndex: 999,
-    borderWidth: 1,
-    borderColor: BORDER,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 15,
   },
 
-  profileMenuItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+  sidebarHeader: {
+    backgroundColor: PRIMARY,
+    paddingTop: Platform.OS === "ios" ? 60 : (StatusBar.currentHeight || 24) + 20,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    alignItems: "center",
   },
 
-  profileMenuText: {
-    fontSize: 14,
+  sidebarAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.3)",
+    marginBottom: 12,
+  },
+
+  sidebarName: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+
+  sidebarEmail: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.7)",
+    marginTop: 4,
+    textAlign: "center",
+  },
+
+  sidebarContent: {
+    flex: 1,
+    paddingTop: 12,
+  },
+
+  sidebarMenuItem: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+
+  sidebarMenuText: {
+    fontSize: 16,
     color: TEXT,
     fontWeight: "600",
   },
 
-  // ÇIKIŞ (EKLENDİ)
-  profileMenuLogout: {
+  sidebarLogout: {
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     borderTopWidth: 1,
     borderTopColor: BORDER,
-    backgroundColor: "rgba(185, 28, 28, 0.06)",
+    backgroundColor: "rgba(220, 38, 38, 0.06)",
   },
 
-  profileMenuLogoutText: {
-    color: "#B91C1C",
-    fontWeight: "900",
+  sidebarLogoutText: {
+    fontSize: 16,
+    color: "#DC2626",
+    fontWeight: "700",
   },
 
   // TABS
@@ -159,16 +206,28 @@ export default StyleSheet.create({
   // CARD
   card: {
     backgroundColor: CARD,
-    borderRadius: 14,
-    marginBottom: 14,
-    padding: 14,
+    borderRadius: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: BORDER,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowColor: "#64748b",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+
+  // Kartın en üstündeki resim
+  cardImageCover: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#cbd5e1',
+  },
+
+  // Kart içerik alanı
+  cardBody: {
+    padding: 16,
   },
 
   cardHeader: {
@@ -224,6 +283,13 @@ export default StyleSheet.create({
     color: MUTED,
     lineHeight: 20,
     marginBottom: 12,
+  },
+
+  addressText: {
+    fontSize: 13,
+    color: MUTED,
+    marginBottom: 10,
+    fontStyle: 'italic',
   },
 
   // FOOTER
